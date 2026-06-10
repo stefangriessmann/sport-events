@@ -1,0 +1,57 @@
+name: Monthly snapshot update
+
+on:
+  schedule:
+    # 1st of each month at 05:00 UTC  (summer: 07:00 CEST)
+    - cron: "0 5 1 * *"
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "Year to fetch (default: current year)"
+        required: false
+        default: ""
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # needed for git push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Run snapshot update
+        run: |
+          YEAR="${{ github.event.inputs.year }}"
+          if [ -z "$YEAR" ]; then
+            YEAR=$(date +%Y)
+          fi
+          python scripts/update_snapshots.py --year "$YEAR"
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage the HTML and geocache (if it exists)
+          git add sport-events-chemnitz.html
+          git add scripts/geocache.json 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "Nothing changed – no commit needed."
+          else
+            DATE=$(date +%Y-%m-%d)
+            git commit -m "chore: monthly snapshot update ${DATE}"
+            git push
+            echo "Pushed updated snapshot – Netlify will auto-deploy."
+          fi
