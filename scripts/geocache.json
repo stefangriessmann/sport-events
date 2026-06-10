@@ -1,0 +1,661 @@
+{
+  "Runde, DE|de": [
+    51.8988447,
+    7.8628313
+  ],
+  "Berlins, DE|de": [
+    52.5173885,
+    13.3951309
+  ],
+  "Classic, DE|de": [
+    52.4997282,
+    13.443332
+  ],
+  "PSV, DE|de": [
+    51.0303366,
+    13.714317
+  ],
+  "Butterkuchenfahrt, DE|de": null,
+  "Butterkuchenfahrt|de": null,
+  "Butterkuchen, DE|de": null,
+  "Butterkuchen|de": null,
+  "Nienhagen, DE|de": [
+    54.159117,
+    11.955593
+  ],
+  "Ostsee-Sportspiele, DE|de": null,
+  "Ostsee-Sportspiele|de": null,
+  "Radrundfahrt, DE|de": null,
+  "Radrundfahrt|de": null,
+  "Oberlausitz, DE|de": [
+    51.2084777,
+    14.6728162
+  ],
+  "Witten, DE|de": [
+    51.4370171,
+    7.335124
+  ],
+  "Hochs, DE|de": [
+    48.0087452,
+    10.5993175
+  ],
+  "Schwalbetour, DE|de": null,
+  "Schwalbetour|de": null,
+  "TDR, DE|de": [
+    52.9374157,
+    9.9629694
+  ],
+  "Wald, DE|de": [
+    47.7224841,
+    10.5578766
+  ],
+  "Stormarn, DE|de": [
+    53.7215127,
+    10.3586145
+  ],
+  "Waldhessen-Rundfahrt, DE|de": null,
+  "Waldhessen-Rundfahrt|de": null,
+  "Radmarathon, DE|de": null,
+  "Radmarathon|de": null,
+  "Fondo, DE|de": null,
+  "Fondo|de": null,
+  "Nussloch, DE|de": [
+    49.3228653,
+    8.6959385
+  ],
+  "Mittsomm, DE|de": null,
+  "Mittsomm|de": null,
+  "Nord, DE|de": [
+    52.404887,
+    9.7123728
+  ],
+  "Bensheim, DE|de": [
+    49.6810158,
+    8.6227577
+  ],
+  "Buchloe, DE|de": [
+    48.0373762,
+    10.7282761
+  ],
+  "Bergen, DE|de": [
+    49.7808936,
+    7.4176059
+  ],
+  "Jura-Radmarathon, DE|de": null,
+  "Jura-Radmarathon|de": null,
+  "HERFORD, DE|de": [
+    52.1152245,
+    8.6711118
+  ],
+  "Land, DE|de": [
+    50.4388725,
+    11.1479378
+  ],
+  "Rundfahrt, DE|de": [
+    50.3761276,
+    8.728473
+  ],
+  "Dortmund-Sölde, DE|de": [
+    51.4954222,
+    7.5891306
+  ],
+  "Rot, DE|de": [
+    48.1578408,
+    9.9806459
+  ],
+  "Kraichgau, DE|de": [
+    49.1441149,
+    8.822265
+  ],
+  "Bergeles, DE|de": null,
+  "Bergeles|de": null,
+  "Schwalm-Tal, DE|de": [
+    51.0466609,
+    9.1918739
+  ],
+  "Höhen, DE|de": [
+    47.6486351,
+    10.5432713
+  ],
+  "Rottal-Classic, DE|de": null,
+  "Rottal-Classic|de": null,
+  "Rönkhausen, DE|de": [
+    51.2181969,
+    7.9574814
+  ],
+  "Bergtraining, DE|de": null,
+  "Bergtraining|de": null,
+  "Gravelride, DE|de": null,
+  "Gravelride|de": null,
+  "Berlin-Total, DE|de": null,
+  "Berlin-Total|de": [
+    52.4531463,
+    13.4570058
+  ],
+  "Meer, DE|de": [
+    52.2030202,
+    10.5015996
+  ],
+  "Steinhud, DE|de": null,
+  "Steinhud|de": null,
+  "Umland, DE|de": [
+    53.5836185,
+    9.982654
+  ],
+  "Elbracht, DE|de": [
+    51.8828731,
+    8.5074628
+  ],
+  "Vogelsberg, DE|de": [
+    50.4932938,
+    9.2400745
+  ],
+  "GTF, DE|de": [
+    49.6572034,
+    8.3565054
+  ],
+  "Kuchentour, DE|de": null,
+  "Kuchentour|de": null,
+  "Höhe, DE|de": [
+    50.9357551,
+    7.3219952
+  ],
+  "Heidetour, DE|de": null,
+  "Heidetour|de": null,
+  "Oberbayern, DE|de": [
+    48.2405833,
+    11.9699152
+  ],
+  "Testevent, DE|de": null,
+  "Testevent|de": null,
+  "RC-Zugvogel, DE|de": null,
+  "RC-Zugvogel|de": null,
+  "Seenland, DE|de": [
+    51.5272581,
+    14.0990497
+  ],
+  "Geest\", DE|de": [
+    52.7716057,
+    7.2215111
+  ],
+  "Uckerath, DE|de": [
+    50.7301781,
+    7.3693694
+  ],
+  "Hochsauerlandklassik, DE|de": null,
+  "Hochsauerlandklassik|de": null,
+  "TMT, DE|de": [
+    49.9437643,
+    11.5791463
+  ],
+  "Fahre, DE|de": [
+    52.7930495,
+    9.4083996
+  ],
+  "Talfahrt, DE|de": [
+    49.2780942,
+    8.0861535
+  ],
+  "Hunsrücks, DE|de": null,
+  "Hunsrücks|de": null,
+  "Zollernblick, DE|de": [
+    48.4331156,
+    8.8724772
+  ],
+  "Höllgrund, DE|de": [
+    51.625598,
+    10.9336153
+  ],
+  "Sandhasen, DE|de": [
+    53.5423318,
+    10.0675507
+  ],
+  "Vulkan, DE|de": [
+    52.7448237,
+    13.1514093
+  ],
+  "Hugenotten, DE|de": [
+    51.642442,
+    9.4527245
+  ],
+  "Ruhrschleife, DE|de": null,
+  "Ruhrschleife|de": null,
+  "Trenckmarathon, DE|de": null,
+  "Trenckmarathon|de": null,
+  "Neckarsulm, DE|de": [
+    49.1917156,
+    9.2249261
+  ],
+  "BRT, DE|de": [
+    48.7766485,
+    9.1600851
+  ],
+  "Ode, DE|de": [
+    52.6587236,
+    14.4558522
+  ],
+  "Luxembourg, DE|de": [
+    52.506983,
+    13.3510996
+  ],
+  "Odenwald, DE|de": [
+    49.6087639,
+    9.0443539
+  ],
+  "Franken, DE|de": [
+    50.0899241,
+    11.9227419
+  ],
+  "Werntal, DE|de": [
+    50.017693,
+    10.1629789
+  ],
+  "Johannesberg, DE|de": [
+    50.0259669,
+    9.1299873
+  ],
+  "Fulda, DE|de": [
+    50.5514658,
+    9.6762161
+  ],
+  "Diemel-Sauerland, DE|de": null,
+  "Diemel-Sauerland|de": null,
+  "Tecklenbu, DE|de": null,
+  "Tecklenbu|de": null,
+  "Barbecue, DE|de": [
+    49.7697002,
+    9.5422911
+  ],
+  "RadSportClub, DE|de": [
+    51.5532092,
+    6.7315079
+  ],
+  "YELLOW, DE|de": [
+    52.6811346,
+    13.5823193
+  ],
+  "Ravensburg, DE|de": [
+    47.7811014,
+    9.612468
+  ],
+  "Schweiz\", DE|de": [
+    48.0829584,
+    8.182261
+  ],
+  "Pfaffenwinkelradrundfahrt, DE|de": null,
+  "Pfaffenwinkelradrundfahrt|de": null,
+  "VfLStade, DE|de": null,
+  "VfLStade|de": null,
+  "VfL-Stade, DE|de": [
+    53.5761522,
+    9.4928247
+  ],
+  "Bädertour, DE|de": null,
+  "Bädertour|de": null,
+  "81/, DE|de": [
+    51.4516901,
+    7.3304645
+  ],
+  "Biberttaltour, DE|de": null,
+  "Biberttaltour|de": null,
+  "Main-Rhein-Main-Rundfahrt, DE|de": null,
+  "Main-Rhein-Main-Rundfahrt|de": null,
+  "Main-Rhein-Main, DE|de": [
+    50.0854957,
+    8.4450832
+  ],
+  "Dreiländermarathon, DE|de": null,
+  "Dreiländermarathon|de": null,
+  "Libori, DE|de": [
+    51.5148613,
+    7.5113126
+  ],
+  "Trophy, DE|de": [
+    48.1255637,
+    11.5611316
+  ],
+  "Göttingen, DE|de": [
+    51.5328328,
+    9.9351811
+  ],
+  "Ibbenbühren, DE|de": null,
+  "Ibbenbühren|de": null,
+  "HBK, DE|de": [
+    51.4613437,
+    7.0124842
+  ],
+  "Rhön300, DE|de": null,
+  "Rhön300|de": null,
+  "RHÖN300, DE|de": null,
+  "RHÖN300|de": null,
+  "OstSeenRoll, DE|de": null,
+  "OstSeenRoll|de": null,
+  "Münsterland, DE|de": [
+    51.7311652,
+    7.9846263
+  ],
+  "Holzland, DE|de": [
+    48.2258876,
+    12.2606332
+  ],
+  "Elbmarschen, DE|de": [
+    53.8583727,
+    9.5748286
+  ],
+  "Steigerwald, DE|de": [
+    49.7516807,
+    10.592308
+  ],
+  "Lippstädt, DE|de": [
+    51.6747074,
+    8.347194
+  ],
+  "Fischbrötchentour, DE|de": null,
+  "Fischbrötchentour|de": null,
+  "NUCLEARBAN, DE|de": null,
+  "NUCLEARBAN|de": null,
+  "Grenzerfahrung, DE|de": null,
+  "Grenzerfahrung|de": null,
+  "Wellenritt, DE|de": null,
+  "Wellenritt|de": null,
+  "Rockenberg, DE|de": [
+    50.4229178,
+    8.7446531
+  ],
+  "Nordtaunus, DE|de": null,
+  "Nordtaunus|de": null,
+  "Nordpfalzrundfahrt, DE|de": null,
+  "Nordpfalzrundfahrt|de": null,
+  "Jubiläumstour, DE|de": null,
+  "Jubiläumstour|de": null,
+  "Schweiz, DE|de": [
+    48.0829584,
+    8.182261
+  ],
+  "See, DE|de": [
+    51.2960043,
+    14.7840851
+  ],
+  "Deichklassiks, DE|de": null,
+  "Deichklassiks|de": null,
+  "Oderbruch, DE|de": [
+    51.772836,
+    10.5656965
+  ],
+  "Oderbruchradmarathon, DE|de": null,
+  "Oderbruchradmarathon|de": null,
+  "Rennrad-Spendenmarathon, DE|de": null,
+  "Rennrad-Spendenmarathon|de": null,
+  "Hannov, DE|de": [
+    51.5133768,
+    10.2618594
+  ],
+  "Hexenturm-Rundfahrt, DE|de": null,
+  "Hexenturm-Rundfahrt|de": null,
+  "Hexenturm-Radmarathon, DE|de": null,
+  "Hexenturm-Radmarathon|de": null,
+  "Bartenwetz, DE|de": null,
+  "Bartenwetz|de": null,
+  "Gäurundfahrt, DE|de": null,
+  "Gäurundfahrt|de": null,
+  "Zugspitz, DE|de": [
+    52.1027797,
+    8.0877317
+  ],
+  "Urstromtal, DE|de": [
+    52.1311888,
+    13.210377
+  ],
+  "Hinterland, DE|de": [
+    53.4080856,
+    7.1884898
+  ],
+  "Bergwinkel-Giro, DE|de": null,
+  "Bergwinkel-Giro|de": null,
+  "Weserrunde, DE|de": null,
+  "Weserrunde|de": null,
+  "Eichhörnchen, DE|de": [
+    50.8391915,
+    14.7273862
+  ],
+  "Wendelsteinrundfahrt, DE|de": null,
+  "Wendelsteinrundfahrt|de": null,
+  "Osthessen-Rundfahrt, DE|de": null,
+  "Osthessen-Rundfahrt|de": null,
+  "Kassel, DE|de": [
+    51.3157833,
+    9.4978479
+  ],
+  "Wiesenrundfahrt, DE|de": null,
+  "Wiesenrundfahrt|de": null,
+  "Voge, DE|de": [
+    50.8119166,
+    6.4794958
+  ],
+  "Wetterau, DE|de": [
+    50.3551,
+    8.8621
+  ],
+  "Wetterau-Taunus, DE|de": [
+    50.3608369,
+    8.8405986
+  ],
+  "Ride, DE|de": [
+    48.2674594,
+    7.7230973
+  ],
+  "Flughafenrunde, DE|de": null,
+  "Flughafenrunde|de": null,
+  "Int, DE|de": [
+    48.3539625,
+    11.7785925
+  ],
+  "Wurmberg, DE|de": [
+    48.8702888,
+    8.8201671
+  ],
+  "ReTOUR, DE|de": [
+    53.7118244,
+    7.8961948
+  ],
+  "Sand, DE|de": [
+    51.2453113,
+    9.259941
+  ],
+  "Sebamed, DE|de": [
+    50.2320204,
+    7.591076
+  ],
+  "Ober-Mörlen, DE|de": [
+    50.3582661,
+    8.6747014
+  ],
+  "Petersberg\", DE|de": [
+    49.2389365,
+    7.5657698
+  ],
+  "Eschede, DE|de": [
+    52.7396011,
+    10.2591201
+  ],
+  "Gravelday, DE|de": null,
+  "Gravelday|de": null,
+  "Stuttgart-Strasbourg-Stuttgart, DE|de": null,
+  "Stuttgart-Strasbourg-Stuttgart|de": null,
+  "Rundfahrt-Volksbank, DE|de": null,
+  "Rundfahrt-Volksbank|de": null,
+  "Hell, DE|de": [
+    50.3789363,
+    8.3183034
+  ],
+  "ARTOUR-Radmarathon, DE|de": null,
+  "ARTOUR-Radmarathon|de": null,
+  "Freiolsheim, DE|de": [
+    48.8460952,
+    8.3733608
+  ],
+  "Mähdreschertour, DE|de": null,
+  "Mähdreschertour|de": null,
+  "Kaperfahrt, DE|de": [
+    54.0764199,
+    10.7841731
+  ],
+  "97/, DE|de": [
+    51.4516901,
+    7.3304645
+  ],
+  "ARTOUR, DE|de": [
+    52.3208501,
+    10.228503
+  ],
+  "Wetterau-Vogelsberg-Rundfahrt, DE|de": null,
+  "Wetterau-Vogelsberg-Rundfahrt|de": null,
+  "Schottertour, DE|de": null,
+  "Schottertour|de": null,
+  "Rheinhessen-Gravelride, DE|de": null,
+  "Rheinhessen-Gravelride|de": null,
+  "Maifeld-Mosel, DE|de": [
+    50.3481804,
+    7.467943
+  ],
+  "Leeze, DE|de": [
+    51.9553312,
+    7.642207
+  ],
+  "Weser-Elbe, DE|de": [
+    53.6391784,
+    8.8318509
+  ],
+  "Berlin, DE|de": [
+    52.5173885,
+    13.3951309
+  ],
+  "Schlüssel, DE|de": [
+    48.341423,
+    7.8795425
+  ],
+  "Wadenkneif, DE|de": null,
+  "Wadenkneif|de": null,
+  "Herbst, DE|de": [
+    52.4879945,
+    13.3740815
+  ],
+  "Taunus, DE|de": [
+    50.2743305,
+    8.1445068
+  ],
+  "Taunustour, DE|de": null,
+  "Taunustour|de": null,
+  "RUNDFAHRT, DE|de": [
+    50.3730526,
+    8.7204554
+  ],
+  "Welt-Kult, DE|de": null,
+  "Welt-Kult|de": null,
+  "Regio, DE|de": [
+    51.5173864,
+    7.1439356
+  ],
+  "Südheide, DE|de": [
+    52.8166631,
+    10.1802827
+  ],
+  "Niemeier-BSV-Brevet, DE|de": null,
+  "Niemeier-BSV-Brevet|de": null,
+  "Aussicht, DE|de": [
+    50.0540332,
+    8.2178439
+  ],
+  "Röder-Elbe, DE|de": [
+    51.2972079,
+    13.2846245
+  ],
+  "Röder-Elbe-Radmarathon, DE|de": null,
+  "Röder-Elbe-Radmarathon|de": null,
+  "Weinstadt, DE|de": [
+    48.8085568,
+    9.3774813
+  ],
+  "Buchfinkenland\", DE|de": [
+    50.365041,
+    8.5230183
+  ],
+  "Spessart, DE|de": [
+    50.0246865,
+    9.3299243
+  ],
+  "Bernau, DE|de": [
+    52.6787254,
+    13.5881114
+  ],
+  "Windpark, DE|de": [
+    50.2570978,
+    7.1733723
+  ],
+  "Federweiße, DE|de": null,
+  "Federweiße|de": null,
+  "Minden-Lübbecke, DE|de": [
+    52.3214469,
+    8.711927
+  ],
+  "Berg, DE|de": [
+    50.2538917,
+    7.8130745
+  ],
+  "Weinlandtour, DE|de": null,
+  "Weinlandtour|de": null,
+  "Weinland--Thon, DE|de": null,
+  "Weinland--Thon|de": null,
+  "Countrytourenfahrt, DE|de": null,
+  "Countrytourenfahrt|de": null,
+  "Cycling, DE|de": [
+    52.5126926,
+    13.3898008
+  ],
+  "Nassau-Rundfahrt, DE|de": null,
+  "Nassau-Rundfahrt|de": null,
+  "Einheitscross, DE|de": null,
+  "Einheitscross|de": null,
+  "Egge, DE|de": [
+    51.6974797,
+    8.984876
+  ],
+  "MTB, DE|de": [
+    50.1527194,
+    9.8576405
+  ],
+  "Mountainbike, DE|de": [
+    51.930313,
+    8.887217
+  ],
+  "Die, DE|de": [
+    52.5138731,
+    13.3787346
+  ],
+  "Cross-Country-Tag, DE|de": null,
+  "Cross-Country-Tag|de": null,
+  "Kapellen, DE|de": [
+    51.4183564,
+    6.5938178
+  ],
+  "Vordertaunus, DE|de": [
+    50.2185192,
+    8.5555706
+  ],
+  "Hand, DE|de": [
+    50.9892835,
+    7.0901934
+  ],
+  "Holz, DE|de": [
+    51.0362225,
+    7.2303372
+  ],
+  "Lübeck, DE|de": [
+    53.866444,
+    10.684738
+  ],
+  "Kartoffeltour, DE|de": null,
+  "Kartoffeltour|de": null,
+  "Herbstmanöv, DE|de": null,
+  "Herbstmanöv|de": null
+}
