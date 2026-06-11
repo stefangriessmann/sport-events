@@ -37,7 +37,7 @@ SOURCES = [
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR = pathlib.Path(__file__).parent
-HTML_PATH  = SCRIPT_DIR.parent / "sport-events-chemnitz.html"
+HTML_PATH  = SCRIPT_DIR.parent / "index.html"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 
