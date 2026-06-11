@@ -115,6 +115,12 @@ def main():
             print("  No events returned – skipping to preserve existing data.")
             continue
 
+        MIN_EVENTS = {"SNAPSHOT": 10, "TRI_SNAPSHOT": 5, "LAUF_SNAPSHOT": 5}
+        min_required = MIN_EVENTS.get(js_var, 3)
+        if len(events) < min_required:
+            print(f"  Only {len(events)} events (need >={min_required}) – keeping existing data.")
+            continue
+
         html = update_snapshot(html, js_var, events)
         html = update_stand_date(html, sport_key, today_fmt)
         changed = True
