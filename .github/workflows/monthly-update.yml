@@ -44,7 +44,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Stage the HTML and geocache (if it exists)
-          git add sport-events-chemnitz.html
+          git add index.html
           git add scripts/geocache.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
