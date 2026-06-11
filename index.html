@@ -761,7 +761,7 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 
 <header>
   <h1 id="hdr-sport" style="display:flex;align-items:center;gap:8px"><svg width="32" height="32" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px;flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#F23A1F" stroke="#14110E" stroke-width="4"/><path d="M14,50 Q50,32 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><path d="M14,50 Q50,68 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><text x="50" y="64" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="52" letter-spacing="-2" fill="#FFC11F">B</text></svg>Bockwurst Sport Events Guide</h1>
-  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste, Kalender oder Merkliste. <span class="snap-badge">Stand 07.06.2026</span></p>
+  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste, Kalender oder Merkliste. <span class="snap-badge" id="snap-date">Stand …</span></p>
 </header>
 
 <div class="promo-zone">
@@ -1476,7 +1476,9 @@ function setSport(s, el) {
     lauf: '<svg class="ic"><use href="#ic-run"/></svg> Lauf Events',
     all:  '<svg class="ic"><use href="#ic-trophy"/></svg> Sport Events – Chemnitz'
   };
-  const subs  = {rad:"400 km um PLZ 09111 · Stand: 07.06.2026",swim:"Freiwasser Wettkämpfe · Stand: 10.06.2026",tri:"DTU-Kalender · Stand: 10.06.2026",lauf:"laufen.run · Stand: 10.06.2026",all:"Radsport · Schwimmen · Triathlon · Laufen · Stand: 10.06.2026"};
+  const _today=new Date(),_dd=String(_today.getDate()).padStart(2,'0'),_mm=String(_today.getMonth()+1).padStart(2,'0'),_yy=_today.getFullYear(),_standStr=_dd+'.'+_mm+'.'+_yy;
+  const subs  = {rad:"400 km um PLZ 09111 · Stand: "+_standStr,swim:"Freiwasser Wettkämpfe · Stand: "+_standStr,tri:"DTU-Kalender · Stand: "+_standStr,lauf:"laufen.run · Stand: "+_standStr,all:"Radsport · Schwimmen · Triathlon · Laufen · Stand: "+_standStr};
+  document.getElementById('snap-date').textContent='Stand '+_standStr;
   document.getElementById("hdr-sport").innerHTML = labels[s];
   document.getElementById("hdr-sub").innerHTML = subs[s] + ' <span class="snap-badge">Snapshot</span>';
   buildPills(); render();
@@ -1498,7 +1500,8 @@ function buildPills() {
 }
 
 function getVis() {
-  return ALL.filter(e=>activeTypes.has(e.art)&&eventKm(e)<=maxDist&&(!selMonth||e.date_iso.includes("-"+selMonth+"-")));
+  const _td=new Date().toISOString().slice(0,10);
+  return ALL.filter(e=>activeTypes.has(e.art)&&eventKm(e)<=maxDist&&e.date_iso>=_td&&(!selMonth||e.date_iso.includes("-"+selMonth+"-")));
 }
 function srt(arr) {
   return [...arr].sort((a,b)=>sortBy==="date"?a.date_iso.localeCompare(b.date_iso):a.km-b.km);
