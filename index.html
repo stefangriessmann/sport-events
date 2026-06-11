@@ -856,7 +856,7 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
     <div class="filter-group">
       <label>Max. Entfernung:</label>
       <input type="range" id="dist-f" min="20" max="800" step="20" value="800">
-      <span id="dist-val">400 km</span>
+      <span id="dist-val">800 km</span>
     </div>
     <div class="filter-group">
       <label>Monat:</label>
@@ -1868,6 +1868,9 @@ function resetPlz() {
   document.getElementById("plz-f").value = "";
   document.getElementById("plz-status").textContent = "";
   userLat = 50.8333; userLon = 12.9167; // zurück auf Chemnitz
+  maxDist = 800;
+  document.getElementById("dist-f").value = 800;
+  document.getElementById("dist-val").textContent = "800 km";
   render();
 }
 
