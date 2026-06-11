@@ -274,22 +274,7 @@ tr:hover td { background: rgba(255,193,31,.12); }
 </style>
 
 <style>
-/* bockwurst-theme — injected last, wins all cascades */
-/* ============================================================
-   BOCKWURST · ALL-IN-ONE THEME
-   ------------------------------------------------------------
-   EINE Datei, die alles mitbringt: Fonts, Farben, Typografie,
-   Komponenten und die Promo-Bausteine. Lädt die Schriften selbst
-   (per @import) — Cowork kann sie also nicht „vergessen".
-
-   EINBINDEN — als ALLERLETZTES Stylesheet im <head>, damit es
-   die Cowork-Standardstile überschreibt:
-
-     <link rel="stylesheet" href="styles/bockwurst-theme.css">
-
-   (Wenn du diese Datei nutzt, brauchst du brand.css NICHT
-    zusätzlich — hier ist alles drin.)
-   ============================================================ */
+/* bockwurst-theme — inline, injected last, wins all cascades */
 
 @import url('https://fonts.bunny.net/css2?family=archivo-black:400&family=familjen-grotesk:400,500,600,700&family=jetbrains-mono:400,500&display=swap');
 
@@ -638,6 +623,54 @@ aside.page-sidebar { display: none !important; }
   border-radius: 50%; margin-right: 5px; flex-shrink: 0;
   vertical-align: middle;
 }
+
+/* ============================================================
+   LESBARKEIT v2 — global größer & kontrastreicher
+   (zuletzt im <style> → gewinnt alle Kaskaden)
+   ============================================================ */
+/* 1) Globale Basis anheben: skaliert ALLES in rem proportional */
+html { font-size: 18px; }
+
+/* 2) Header */
+#hdr-sub, header p { font-size: .9rem !important; color: rgba(255,248,232,.78) !important; }
+
+/* 3) Tabs + Sport-Buttons */
+.tab { font-size: .82rem !important; }
+.sport-btn { font-size: .92rem !important; padding: 7px 16px !important; }
+
+/* 4) Stat-Karten */
+.stat-label { font-size: .78rem !important; }
+.stat-val.sm { font-size: 1.05rem !important; }
+
+/* 5) Filter-Pills — waren nur 45% sichtbar */
+.pill { font-size: .86rem !important; opacity: .82 !important; padding: 6px 13px !important; }
+.pill.active, .pill:hover { opacity: 1 !important; }
+.pill-dot { width: 10px; height: 10px; }
+
+/* 6) Filter-Labels + Eingaben */
+label { font-size: .82rem !important; }
+select, input[type=range], #plz-f, #dist-val { font-size: .95rem !important; }
+
+/* 7) Tabelle — Hauptbereich, jetzt deutlich größer & dunkler */
+table { font-size: 1rem !important; }
+th { font-size: .8rem !important; }
+td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
+.event-link, .card-title a { font-size: 1.05rem !important; font-weight: 700 !important; }
+.verein-sm { font-size: .9rem !important; color: var(--bw-ink-soft) !important; }
+.dist-num { font-size: .88rem !important; color: var(--bw-ink) !important; }
+.km-tag { font-size: .82rem !important; color: var(--bw-ink) !important; }
+.wday { width: 26px !important; height: 26px !important; line-height: 26px !important; font-size: .76rem !important; }
+
+/* 8) Badges + Kalender */
+.badge, .serie-badge, .snap-badge { font-size: .8rem !important; }
+.country-badge { font-size: .98rem !important; opacity: .9 !important; }
+.month-header { font-size: 1.2rem !important; }
+.card-title { font-size: 1rem !important; }
+.section-heading h2 { font-size: 1.3rem !important; }
+
+/* 9) Hinweise / Leerzustände */
+.src-note { font-size: .8rem !important; }
+.empty-state, .no-results { font-size: 1rem !important; }
 </style>
 <script data-goatcounter="https://bockwurst-events.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
@@ -758,7 +791,7 @@ aside.page-sidebar { display: none !important; }
   <div class="yt-side" id="yt-side-card">
     <div class="yt-vthumb" id="yt-thumb">
       <!-- 2-Klick: Thumbnail nur nach Nutzer-Klick laden (DSGVO) -->
-      <img class="yt-thumb-img" id="yt-thumb-img" src="" alt="" style="display:none">
+      <img class="yt-thumb-img" id="yt-thumb-img" alt="" style="display:none">
       <span class="yt-new-badge" id="yt-new-badge" style="display:none">● Neu</span>
       <div class="yt-playbtn" id="yt-playbtn" onclick="loadYtPreview()" style="cursor:pointer" title="Video-Vorschau laden">
         <span class="tri"></span>
@@ -1791,7 +1824,7 @@ function loadYtPreview() {
       Du hast das Recht auf Auskunft, Berichtigung und Löschung deiner Daten
       (Art. 15–17 DSGVO). Da auf dieser Seite keine personenbezogenen Daten
       aktiv erhoben oder gespeichert werden, gibt es nichts zu löschen.
-      Bei Fragen: stefan.griessmann@web.de
+      Bei Fragen: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4a393e2f2c2b24642d38232f3939272b24240a3d2f28642e2f">[email&#160;protected]</a>
     </p>
   </div>
 </div>
@@ -1804,7 +1837,7 @@ function loadYtPreview() {
     © Stefan Grießmann · Bockwurst Sport Events Guide · Kein Tracking · Keine Cookies
   </span>
 </div>
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function openLegal(id) {
   document.getElementById('modal-' + id).classList.add('open');
   document.body.style.overflow = 'hidden';
