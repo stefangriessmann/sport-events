@@ -23,15 +23,14 @@ import pathlib
 from datetime import date
 
 # ── Source registry ────────────────────────────────────────────────────────────
-# Each entry: (module_path, js_var_name, sport_key)
+# Each entry: (module_path_or_list, js_var_name, sport_key)
+# module_path can be a string or a list of strings – multiple scrapers are
+# merged and deduplicated (by url, then title+date_iso) into one JS variable.
 # sport_key matches the setSport() keys in the HTML ('rad', 'tri', 'lauf', 'swim')
-# Add new countries here:
-#   ("scrapers.aut_triathlon", "AUT_TRI_SNAPSHOT", "tri"),
-#   ("scrapers.che_radnet",    "CHE_SNAPSHOT",     "rad"),
 SOURCES = [
-    ("scrapers.de_radnet", "SNAPSHOT",      "rad"),
-    ("scrapers.de_dtu",    "TRI_SNAPSHOT",  "tri"),
-    ("scrapers.de_laufen", "LAUF_SNAPSHOT", "lauf"),
+    (["scrapers.de_radnet", "scrapers.de_radsport_events"], "SNAPSHOT", "rad"),
+    ("scrapers.de_triathlonde", "TRI_SNAPSHOT",  "tri"),
+    ("scrapers.de_laufen",      "LAUF_SNAPSHOT", "lauf"),
     # SWIM_SNAPSHOT is manually curated – not auto-updated
 ]
 
@@ -100,27 +99,53 @@ def main():
     today_fmt = date.today().strftime("%d.%m.%Y")
 
     changed = False
+    import importlib
+
     for module_path, js_var, sport_key in SOURCES:
-        print(f"\n── {module_path} → {js_var} ──────────────────")
-        try:
-            import importlib
-            mod = importlib.import_module(module_path)
-            events = mod.fetch(args.year)
-        except Exception as e:
-            print(f"  SCRAPER ERROR: {e}")
-            print("  Skipping this source (keeping existing snapshot).")
-            continue
+        # module_path may be a single string or a list of strings
+        modules = [module_path] if isinstance(module_path, str) else module_path
+        print(f"\n── {', '.join(modules)} → {js_var} ──────────────────")
+
+        all_events: list[dict] = []
+        seen_urls: set[str] = set()
+        seen_titledate: set[tuple] = set()
+
+        for mp in modules:
+            try:
+                mod = importlib.import_module(mp)
+                batch = mod.fetch(args.year)
+                print(f"  {mp}: {len(batch)} events")
+            except Exception as e:
+                print(f"  SCRAPER ERROR ({mp}): {e}")
+                batch = []
+
+            for ev in batch:
+                # Deduplicate: prefer url, fall back to (titel, date_iso)
+                key_url = ev.get("url", "")
+                key_td  = (ev.get("titel", ""), ev.get("date_iso", ""))
+                if key_url and key_url in seen_urls:
+                    continue
+                if key_td in seen_titledate:
+                    continue
+                if key_url:
+                    seen_urls.add(key_url)
+                seen_titledate.add(key_td)
+                all_events.append(ev)
+
+        events = sorted(all_events, key=lambda e: e.get("date_iso", ""))
 
         if not events:
             print("  No events returned – skipping to preserve existing data.")
             continue
 
-        MIN_EVENTS = {"SNAPSHOT": 10, "TRI_SNAPSHOT": 5, "LAUF_SNAPSHOT": 5}
-        min_required = MIN_EVENTS.get(js_var, 3)
+        # With all-Germany scraping we expect many more events
+        MIN_EVENTS = {"SNAPSHOT": 50, "TRI_SNAPSHOT": 20, "LAUF_SNAPSHOT": 20}
+        min_required = MIN_EVENTS.get(js_var, 10)
         if len(events) < min_required:
             print(f"  Only {len(events)} events (need >={min_required}) – keeping existing data.")
             continue
 
+        print(f"  Merged total: {len(events)} events")
         html = update_snapshot(html, js_var, events)
         html = update_stand_date(html, sport_key, today_fmt)
         changed = True
@@ -133,6 +158,7 @@ def main():
         print(f"\n[dry-run] Would write {len(html)} chars to {HTML_PATH}")
         return
 
+    html = update_static_badge_date(html, today_fmt)
     HTML_PATH.write_text(html, encoding="utf-8")
     print(f"\nWrote updated HTML to {HTML_PATH}")
     print(f"Stand: {today_fmt}")
@@ -140,3 +166,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def update_static_badge_date(html: str, new_date: str) -> str:
+    """Update the hardcoded fallback date in the snap-badge span (for non-JS visitors)."""
+    pattern = r'(<span class="snap-badge" id="snap-date">Stand )[^<]+(</span>)'
+    result, n = re.subn(pattern, rf'\g<1>{new_date}\g<2>', html)
+    if n:
+        print(f"  Updated static snap-badge to Stand {new_date}")
+    return result
