@@ -1,5 +1,26 @@
 [
   {
+    "art": "Sonstiges",
+    "datum": "So, 14.06.2026",
+    "datum_end": null,
+    "wochentag": "Sonntag",
+    "date_iso": "2026-06-14",
+    "date_iso_end": null,
+    "km": null,
+    "lat": null,
+    "lon": null,
+    "titel": "7 Türme Triathlon",
+    "ort": "Lübeck",
+    "strecken": "",
+    "verein": "",
+    "lv": "",
+    "country": "DE",
+    "url": "https://7-tuerme-triathlon.de",
+    "serie": "",
+    "_snapshot": "SNAPSHOT",
+    "_issue": 2
+  },
+  {
     "art": "Test",
     "datum": "Mi, 01.07.2026",
     "datum_end": null,
