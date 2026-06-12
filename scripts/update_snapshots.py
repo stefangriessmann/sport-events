@@ -184,14 +184,14 @@ def main():
             return []
         js = m.group(1)
         try:
-            known_keys = [
-                "art","datum","datum_end","wochentag","date_iso","date_iso_end",
-                "km","lat","lon","titel","ort","strecken","verein","lv",
-                "country","url","serie",
-            ]
-            json_str = js
-            for k in known_keys:
-                json_str = json_str.replace(f"{k}:", f'"{k}":')
+            # 1. Quote unquoted object keys (only after { or ,)
+            json_str = re.sub(
+                r'(?<=[{,])\s*([a-zA-Z_]\w*)\s*:',
+                lambda x: f'"{x.group(1)}":',
+                js
+            )
+            # 2. Remove trailing commas before } or ] (JS allows, JSON doesn't)
+            json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
             return json.loads(json_str)
         except Exception as e:
             print(f"  WARNING: Konnte {var_name} nicht parsen: {e}")
