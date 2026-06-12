@@ -54,7 +54,8 @@ header p { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: r
 .filters { display: flex; gap: 10px; padding: 0 20px 12px; flex-wrap: wrap; align-items: center; }
 .filter-group { display: flex; align-items: center; gap: 5px; }
 label { font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: #3C342D; white-space: nowrap; letter-spacing: .04em; text-transform: uppercase; }
-select, input[type=range] { background: white; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 7px; font-size: .8rem; }
+select, input[type=range] { background: #FFF8EE; color: var(--bw-ink); border: 1.5px solid var(--bw-ink); border-radius: 999px; padding: 5px 11px; font-size: .8rem; font-family: 'JetBrains Mono', monospace; }
+input[type=date] { background: #FFF8EE !important; color: var(--bw-ink) !important; border: 1.5px solid var(--bw-ink) !important; border-radius: 999px !important; padding: 5px 11px !important; font-family: 'JetBrains Mono', monospace !important; }
 
 /* Table */
 .table-wrap { padding: 0 20px 28px; overflow-x: auto; }
@@ -85,11 +86,11 @@ tr:hover td { background: rgba(255,193,31,.12); }
 .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: .69rem; font-weight: 700; white-space: nowrap; }
 .event-link { font-family: 'Familjen Grotesk', sans-serif; color: #14110E; text-decoration: none; font-weight: 700; }
 .event-link:hover { color: #F23A1F; }
-.wday { display: inline-block; width: 22px; height: 22px; border-radius: 4px; font-size: .67rem; font-weight: 700; text-align: center; line-height: 22px; background: #e2e8f0; color: #64748b; margin-right: 4px; }
-.wday.we { background: #dcfce7; color: #16a34a; }
-.verein-sm { color: #64748b; font-size: .78rem; }
+.wday { display: inline-block; width: 22px; height: 22px; border-radius: 6px; font-size: .67rem; font-weight: 700; text-align: center; line-height: 22px; background: #EFE6D2; color: #3C342D; margin-right: 4px; }
+.wday.we { background: var(--bw-mustard); color: var(--bw-ink); }
+.verein-sm { color: #6B6052; font-size: .78rem; }
 .no-results { text-align: center; padding: 44px; color: #3C342D; font-size: .88rem; font-family: 'Familjen Grotesk',sans-serif; background: #FFF1D6; border-radius: 12px; margin: 0 0 20px; border: 2.5px solid #14110E; display: none; }
-.snap-badge { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 4px; padding: 1px 6px; font-size: .68rem; font-weight: 600; margin-left: 6px; }
+.snap-badge { display: inline-block; background: var(--bw-mustard); color: var(--bw-ink); border-radius: 999px; padding: 1px 8px; font-size: .68rem; font-weight: 700; margin-left: 6px; }
 
 
 /* Sport selector */
@@ -97,7 +98,7 @@ tr:hover td { background: rgba(255,193,31,.12); }
 .sport-btn { font-family:'Familjen Grotesk',sans-serif; font-weight:700; padding:6px 15px; border-radius:999px; border:2px solid #14110E; font-size:.8rem; cursor:pointer; background:#FFF8E8; color:#14110E; transition:all .15s; white-space:nowrap; }
 .sport-btn:hover { background:#FFF1D6; }
 .sport-btn.active { background:#14110E; color:#FFC11F; border-color:#14110E; }
-.serie-badge { display:inline-block; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:4px; padding:1px 6px; font-size:.67rem; font-weight:600; margin-left:4px; }
+.serie-badge { display:inline-block; background:#FFEFC4; color:#B26A00; border:1px solid #E5A50A; border-radius:999px; padding:1px 8px; font-size:.67rem; font-weight:700; margin-left:4px; }
 .country-badge { display:inline-block; font-size:.78rem; margin-left:3px; vertical-align:middle; opacity:.75; }
 
 @media (max-width: 600px) {
@@ -671,16 +672,16 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 .fb-body input, .fb-body select, .fb-body textarea { width:100%; border:1.5px solid #d1c9bc; border-radius:8px; padding:8px 10px; font-size:.88rem; font-family:'Familjen Grotesk',sans-serif; box-sizing:border-box; background:#FFF8EE; }
 .fb-body textarea { min-height:72px; resize:vertical; }
 .fb-chip-row { display:flex; gap:6px; flex-wrap:wrap; }
-.fb-chip { border:1.5px solid #d1c9bc; background:#FFF8EE; border-radius:20px; padding:5px 12px; font-size:.8rem; cursor:pointer; font-family:'Familjen Grotesk',sans-serif; }
+.fb-chip { border:1.5px solid #d1c9bc; background:#FFF8EE; border-radius:999px; padding:5px 12px; font-size:.8rem; cursor:pointer; font-family:'Familjen Grotesk',sans-serif; }
 .fb-chip.sel { background:var(--bw-ink); color:var(--bw-cream); border-color:var(--bw-ink); }
 .fb-foot { padding:0 20px 18px; display:flex; gap:10px; justify-content:flex-end; }
-.fb-submit { background:var(--bw-tomato); color:#fff; border:2px solid var(--bw-ink); border-radius:20px; padding:8px 20px; font-size:.88rem; font-weight:700; cursor:pointer; }
-.fb-cancel { background:none; border:none; color:#94a3b8; font-size:.88rem; cursor:pointer; padding:8px; }
+.fb-submit { background:var(--bw-tomato); color:#fff; border:2px solid var(--bw-ink); border-radius:999px; padding:8px 20px; font-size:.88rem; font-weight:700; cursor:pointer; font-family:'Familjen Grotesk',sans-serif; }
+.fb-cancel { background:none; border:none; color:#6B6052; font-size:.88rem; cursor:pointer; padding:8px; font-family:'Familjen Grotesk',sans-serif; }
 .fb-success { text-align:center; padding:32px 20px; font-size:.95rem; color:#3C342D; }
 .fb-success .fb-ok-icon { font-size:2.5rem; margin-bottom:10px; }
 .report-btn { background:none; border:none; cursor:pointer; color:#cbd5e1; font-size:.8rem; padding:2px 5px; line-height:1; transition:color .15s; }
 .report-btn:hover { color:var(--bw-tomato); }
-.suggest-btn { background:var(--bw-ink); color:var(--bw-cream); border:2px solid var(--bw-ink); border-radius:20px; padding:6px 14px; font-size:.8rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.suggest-btn { background:var(--bw-ink); color:var(--bw-cream); border:2px solid var(--bw-ink); border-radius:999px; padding:6px 14px; font-size:.8rem; font-weight:700; font-family:'Familjen Grotesk',sans-serif; cursor:pointer; white-space:nowrap; }
 .suggest-btn:hover { background:#2a2520; }
 </style>
 <script data-goatcounter="https://bockwurst-events.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -860,14 +861,14 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
   <div class="filters">
     <div class="filter-group">
       <label>Von:</label>
-      <input type="date" id="date-from" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateFrom=this.value;render()">
+      <input type="date" id="date-from" style="font-size:.8rem" onchange="selDateFrom=this.value;render()">
     </div>
     <div class="filter-group">
       <label>Bis:</label>
-      <input type="date" id="date-to" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateTo=this.value;render()">
+      <input type="date" id="date-to" style="font-size:.8rem" onchange="selDateTo=this.value;render()">
     </div>
     <div class="filter-group">
-      <button id="reset-all-btn" onclick="resetAllFilters()" style="background:var(--bw-tomato);color:#fff;border:2px solid var(--bw-ink);border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;letter-spacing:.03em;white-space:nowrap">↺ Alle Filter zurücksetzen</button>
+      <button id="reset-all-btn" onclick="resetAllFilters()" style="background:var(--bw-tomato);color:#fff;border:2px solid var(--bw-ink);border-radius:999px;padding:6px 14px;font-size:.8rem;font-weight:700;font-family:'Familjen Grotesk',sans-serif;cursor:pointer;letter-spacing:.03em;white-space:nowrap">↺ Alle Filter zurücksetzen</button>
     </div>
     <div class="filter-group">
       <button class="suggest-btn" onclick="openSuggest()">+ Event vorschlagen</button>
@@ -2009,28 +2010,30 @@ const LAUF_SNAPSHOT = [
 
 const MONTHS = ["","Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 
+// Typ-Farben — Bockwurst-Palette (Ocher/Tomate/Rost/Oliv/Pickle/See/Tinte),
+// keine Tailwind-Regenbogenfarben mehr. c = Punkt/Text, bg = warmer Tint.
 const TYPE_CFG = {
   // Radsport
-  "RTF":                       {c:"#2563eb",bg:"#dbeafe",l:"RTF",           i:"ic-route"},
-  "Marathon":                  {c:"#dc2626",bg:"#fee2e2",l:"Radmarathon",   i:"ic-trophy"},
-  "Radmarathon-Cup":           {c:"#ea580c",bg:"#ffedd5",l:"RM-Cup",        i:"ic-medal"},
-  "Radmarathon-Cup Deutschland":{c:"#ea580c",bg:"#ffedd5",l:"RMCD",         i:"ic-medal"},
-  "CTF":                       {c:"#7c3aed",bg:"#ede9fe",l:"CTF",           i:"ic-mountain"},
-  "Gravelride":                {c:"#059669",bg:"#d1fae5",l:"Gravel",        i:"ic-mountain"},
-  "Brevet":                    {c:"#4f46e5",bg:"#e0e7ff",l:"Brevet",        i:"ic-route"},
-  "Volksradfahren":            {c:"#0891b2",bg:"#cffafe",l:"Volksradfahren",i:"ic-people"},
+  "RTF":                       {c:"#B26A00",bg:"#FFEFC4",l:"RTF",           i:"ic-route"},
+  "Marathon":                  {c:"#C2280F",bg:"#FFE0D6",l:"Radmarathon",   i:"ic-trophy"},
+  "Radmarathon-Cup":           {c:"#9A3412",bg:"#FBE4D2",l:"RM-Cup",        i:"ic-medal"},
+  "Radmarathon-Cup Deutschland":{c:"#9A3412",bg:"#FBE4D2",l:"RMCD",         i:"ic-medal"},
+  "CTF":                       {c:"#5C9520",bg:"#E8F3D6",l:"CTF",           i:"ic-mountain"},
+  "Gravelride":                {c:"#466E18",bg:"#E2EDCC",l:"Gravel",        i:"ic-mountain"},
+  "Brevet":                    {c:"#136487",bg:"#D7EAF2",l:"Brevet",        i:"ic-route"},
+  "Volksradfahren":            {c:"#8A6A2E",bg:"#F2E7CC",l:"Volksradfahren",i:"ic-people"},
   // Schwimmen
-  "Freiwasser":                {c:"#0284c7",bg:"#e0f2fe",l:"Freiwasser",    i:"ic-waves"},
-  "Swim & Run":                {c:"#0e7490",bg:"#cffafe",l:"Swim & Run",    i:"ic-waves"},
+  "Freiwasser":                {c:"#1E7FA8",bg:"#D7EAF2",l:"Freiwasser",    i:"ic-waves"},
+  "Swim & Run":                {c:"#136487",bg:"#CFE3EC",l:"Swim & Run",    i:"ic-waves"},
   // Triathlon
-  "Triathlon":                 {c:"#ea580c",bg:"#fff7ed",l:"Triathlon",     i:"ic-tri"},
-  "Duathlon":                  {c:"#c2410c",bg:"#ffedd5",l:"Duathlon",      i:"ic-tri"},
+  "Triathlon":                 {c:"#C2280F",bg:"#FFE0D6",l:"Triathlon",     i:"ic-tri"},
+  "Duathlon":                  {c:"#9A3412",bg:"#FBE4D2",l:"Duathlon",      i:"ic-tri"},
   // Laufen
-  "Laufen":                    {c:"#16a34a",bg:"#f0fdf4",l:"Laufen",        i:"ic-run"},
-  "Trail":                     {c:"#15803d",bg:"#dcfce7",l:"Trail",         i:"ic-mountain"},
-  "Ultra":                     {c:"#365314",bg:"#f7fee7",l:"Ultra",         i:"ic-run"},
+  "Laufen":                    {c:"#5C9520",bg:"#E8F3D6",l:"Laufen",        i:"ic-run"},
+  "Trail":                     {c:"#466E18",bg:"#E2EDCC",l:"Trail",         i:"ic-mountain"},
+  "Ultra":                     {c:"#3C342D",bg:"#ECE4D5",l:"Ultra",         i:"ic-run"},
 };
-const DEF_CFG = {c:"#475569",bg:"#f1f5f9",l:"Sonstige",i:"ic-dots"};
+const DEF_CFG = {c:"#3C342D",bg:"#ECE4D5",l:"Sonstige",i:"ic-dots"};
 const g = art => TYPE_CFG[art] || DEF_CFG;
 
 // ── Distance helpers ──────────────────────────────────────────────────────────
