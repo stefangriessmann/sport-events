@@ -1790,7 +1790,7 @@ function renderListe(v) {
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><span class="badge" style="background:${cfg.bg};color:${cfg.c}"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span></td>
-      <td><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}</td>
+      <td><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}${e.datum_end?`<span style="color:#94a3b8;font-size:.75rem"> – ${e.datum_end}</span>`:""}</td>
       <td><div class="dist-bar"><div class="dist-fill" style="width:${dp}px"></div><span class="dist-num">~${ekm} km</span></div></td>
       <td><a class="event-link" href="${e.url}" target="_blank">${e.titel}</a>${flag?`<span class="country-badge">${flag}</span>`:""} ${e.serie?`<span class="serie-badge">${e.serie}</span>`:""}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
@@ -1954,7 +1954,7 @@ function openSuggest() {
   document.querySelectorAll("#fb-sport-chips .fb-chip").forEach(c => c.classList.remove("sel"));
   document.getElementById("fb-subtype-row").style.display = "none";
   document.getElementById("fb-subtype-chips").innerHTML = "";
-  ["fb-suggest-name","fb-datum","fb-ort","fb-link"].forEach(id => document.getElementById(id).value = "");
+  ["fb-suggest-name","fb-datum","fb-datum-end","fb-ort","fb-link"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fb-content").style.display = "block";
   document.getElementById("fb-success").style.display = "none";
   document.getElementById("fb-overlay").classList.remove("hidden");
@@ -2006,7 +2006,7 @@ async function submitFb() {
     "event-url": _fbEventUrl,
     "problem-typ": _fbChip,
     "sport": _fbSport,
-    "datum": document.getElementById("fb-datum") ? document.getElementById("fb-datum").value : "",
+    "datum": (document.getElementById("fb-datum").value || "") + (document.getElementById("fb-datum-end").value ? " bis " + document.getElementById("fb-datum-end").value : ""),
     "ort": document.getElementById("fb-ort") ? document.getElementById("fb-ort").value : "",
     "link": document.getElementById("fb-link") ? document.getElementById("fb-link").value : "",
     "filter-plz": plzLabel || "–",
@@ -2295,9 +2295,15 @@ document.addEventListener("DOMContentLoaded",function(){
             <label>Event-Name</label>
             <input type="text" id="fb-suggest-name" placeholder="z.B. Muster-RTF 2026">
           </div>
-          <div style="margin-top:10px">
-            <label>Datum</label>
-            <input type="date" id="fb-datum">
+          <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label>Datum von</label>
+              <input type="date" id="fb-datum">
+            </div>
+            <div>
+              <label>Bis (optional)</label>
+              <input type="date" id="fb-datum-end">
+            </div>
           </div>
           <div style="margin-top:10px">
             <label>Ort / Region</label>
