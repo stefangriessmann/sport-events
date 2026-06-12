@@ -384,30 +384,22 @@ a { color: var(--bw-tomato); text-decoration-thickness: 2px; text-underline-offs
 /* ============================================================
    6POINTS · HERO BANNER   (Empfehlung)
    ============================================================ */
-.sp-hero { position:relative; display:grid; grid-template-columns:1.15fr 1fr; background:var(--bw-ink); color:var(--bw-cream);
+.sp-hero { position:relative; display:grid; grid-template-columns:1.25fr 1fr; background:var(--bw-ink); color:var(--bw-cream);
   border-radius:var(--bw-radius-lg); overflow:hidden; border:var(--bw-border); }
-.sp-hero__l { padding:26px 30px; position:relative; z-index:2; align-self:center; }
+.sp-hero__l { padding:28px 36px; position:relative; z-index:2; }
 .sp-amb { display:inline-flex; align-items:center; gap:7px; background:var(--bw-mustard); color:var(--bw-ink);
   font-family:var(--bw-font-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; padding:5px 10px; border-radius:var(--bw-radius-pill); }
 .sp-hero h3 { font-family:var(--bw-font-display); font-size:38px; line-height:.85; letter-spacing:-.04em; text-transform:uppercase; margin:14px 0 0; color:var(--bw-cream); }
 .sp-hero h3 .sea { color:var(--sp-sun); }
-.sp-hero .sp-sub { font-size:14px; line-height:1.45; opacity:.85; margin-top:10px; margin-bottom:4px; max-width:340px; }
-/* Foto rechts — ausgewogene zweite Spalte */
-.sp-hero__r { position:relative; min-height:240px; }
-.sp-hero__photo { position:absolute; inset:0; background-size:cover; background-position:56% 32%;
+.sp-hero .sp-sub { font-size:14px; line-height:1.45; opacity:.8; margin-top:10px; max-width:340px; }
+.sp-hero__r { position:relative; min-height:220px; }
+.sp-hero__photo { position:absolute; inset:0; background-size:cover; background-position:60% center;
   background-color:var(--sp-sea-dark); background-image:repeating-linear-gradient(135deg,var(--sp-sea-dark) 0 16px,#1a577a 16px 17px); }
-/* Verlauf nur an der Naht (links der Foto-Spalte), damit Stefan rechts voll sichtbar bleibt */
-.sp-hero__grad { position:absolute; inset:0; z-index:1; background:
-  linear-gradient(90deg, var(--bw-ink) 0%, rgba(20,17,14,.32) 18%, rgba(20,17,14,0) 46%); }
+.sp-hero__grad { position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,var(--bw-ink) 0%,rgba(20,17,14,0) 55%); }
 .sp-cta { display:inline-flex; align-items:center; gap:10px; margin-top:18px; background:var(--sp-sun); color:var(--bw-ink);
   font-family:var(--bw-font-display); font-size:14px; letter-spacing:.06em; text-transform:uppercase; padding:13px 20px;
   border-radius:var(--bw-radius-pill); text-decoration:none; border:2.5px solid var(--bw-ink); box-shadow:0 4px 0 var(--bw-ink); }
-@media (max-width:760px){
-  .sp-hero{ grid-template-columns:1fr; }
-  .sp-hero__r{ min-height:170px; order:-1; }
-  .sp-hero__photo{ background-position:56% 26%; }
-  .sp-hero__grad{ background:linear-gradient(180deg, rgba(20,17,14,0) 45%, rgba(20,17,14,.55) 100%); }
-}
+@media (max-width:640px){ .sp-hero{grid-template-columns:1fr;} .sp-hero__r{min-height:140px;order:-1;} }
 
 /* Countdown */
 .promo-cd-label { font-family:var(--bw-font-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--sp-sun); margin-top:14px; }
@@ -444,26 +436,10 @@ a { color: var(--bw-tomato); text-decoration-thickness: 2px; text-underline-offs
   border-bottom: 2.5px solid #14110E;
 }
 .promo-zone .sp-hero { height: 100%; min-height: 200px; }
-.promo-zone .sp-hero h3 { font-size: 32px; }
-@media (max-width: 1100px) {
-  .promo-zone { grid-template-columns: 1fr; }
-}
-/* Tablet-Bereich: YT-Karte als horizontaler Streifen statt riesigem Vollbreit-Thumbnail */
-@media (max-width: 1100px) and (min-width: 620px) {
-  .promo-zone .yt-side {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
-    gap: 12px 18px;
-  }
-  .promo-zone .yt-vthumb { grid-row: 1 / span 2; grid-column: 1; align-self: stretch; min-height: 180px; }
-  .promo-zone .yt-vbody { grid-column: 2; align-self: end; }
-  .promo-zone .yt-btn { grid-column: 2; align-self: start; width: fit-content; }
-}
+.promo-zone .sp-hero h3 { font-size: 30px; }
 @media (max-width: 760px) {
-  .promo-zone { padding: 14px 16px; }
-  .promo-zone .sp-hero__r { min-height: 150px; }
+  .promo-zone { grid-template-columns: 1fr; padding: 14px 16px; }
+  .promo-zone .sp-hero__r { min-height: 140px; }
 }
 
 /* ── yt-side: YouTube video-preview card ── */
@@ -695,6 +671,30 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 /* 9) Hinweise / Leerzustände */
 .src-note { font-size: .8rem !important; }
 .empty-state, .no-results { font-size: 1rem !important; }
+
+/* Feedback Modal */
+.fb-overlay { position:fixed; inset:0; background:rgba(20,17,14,.55); z-index:9000; display:flex; align-items:center; justify-content:center; padding:16px; }
+.fb-overlay.hidden { display:none; }
+.fb-box { background:#fff; border:2.5px solid var(--bw-ink); border-radius:16px; width:100%; max-width:480px; box-shadow:0 8px 0 var(--bw-ink); overflow:hidden; }
+.fb-head { background:var(--bw-ink); color:var(--bw-cream); padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
+.fb-head h4 { font-family:'Archivo Black',sans-serif; font-size:1rem; margin:0; letter-spacing:.02em; }
+.fb-close { background:none; border:none; color:var(--bw-cream); font-size:1.1rem; cursor:pointer; padding:0 4px; line-height:1; }
+.fb-body { padding:20px; display:flex; flex-direction:column; gap:13px; }
+.fb-body label { font-size:.78rem; font-weight:600; color:#3C342D; letter-spacing:.04em; text-transform:uppercase; display:block; margin-bottom:3px; }
+.fb-body input, .fb-body select, .fb-body textarea { width:100%; border:1.5px solid #d1c9bc; border-radius:8px; padding:8px 10px; font-size:.88rem; font-family:'Familjen Grotesk',sans-serif; box-sizing:border-box; background:#FFF8EE; }
+.fb-body textarea { min-height:72px; resize:vertical; }
+.fb-chip-row { display:flex; gap:6px; flex-wrap:wrap; }
+.fb-chip { border:1.5px solid #d1c9bc; background:#FFF8EE; border-radius:20px; padding:5px 12px; font-size:.8rem; cursor:pointer; font-family:'Familjen Grotesk',sans-serif; }
+.fb-chip.sel { background:var(--bw-ink); color:var(--bw-cream); border-color:var(--bw-ink); }
+.fb-foot { padding:0 20px 18px; display:flex; gap:10px; justify-content:flex-end; }
+.fb-submit { background:var(--bw-tomato); color:#fff; border:2px solid var(--bw-ink); border-radius:20px; padding:8px 20px; font-size:.88rem; font-weight:700; cursor:pointer; }
+.fb-cancel { background:none; border:none; color:#94a3b8; font-size:.88rem; cursor:pointer; padding:8px; }
+.fb-success { text-align:center; padding:32px 20px; font-size:.95rem; color:#3C342D; }
+.fb-success .fb-ok-icon { font-size:2.5rem; margin-bottom:10px; }
+.report-btn { background:none; border:none; cursor:pointer; color:#cbd5e1; font-size:.8rem; padding:2px 5px; line-height:1; transition:color .15s; }
+.report-btn:hover { color:var(--bw-tomato); }
+.suggest-btn { background:var(--bw-ink); color:var(--bw-cream); border:2px solid var(--bw-ink); border-radius:20px; padding:6px 14px; font-size:.8rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.suggest-btn:hover { background:#2a2520; }
 </style>
 <script data-goatcounter="https://bockwurst-events.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
@@ -784,7 +784,7 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 
 
 <header>
-  <h1 id="hdr-brand" style="display:flex;align-items:center;gap:10px;margin:0"><svg width="42" height="42" viewBox="0 0 100 100" style="flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#FFC11F" stroke="#14110E" stroke-width="5"/><rect x="18" y="41" width="64" height="19" rx="9.5" fill="#E8B891" stroke="#14110E" stroke-width="4"/><rect x="18" y="41" width="64" height="7" rx="3.5" fill="#ffffff" opacity="0.3"/><path d="M27,51 Q35,45 43,51 T59,51 T75,51" stroke="#F23A1F" stroke-width="4.5" stroke-linecap="round" fill="none"/></svg><span>BOCKWURST <span style="color:#FFF1D6">EVENTS</span></span></h1>
+  <h1 id="hdr-sport" style="display:flex;align-items:center;gap:8px"><svg width="32" height="32" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px;flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#F23A1F" stroke="#14110E" stroke-width="4"/><path d="M14,50 Q50,32 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><path d="M14,50 Q50,68 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><text x="50" y="64" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="52" letter-spacing="-2" fill="#FFC11F">B</text></svg>Bockwurst Sport Events Guide</h1>
   <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste, Kalender oder Merkliste. <span class="snap-badge" id="snap-date">Stand 11.06.2026</span></p>
 </header>
 <script>
@@ -901,6 +901,9 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
     </div>
     <div class="filter-group">
       <button id="reset-all-btn" onclick="resetAllFilters()" style="background:var(--bw-tomato);color:#fff;border:2px solid var(--bw-ink);border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;letter-spacing:.03em;white-space:nowrap">↺ Alle Filter zurücksetzen</button>
+    </div>
+    <div class="filter-group">
+      <button class="suggest-btn" onclick="openSuggest()">+ Event vorschlagen</button>
     </div>
   </div>
 
@@ -1605,6 +1608,9 @@ const STATE_GEO = {
   MEV:[53.80,12.50], SCH:[54.20, 9.70], RLP:[50.10, 7.30], BER:[52.52,13.41],
   BAD:[48.60, 8.40], WÜR:[48.50, 9.50], SAA:[49.40, 7.00], HAM:[53.55, 9.99],
   BRE:[53.07, 8.80],
+  WTB:[48.50, 9.50],  // Württembergischer Radsport-Verband → Württemberg
+  SAH:[51.75,11.00],  // Sachsen-Anhalt Harz
+  TIR:[47.30,11.40],  // Tirol (AT)
 };
 // Country flags
 const COUNTRY_FLAG = { DE:"🇩🇪", AT:"🇦🇹", CH:"🇨🇭", CZ:"🇨🇿", IT:"🇮🇹", GB:"🇬🇧", ES:"🇪🇸", FR:"🇫🇷" };
@@ -1720,9 +1726,9 @@ function setSport(s, el) {
     all:  '<svg class="ic"><use href="#ic-trophy"/></svg> Sport Events – Chemnitz'
   };
   const _today=new Date(),_dd=String(_today.getDate()).padStart(2,'0'),_mm=String(_today.getMonth()+1).padStart(2,'0'),_yy=_today.getFullYear(),_standStr=_dd+'.'+_mm+'.'+_yy;
-  const subs  = {rad:"400 km um PLZ 09111",swim:"Freiwasser Wettkämpfe",tri:"DTU-Kalender",lauf:"laufen.run",all:"Radsport · Schwimmen · Triathlon · Laufen"};
-  const sportName = {rad:'Radsport',swim:'Freiwasser',tri:'Triathlon',lauf:'Laufen',all:'Alle Sportarten'}[s] || 'Events';
-  document.getElementById("hdr-sub").innerHTML = '<b>'+sportName+'</b> · ' + subs[s] + ' <span class="snap-badge">Stand '+_standStr+'</span>';
+  const subs  = {rad:"400 km um PLZ 09111 · Stand: "+_standStr,swim:"Freiwasser Wettkämpfe · Stand: "+_standStr,tri:"DTU-Kalender · Stand: "+_standStr,lauf:"laufen.run · Stand: "+_standStr,all:"Radsport · Schwimmen · Triathlon · Laufen · Stand: "+_standStr};
+  document.getElementById("hdr-sport").innerHTML = labels[s];
+  document.getElementById("hdr-sub").innerHTML = subs[s] + ' <span class="snap-badge">Stand '+_standStr+'</span>';
   buildPills(); render();
 }
 
@@ -1789,7 +1795,7 @@ function renderListe(v) {
       <td><a class="event-link" href="${e.url}" target="_blank">${e.titel}</a>${flag?`<span class="country-badge">${flag}</span>`:""} ${e.serie?`<span class="serie-badge">${e.serie}</span>`:""}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
       <td class="verein-sm">${e.verein} <span style="color:#94a3b8">(${e.lv})</span></td>
-      <td>${starBtn(e.url)}</td>`;
+      <td style="white-space:nowrap">${starBtn(e.url)}<button class="report-btn" title="Event melden" onclick="openReport(${JSON.stringify(e.titel)},${JSON.stringify(e.url)})">⚑</button></td>`;
     tb.appendChild(tr);
   });
   document.getElementById("evt-tbl").style.display=v.length?"table":"none";
@@ -1921,6 +1927,99 @@ function resetAllFilters() {
   activeTypes = new Set(ALL.map(e => e.art));
   document.querySelectorAll("#pills .pill").forEach(p => p.classList.add("active"));
   render();
+}
+
+// ── Feedback Modal ─────────────────────────────────────────────────────────
+let _fbModus = "melden", _fbChip = "", _fbSport = "", _fbEventUrl = "";
+
+function openReport(titel, url) {
+  _fbModus = "melden"; _fbChip = ""; _fbEventUrl = url;
+  document.getElementById("fb-title").textContent = "Event melden";
+  document.getElementById("fb-event-row").style.display = "block";
+  document.getElementById("fb-event-name").value = titel;
+  document.getElementById("fb-problem-row").style.display = "block";
+  document.getElementById("fb-suggest-fields").style.display = "none";
+  document.querySelectorAll("#fb-chips .fb-chip").forEach(c => c.classList.remove("sel"));
+  document.getElementById("fb-content").style.display = "block";
+  document.getElementById("fb-success").style.display = "none";
+  document.getElementById("fb-overlay").classList.remove("hidden");
+}
+
+function openSuggest() {
+  _fbModus = "vorschlagen"; _fbSport = ""; _fbEventUrl = "";
+  document.getElementById("fb-title").textContent = "Event vorschlagen";
+  document.getElementById("fb-event-row").style.display = "none";
+  document.getElementById("fb-problem-row").style.display = "none";
+  document.getElementById("fb-suggest-fields").style.display = "block";
+  document.querySelectorAll("#fb-sport-chips .fb-chip").forEach(c => c.classList.remove("sel"));
+  document.getElementById("fb-subtype-row").style.display = "none";
+  document.getElementById("fb-subtype-chips").innerHTML = "";
+  ["fb-suggest-name","fb-datum","fb-ort","fb-link"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("fb-content").style.display = "block";
+  document.getElementById("fb-success").style.display = "none";
+  document.getElementById("fb-overlay").classList.remove("hidden");
+}
+
+function closeFb() { document.getElementById("fb-overlay").classList.add("hidden"); }
+
+function selectChip(el, val) {
+  document.querySelectorAll("#fb-chips .fb-chip").forEach(c => c.classList.remove("sel"));
+  el.classList.add("sel"); _fbChip = val;
+}
+const SPORT_TYPES = {
+  rad:  ["RTF","Marathon","Radmarathon-Cup","CTF","Gravelride","Brevet","Volksradfahren"],
+  swim: ["Freiwasser","Swim & Run"],
+  tri:  ["Triathlon","Duathlon"],
+  lauf: ["Laufen","Trail","Ultra"],
+};
+
+function selectMainSport(el, sportKey) {
+  document.querySelectorAll("#fb-sport-chips .fb-chip").forEach(c => c.classList.remove("sel"));
+  el.classList.add("sel");
+  _fbSport = el.textContent; // Hauptkategorie als Label
+  // Sub-Typen aufbauen
+  const subRow = document.getElementById("fb-subtype-row");
+  const subChips = document.getElementById("fb-subtype-chips");
+  subChips.innerHTML = "";
+  SPORT_TYPES[sportKey].forEach(art => {
+    const cfg = g(art);
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "fb-chip"; btn.textContent = cfg.l;
+    btn.onclick = () => {
+      document.querySelectorAll("#fb-subtype-chips .fb-chip").forEach(c => c.classList.remove("sel"));
+      btn.classList.add("sel");
+      _fbSport = el.textContent + " – " + cfg.l;
+    };
+    subChips.appendChild(btn);
+  });
+  subRow.style.display = "block";
+}
+
+async function submitFb() {
+  const body = new URLSearchParams({
+    "form-name": "event-feedback",
+    "bot-field": "",
+    "modus": _fbModus,
+    "event-name": _fbModus === "melden"
+      ? document.getElementById("fb-event-name").value
+      : document.getElementById("fb-suggest-name").value,
+    "event-url": _fbEventUrl,
+    "problem-typ": _fbChip,
+    "sport": _fbSport,
+    "datum": document.getElementById("fb-datum") ? document.getElementById("fb-datum").value : "",
+    "ort": document.getElementById("fb-ort") ? document.getElementById("fb-ort").value : "",
+    "link": document.getElementById("fb-link") ? document.getElementById("fb-link").value : "",
+    "filter-plz": plzLabel || "–",
+    "filter-entfernung": maxDist + " km",
+    "filter-monat": selMonth || "Alle",
+    "filter-sport": tab,
+    "filter-typen": [...document.querySelectorAll("#pills .pill.active")].map(p => p.textContent.trim()).join(", "),
+  });
+  try {
+    await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+  } catch(e) { /* silent – show success anyway */ }
+  document.getElementById("fb-content").style.display = "none";
+  document.getElementById("fb-success").style.display = "block";
 }
 
 buildPills(); updateBMCnt(); render();
@@ -2137,5 +2236,92 @@ document.addEventListener("DOMContentLoaded",function(){
   });
 });
 </script>
+<!-- Netlify form detection (hidden, required for Netlify Forms) -->
+<form name="event-feedback" netlify netlify-honeypot="bot-field" hidden>
+  <input name="bot-field">
+  <input name="modus">
+  <input name="event-name">
+  <input name="event-url">
+  <input name="problem-typ">
+  <input name="sport">
+  <input name="datum">
+  <input name="ort">
+  <input name="link">
+  <input name="filter-plz">
+  <input name="filter-entfernung">
+  <input name="filter-monat">
+  <input name="filter-sport">
+  <input name="filter-typen">
+</form>
+
+<!-- Feedback Modal -->
+<div class="fb-overlay hidden" id="fb-overlay" onclick="if(event.target===this)closeFb()">
+  <div class="fb-box" id="fb-box">
+    <div class="fb-head">
+      <h4 id="fb-title">Event melden</h4>
+      <button class="fb-close" onclick="closeFb()">✕</button>
+    </div>
+    <div id="fb-content">
+      <div class="fb-body">
+        <div id="fb-event-row" style="display:none">
+          <label>Event</label>
+          <input type="text" id="fb-event-name" readonly style="color:#64748b">
+        </div>
+        <!-- Melden: Problem-Typ -->
+        <div id="fb-problem-row">
+          <label>Problem</label>
+          <div class="fb-chip-row" id="fb-chips">
+            <button type="button" class="fb-chip" onclick="selectChip(this,'Veranstaltung abgesagt')">Abgesagt</button>
+            <button type="button" class="fb-chip" onclick="selectChip(this,'Falsche Angaben')">Falsche Angaben</button>
+            <button type="button" class="fb-chip" onclick="selectChip(this,'Duplikat')">Duplikat</button>
+            <button type="button" class="fb-chip" onclick="selectChip(this,'Fehlt – sollte aufgenommen werden')">Fehlt im Kalender</button>
+            <button type="button" class="fb-chip" onclick="selectChip(this,'Anderes')">Anderes</button>
+          </div>
+        </div>
+        <!-- Vorschlagen: Sport + Datum + Ort + Link -->
+        <div id="fb-suggest-fields" style="display:none">
+          <label>Sportart</label>
+          <div class="fb-chip-row" id="fb-sport-chips">
+            <button type="button" class="fb-chip" onclick="selectMainSport(this,'rad')">Radsport</button>
+            <button type="button" class="fb-chip" onclick="selectMainSport(this,'swim')">Schwimmen</button>
+            <button type="button" class="fb-chip" onclick="selectMainSport(this,'tri')">Triathlon</button>
+            <button type="button" class="fb-chip" onclick="selectMainSport(this,'lauf')">Laufen</button>
+          </div>
+          <div id="fb-subtype-row" style="display:none;margin-top:8px">
+            <label>Typ</label>
+            <div class="fb-chip-row" id="fb-subtype-chips"></div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Event-Name</label>
+            <input type="text" id="fb-suggest-name" placeholder="z.B. Muster-RTF 2026">
+          </div>
+          <div style="margin-top:10px">
+            <label>Datum</label>
+            <input type="date" id="fb-datum">
+          </div>
+          <div style="margin-top:10px">
+            <label>Ort / Region</label>
+            <input type="text" id="fb-ort" placeholder="z.B. München, Bayern">
+          </div>
+          <div style="margin-top:10px">
+            <label>Link zur Veranstaltung *</label>
+            <input type="url" id="fb-link" placeholder="https://..." required>
+          </div>
+        </div>
+      </div>
+      <div class="fb-foot">
+        <button class="fb-cancel" onclick="closeFb()">Abbrechen</button>
+        <button class="fb-submit" onclick="submitFb()">Absenden</button>
+      </div>
+    </div>
+    <div id="fb-success" style="display:none" class="fb-success">
+      <div class="fb-ok-icon">✓</div>
+      <strong>Danke für dein Feedback!</strong><br>
+      <span style="color:#64748b;font-size:.85rem">Wir schauen uns das an.</span><br>
+      <button class="fb-submit" style="margin-top:16px" onclick="closeFb()">Schließen</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
