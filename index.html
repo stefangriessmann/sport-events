@@ -4,20 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- SEO & GEO -->
-  <meta name="description" content="Bockwurst Sport Events Guide – Radsport, Triathlon & Lauf-Events in ganz Deutschland. Über 280 Termine, filterbar nach PLZ und Entfernung.">
+  <meta name="description" content="Bockwurst Sport Events Guide – Radsport, Triathlon & Lauf-Events in ganz Deutschland. Über 700 Termine im Überblick.">
   <meta name="keywords" content="Radsport Events Deutschland, RTF Veranstaltungen, Triathlon Kalender, Laufveranstaltungen, Radmarathon, Sportevents 2026">
   <meta name="author" content="Stefan Grießmann">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://bockwurst-events.netlify.app/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Bockwurst Sport Events Guide">
-  <meta property="og:description" content="Über 280 Radsport-, Triathlon- und Lauf-Events in Deutschland. Filterbar nach deiner PLZ und Entfernung.">
+  <meta property="og:description" content="Über 280 Radsport-, Triathlon- und Lauf-Events in Deutschland. Filterbar nach Sportart und Zeitraum.">
   <meta property="og:url" content="https://bockwurst-events.netlify.app/">
   <meta property="og:locale" content="de_DE">
   <meta property="og:site_name" content="Bockwurst Sport Events Guide">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Bockwurst Sport Events Guide">
-  <meta name="twitter:description" content="Radsport, Triathlon und Laufen: über 280 Events in Deutschland, filterbar nach PLZ.">
+  <meta name="twitter:description" content="Radsport, Triathlon und Laufen: über 700 Events in Deutschland.">
   <meta name="geo.region" content="DE">
   <meta name="geo.placename" content="Deutschland">
   <meta name="geo.position" content="51.1657;10.4515">
@@ -55,7 +55,6 @@ header p { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: r
 .filter-group { display: flex; align-items: center; gap: 5px; }
 label { font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: #3C342D; white-space: nowrap; letter-spacing: .04em; text-transform: uppercase; }
 select, input[type=range] { background: white; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 7px; font-size: .8rem; }
-#dist-val { font-family: 'JetBrains Mono', monospace; color: #F23A1F; font-weight: 700; font-size: .8rem; min-width: 46px; }
 
 /* Table */
 .table-wrap { padding: 0 20px 28px; overflow-x: auto; }
@@ -86,16 +85,10 @@ tr:hover td { background: rgba(255,193,31,.12); }
 .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: .69rem; font-weight: 700; white-space: nowrap; }
 .event-link { font-family: 'Familjen Grotesk', sans-serif; color: #14110E; text-decoration: none; font-weight: 700; }
 .event-link:hover { color: #F23A1F; }
-.km-tag { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1px 5px; font-size: .69rem; color: #475569; font-weight: 600; }
-.dist-bar { display: flex; align-items: center; gap: 7px; }
-.dist-fill { height: 4px; border-radius: 2px; background: #F23A1F; flex-shrink: 0; }
-.dist-num { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: #3C342D; white-space: nowrap; }
 .wday { display: inline-block; width: 22px; height: 22px; border-radius: 4px; font-size: .67rem; font-weight: 700; text-align: center; line-height: 22px; background: #e2e8f0; color: #64748b; margin-right: 4px; }
 .wday.we { background: #dcfce7; color: #16a34a; }
 .verein-sm { color: #64748b; font-size: .78rem; }
 .no-results { text-align: center; padding: 44px; color: #3C342D; font-size: .88rem; font-family: 'Familjen Grotesk',sans-serif; background: #FFF1D6; border-radius: 12px; margin: 0 0 20px; border: 2.5px solid #14110E; display: none; }
-.src-note { font-family: 'JetBrains Mono', monospace; padding: 0 0 16px; font-size: .68rem; color: #3C342D; letter-spacing: .02em; }
-.src-note a { color: #F23A1F; }
 .snap-badge { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 4px; padding: 1px 6px; font-size: .68rem; font-weight: 600; margin-left: 6px; }
 
 
@@ -106,11 +99,9 @@ tr:hover td { background: rgba(255,193,31,.12); }
 .sport-btn.active { background:#14110E; color:#FFC11F; border-color:#14110E; }
 .serie-badge { display:inline-block; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:4px; padding:1px 6px; font-size:.67rem; font-weight:600; margin-left:4px; }
 .country-badge { display:inline-block; font-size:.78rem; margin-left:3px; vertical-align:middle; opacity:.75; }
-#plz-f { background:white; color:#0f172a; border:1px solid #cbd5e1; border-radius:6px; padding:5px 7px; font-size:.8rem; }
 
 @media (max-width: 600px) {
-  header, .stats, .tabs, .type-pills, .filters, .table-wrap, .cal-wrap, .src-note { padding-left: 12px; padding-right: 12px; }
-  .cards { grid-template-columns: 1fr; }
+  header, .stats, .tabs, .type-pills, .filters, .table-wrap, .cal-wrap,   .cards { grid-template-columns: 1fr; }
   .stats { gap: 8px; }
 }
 
@@ -160,8 +151,7 @@ tr:hover td { background: rgba(255,193,31,.12); }
 .page-main .table-wrap { padding: 0 0 20px; }
 .page-main .cal-wrap   { padding: 0 0 20px; }
 .page-main #bm-body    { padding-bottom: 20px; }
-.page-main .src-note   { padding: 0 0 16px; }
-.page-main .no-results { margin: 0 0 20px; }
+.page-main .page-main .no-results { margin: 0 0 20px; }
 
 .page-sidebar {
   width: 290px;
@@ -649,7 +639,7 @@ html { font-size: 18px; }
 
 /* 6) Filter-Labels + Eingaben */
 label { font-size: .82rem !important; }
-select, input[type=range], #plz-f, #dist-val { font-size: .95rem !important; }
+select { font-size: .95rem !important; }
 
 /* 7) Tabelle — Hauptbereich, jetzt deutlich größer & dunkler */
 table { font-size: 1rem !important; }
@@ -657,8 +647,6 @@ th { font-size: .8rem !important; }
 td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 .event-link, .card-title a { font-size: 1.05rem !important; font-weight: 700 !important; }
 .verein-sm { font-size: .9rem !important; color: var(--bw-ink-soft) !important; }
-.dist-num { font-size: .88rem !important; color: var(--bw-ink) !important; }
-.km-tag { font-size: .82rem !important; color: var(--bw-ink) !important; }
 .wday { width: 26px !important; height: 26px !important; line-height: 26px !important; font-size: .76rem !important; }
 
 /* 8) Badges + Kalender */
@@ -669,7 +657,6 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 .section-heading h2 { font-size: 1.3rem !important; }
 
 /* 9) Hinweise / Leerzustände */
-.src-note { font-size: .8rem !important; }
 .empty-state, .no-results { font-size: 1rem !important; }
 
 /* Feedback Modal */
@@ -872,15 +859,12 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
   <div class="type-pills" id="pills"></div>
   <div class="filters">
     <div class="filter-group">
-      <label>Mein PLZ:</label>
-      <input type="text" id="plz-f" maxlength="10" placeholder="z.B. 09111" style="width:90px">
-      <button id="plz-reset" onclick="resetPlz()" title="PLZ zurücksetzen" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#94a3b8;padding:2px 4px;line-height:1" aria-label="PLZ löschen">✕</button>
-      <span id="plz-status" style="font-size:.7rem;color:#94a3b8"></span>
+      <label>Von:</label>
+      <input type="date" id="date-from" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateFrom=this.value;render()">
     </div>
     <div class="filter-group">
-      <label>Max. Entfernung:</label>
-      <input type="range" id="dist-f" min="20" max="800" step="20" value="800">
-      <span id="dist-val">800 km</span>
+      <label>Bis:</label>
+      <input type="date" id="date-to" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateTo=this.value;render()">
     </div>
     <div class="filter-group">
       <label>Monat:</label>
@@ -890,13 +874,6 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
         <option value="08">August</option><option value="09">September</option>
         <option value="10">Oktober</option><option value="11">November</option>
         <option value="12">Dezember</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Sortierung:</label>
-      <select id="sort-f">
-        <option value="date">Datum</option>
-        <option value="dist">Entfernung</option>
       </select>
     </div>
     <div class="filter-group">
@@ -912,8 +889,7 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
     <div class="table-wrap">
       <table id="evt-tbl">
         <thead><tr>
-          <th>Art</th><th>Datum</th><th>Entfernung</th>
-          <th>Event</th><th>Strecken</th><th>Verein</th><th></th>
+          <th>Art</th><th>Datum</th><th>Event</th><th>Strecken</th><th>Verein</th><th></th>
         </tr></thead>
         <tbody id="evt-body"></tbody>
       </table>
@@ -929,13 +905,6 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
   <!-- Merkliste -->
   <div id="tab-merken" style="display:none">
     <div id="bm-body"></div>
-  </div>
-
-  <div class="src-note">
-    🚴 <a href="https://breitensport.rad-net.de" target="_blank">breitensport.rad-net.de</a> (BDR, Snapshot 07.06.2026)
-    · 🏊 <a href="https://alpen-open-watercup.de" target="_blank">Alpen Open Water Cup</a>
-    · <a href="https://www.lsv-sachsen.de" target="_blank">SSV Sachsen</a>
-    · <a href="https://www.leipziger-triathlon.de" target="_blank">Leipziger Triathlon</a>
   </div>
       <!-- Paginierung / Mehr laden -->
       <div class="be-more" id="mehr-zone" style="display:none">
@@ -2076,90 +2045,18 @@ const g = art => TYPE_CFG[art] || DEF_CFG;
 
 // ── Distance helpers ──────────────────────────────────────────────────────────
 // Approximate state-centre coordinates for events without explicit lat/lon
-const STATE_GEO = {
-  SAC:[51.05,13.20], SA:[51.90,11.80],  THÜ:[51.00,11.00], BAY:[48.80,11.50],
-  NDS:[52.60, 9.50], HES:[50.70, 9.00], NRW:[51.50, 7.40], BRA:[52.50,13.00],
-  MEV:[53.80,12.50], SCH:[54.20, 9.70], RLP:[50.10, 7.30], BER:[52.52,13.41],
-  BAD:[48.60, 8.40], WÜR:[48.50, 9.50], SAA:[49.40, 7.00], HAM:[53.55, 9.99],
-  BRE:[53.07, 8.80],
-  WTB:[48.50, 9.50],  // Württembergischer Radsport-Verband → Württemberg
-  SAH:[51.75,11.00],  // Sachsen-Anhalt Harz
-  TIR:[47.30,11.40],  // Tirol (AT)
-};
 // Country flags
 const COUNTRY_FLAG = { DE:"🇩🇪", AT:"🇦🇹", CH:"🇨🇭", CZ:"🇨🇿", IT:"🇮🇹", GB:"🇬🇧", ES:"🇪🇸", FR:"🇫🇷" };
 
-function haversine(lat1,lon1,lat2,lon2) {
-  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return Math.round(R*2*Math.asin(Math.sqrt(a)));
-}
-
 // Default centre = Chemnitz
-let userLat = 50.8333, userLon = 12.9167;
-let plzLabel = "09111";
-
-// Restore saved PLZ
-(function(){
-  const saved = localStorage.getItem("user_plz");
-  if(saved) {
-    const lat=parseFloat(localStorage.getItem("user_lat")||"");
-    const lon=parseFloat(localStorage.getItem("user_lon")||"");
-    if(!isNaN(lat)&&!isNaN(lon)){
-      userLat=lat; userLon=lon; plzLabel=saved;
-      document.addEventListener("DOMContentLoaded",()=>{ document.getElementById("plz-f").value=saved; });
-    }
-  }
-})();
-
-function eventKm(e) {
-  if(e.lat!=null&&e.lon!=null) return haversine(userLat,userLon,e.lat,e.lon);
-  const g=STATE_GEO[e.lv];
-  if(g) return haversine(userLat,userLon,g[0],g[1]);
-  return e.km||999;
-}
-
-let _geocodeTimer=null;
-function onPlzInput() {
-  clearTimeout(_geocodeTimer);
-  const val=document.getElementById("plz-f").value.trim();
-  if(val.length<4) return;
-  _geocodeTimer=setTimeout(()=>geocodePlz(val),800);
-}
-
-async function geocodePlz(plz) {
-  const status=document.getElementById("plz-status");
-  status.textContent="⏳";
-  try {
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(plz)}&format=json&limit=1`,
-      {headers:{"User-Agent":"sport-events-chemnitz/2.0"}});
-    const data=await r.json();
-    if(data.length>0){
-      userLat=parseFloat(data[0].lat);
-      userLon=parseFloat(data[0].lon);
-      plzLabel=plz;
-      localStorage.setItem("user_plz",plz);
-      localStorage.setItem("user_lat",userLat);
-      localStorage.setItem("user_lon",userLon);
-      const name=data[0].display_name.split(",")[0];
-      status.textContent="✓ "+name;
-      render();
-    } else {
-      status.textContent="⚠ nicht gefunden";
-    }
-  } catch(e){
-    status.textContent="⚠ Fehler";
-  }
-}
-
-// ── App state ─────────────────────────────────────────────────────────────────
+let // ── App state ─────────────────────────────────────────────────────────────────
 let SPORT = 'rad';
 let ALL = SNAPSHOT;
 // Patch existing events: add country="DE" if missing (backward compat)
 [...SNAPSHOT,...SWIM_SNAPSHOT,...TRI_SNAPSHOT,...LAUF_SNAPSHOT].forEach(e=>{if(!e.country)e.country="DE";});
 
 let activeTypes = new Set(ALL.map(e=>e.art));
-let maxDist = 800, selMonth = "", sortBy = "date", tab = "liste";
+let selMonth = "", selDateFrom = "", selDateTo = "", tab = "liste";
 let bookmarks = new Set(JSON.parse(localStorage.getItem("rad_bm")||"[]"));
 
 function saveBM() { localStorage.setItem("rad_bm",JSON.stringify([...bookmarks])); updateBMCnt(); }
@@ -2223,10 +2120,10 @@ function buildPills() {
 
 function getVis() {
   const _td=new Date().toISOString().slice(0,10);
-  return ALL.filter(e=>activeTypes.has(e.art)&&eventKm(e)<=maxDist&&e.date_iso>=_td&&(!selMonth||e.date_iso.includes("-"+selMonth+"-")));
+  return ALL.filter(e=>activeTypes.has(e.art)&&e.date_iso>=_td&&(!selDateFrom||e.date_iso>=selDateFrom)&&(!selDateTo||e.date_iso<=selDateTo)&&(!selMonth||e.date_iso.includes("-"+selMonth+"-")));
 }
 function srt(arr) {
-  return [...arr].sort((a,b)=>sortBy==="date"?a.date_iso.localeCompare(b.date_iso):a.km-b.km);
+  return [...arr].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
 }
 
 function updateStats(v) {
@@ -2236,7 +2133,7 @@ function updateStats(v) {
   if(next){const d=Math.ceil((new Date(next.date_iso)-new Date(today))/86400000); cd=d<=0?"Heute!":d===1?"Morgen!":d+" Tage";}
   document.getElementById("stats").innerHTML=`
     <div class="stat"><div class="stat-val">${v.length}</div><div class="stat-label">Events</div></div>
-    <div class="stat"><div class="stat-val">${v.filter(e=>eventKm(e)<=150).length}</div><div class="stat-label">≤ 150 km</div></div>
+    <div class="stat"><div class="stat-val">${(()=>{const m=new Date().toISOString().slice(0,7);return v.filter(e=>e.date_iso.startsWith(m)).length;})()}</div><div class="stat-label">Diesen Monat</div></div>
     ${next?`<div class="stat"><div class="stat-val sm">${cd}</div><div class="stat-label">${next.titel.slice(0,22)}${next.titel.length>22?"…":""}</div></div>`:""}
     <div class="stat"><div class="stat-val">${bookmarks.size}</div><div class="stat-label">⭐ Gemerkt</div></div>
   `;
@@ -2258,14 +2155,12 @@ function renderListe(v) {
   }
   page.forEach(e=>{
     const cfg=g(e.art); const we=e.wochentag==="Samstag"||e.wochentag==="Sonntag";
-    const ekm=eventKm(e); const dp=Math.max(4,Math.round(ekm/800*100));
     const flag=COUNTRY_FLAG[e.country]||"";
     const sH=e.strecken?e.strecken.split("/").map(s=>`<span class="km-tag">${s}</span>`).join(""):"–";
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><span class="badge" style="background:${cfg.bg};color:${cfg.c}"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span></td>
       <td><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}${e.datum_end?`<span style="color:#94a3b8;font-size:.75rem"> – ${e.datum_end}</span>`:""}</td>
-      <td><div class="dist-bar"><div class="dist-fill" style="width:${dp}px"></div><span class="dist-num">~${ekm} km</span></div></td>
       <td><a class="event-link" href="${e.url}" target="_blank">${e.titel}</a>${flag?`<span class="country-badge">${flag}</span>`:""} ${e.serie?`<span class="serie-badge">${e.serie}</span>`:""}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
       <td class="verein-sm">${e.verein} <span style="color:#94a3b8">(${e.lv})</span></td>
@@ -2289,7 +2184,7 @@ function renderKalender(v) {
     const cards=document.createElement("div"); cards.className="cards";
     byM[m].forEach(e=>{
       const cfg=g(e.art); const we=e.wochentag==="Samstag"||e.wochentag==="Sonntag";
-      const ekm=eventKm(e); const flag=COUNTRY_FLAG[e.country]||"";
+      const flag=COUNTRY_FLAG[e.country]||"";
       const sH=e.strecken?e.strecken.split("/").map(s=>`<span class="km-tag">${s}</span>`).join(""):"";
       const card=document.createElement("div"); card.className="card";
       card.innerHTML=`
@@ -2320,7 +2215,7 @@ function renderMerkliste() {
   const cards=document.createElement("div"); cards.className="cards";
   bmd.forEach(e=>{
     const cfg=g(e.art); const we=e.wochentag==="Samstag"||e.wochentag==="Sonntag";
-    const ekm=eventKm(e); const flag=COUNTRY_FLAG[e.country]||"";
+    const flag=COUNTRY_FLAG[e.country]||"";
     const sH=e.strecken?e.strecken.split("/").map(s=>`<span class="km-tag">${s}</span>`).join(""):"";
     const card=document.createElement("div"); card.className="card";
     card.style.borderLeft=`3px solid ${cfg.c}`;
@@ -2365,38 +2260,14 @@ function switchTab(name, el) {
   render();
 }
 
-document.getElementById("dist-f").addEventListener("input",function(){maxDist=parseInt(this.value);document.getElementById("dist-val").textContent=maxDist+" km";render();});
 document.getElementById("month-f").addEventListener("change",function(){selMonth=this.value;render();});
-document.getElementById("sort-f").addEventListener("change",function(){sortBy=this.value;render();});
-document.getElementById("plz-f").addEventListener("input",onPlzInput);
-
-function resetPlz() {
-  localStorage.removeItem("user_plz");
-  document.getElementById("plz-f").value = "";
-  document.getElementById("plz-status").textContent = "";
-  userLat = 50.8333; userLon = 12.9167; // zurück auf Chemnitz
-  maxDist = 800;
-  document.getElementById("dist-f").value = 800;
-  document.getElementById("dist-val").textContent = "800 km";
-  render();
-}
 
 function resetAllFilters() {
-  // Entfernung
-  maxDist = 800;
-  document.getElementById("dist-f").value = 800;
-  document.getElementById("dist-val").textContent = "800 km";
-  // PLZ
-  localStorage.removeItem("user_plz");
-  document.getElementById("plz-f").value = "";
-  document.getElementById("plz-status").textContent = "";
-  userLat = 50.8333; userLon = 12.9167;
-  // Monat
-  selMonth = "";
+  // Monat & Zeitraum
+  selMonth = ""; selDateFrom = ""; selDateTo = "";
   document.getElementById("month-f").value = "";
-  // Sortierung zurücksetzen
-  sortBy = "date";
-  document.getElementById("sort-f").value = "date";
+  document.getElementById("date-from").value = "";
+  document.getElementById("date-to").value = "";
   // Alle Typ-Pills aktivieren
   activeTypes = new Set(ALL.map(e => e.art));
   document.querySelectorAll("#pills .pill").forEach(p => p.classList.add("active"));
@@ -2483,8 +2354,6 @@ async function submitFb() {
     "datum": (document.getElementById("fb-datum").value || "") + (document.getElementById("fb-datum-end").value ? " bis " + document.getElementById("fb-datum-end").value : ""),
     "ort": document.getElementById("fb-ort") ? document.getElementById("fb-ort").value : "",
     "link": document.getElementById("fb-link") ? document.getElementById("fb-link").value : "",
-    "filter-plz": plzLabel || "–",
-    "filter-entfernung": maxDist + " km",
     "filter-monat": selMonth || "Alle",
     "filter-sport": tab,
     "filter-typen": [...document.querySelectorAll("#pills .pill.active")].map(p => p.textContent.trim()).join(", "),
