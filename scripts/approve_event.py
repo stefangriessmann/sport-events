@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-approve_event.py – Parse a GitHub Issue body and append the event to
+approve_event.py â Parse a GitHub Issue body and append the event to
 data/approved_events.json.
 
 Called by the GitHub Action:
@@ -25,7 +25,7 @@ from datetime import date
 SCRIPT_DIR = pathlib.Path(__file__).parent
 DATA_FILE  = SCRIPT_DIR.parent / "data" / "approved_events.json"
 
-# Sport-Label (lowercase) → JS-Snapshot-Variable
+# Sport-Label (lowercase) â JS-Snapshot-Variable
 SPORT_SNAPSHOT: dict[str, str] = {
     "radsport":  "SNAPSHOT",
     "rad":       "SNAPSHOT",
@@ -46,7 +46,7 @@ def parse_body(body: str) -> dict[str, str]:
     for line in body.splitlines():
         m = re.match(r'\*\*([^*]+)\*\*[:\s]+(.+)', line.strip())
         if m:
-            key = m.group(1).strip().lower().replace(" ", "-")
+            key = m.group(1).strip().lower().replace(" ", "-").rstrip(":")
             val = m.group(2).strip()
             result[key] = val
     return result
@@ -118,7 +118,7 @@ def main() -> None:
         sys.exit("ERROR: Missing required fields 'name' and/or 'datum'.")
 
     event = build_event(fields, issue_num)
-    print(f"→ {event['titel']}  {event['date_iso']}  [{event['_snapshot']}]")
+    print(f"â {event['titel']}  {event['date_iso']}  [{event['_snapshot']}]")
 
     # Load existing list, replace if same issue, append, sort, save
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -127,7 +127,7 @@ def main() -> None:
     approved.append(event)
     approved.sort(key=lambda e: e.get("date_iso", ""))
     DATA_FILE.write_text(json.dumps(approved, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Saved – {len(approved)} approved events in {DATA_FILE}")
+    print(f"Saved â {len(approved)} approved events in {DATA_FILE}")
 
 
 if __name__ == "__main__":
