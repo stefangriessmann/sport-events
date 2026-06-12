@@ -11,6 +11,7 @@ Strategy:
 - Stop after 3 consecutive pages with no future events
 - Filter events: only those with date_iso >= today and year == target year
 """
+from __future__ import annotations  # Python 3.9 compat
 import re
 import time
 from datetime import date, datetime

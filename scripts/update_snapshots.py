@@ -164,9 +164,7 @@ def main():
     print(f"Stand: {today_fmt}")
 
 
-if __name__ == "__main__":
-    main()
-
+# ── Must be defined before if __name__ block calls main() ─────────────────────
 
 def update_static_badge_date(html: str, new_date: str) -> str:
     """Update the hardcoded fallback date in the snap-badge span (for non-JS visitors)."""
@@ -175,3 +173,7 @@ def update_static_badge_date(html: str, new_date: str) -> str:
     if n:
         print(f"  Updated static snap-badge to Stand {new_date}")
     return result
+
+
+if __name__ == "__main__":
+    main()

@@ -3,21 +3,21 @@ de_radsport_events.py – Scraper for radsport-events.de cycling calendar.
 
 Full listing (server-rendered HTML, ISO-8859-1):
   https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php
-Pagination: ?kal_Start=N  (N=1, 22, 43, 64, ...; step=21; last page ≈ 673)
+Pagination: ?kal_Start=N  (N=1, 22, 43, 64, ...; step=21)
 Event canonical URL: ?kal_Aktion=detail&kal_Nummer=NNNN
 
-Table columns per event row:
-  1. Date (possibly multi-day: "11.06.2026 Do – 13.06.2026 Sa")
-  2. Title (link contains kal_Nummer)
-  3. Category text (Radtourenfahrt, Brevet, Radmarathon, ...)
-  4. Distance / Höhenmeter
-  5. Location: [PLZ] City  /  Country [State]
+HTML structure per event (4 x div.kalTbLst inside a per-event container div):
+  cells[0] = date:       "27.06.2026\xa0Sa-\xa028.06.2026\xa0So"  (or single day)
+  cells[1] = title+cat:  <a class="kalDetl">TITLE</a><div class="uzl">CATEGORY</div>
+  cells[2] = distance:   "122 / 233 / 333 km 2500 / 4600 / 6400 Hm"
+  cells[3] = location:   PLZ + City + Country + State (may be concatenated)
 
 Scope: Germany-only, future events, current year.
 """
+from __future__ import annotations  # Python 3.9 compat for type hints
 import re
 import time
-from datetime import date, datetime
+from datetime import date
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,16 +27,13 @@ HEADERS   = {
     "User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)",
 }
 
-# Pagination step observed from links: kal_Start 1,22,43,64,...  (step 21)
 PAGE_STEP = 21
 
-# art values to skip entirely
 SKIP_ARTS = {
     "Etappenfahrt", "Sonstige", "Vintage-Tour", "Triathlon", "Duathlon",
     "Swimrun", "Swim & Run", "24 h Rennen", "12 h Rennen",
 }
 
-# Map radsport-events.de category → internal art value
 ART_MAP = {
     "Radtourenfahrt":   "RTF",
     "Radtourenfahrten": "RTF",
@@ -52,12 +49,13 @@ ART_MAP = {
     "Gravel":           "Gravelride",
 }
 
-# German state names → our LV code
 STATE_MAP = [
     ("sachsen-anhalt",      "SA"),
     ("sachsen",             "SAC"),
-    ("thüringen",           "THÜ"),
+    ("thüringen",      "THÜ"),
     ("thueringen",          "THÜ"),
+    ("thuringen",           "THÜ"),
+    ("thuring",             "THÜ"),
     ("bayern",              "BAY"),
     ("niedersachsen",       "NDS"),
     ("hessen",              "HES"),
@@ -75,8 +73,9 @@ STATE_MAP = [
     ("hamburg",             "HAM"),
     ("bremen",              "BRE"),
     ("saarland",            "SAA"),
-    ("württemberg",         "WÜR"),
+    ("württemberg",    "WÜR"),
     ("wuerttemberg",        "WÜR"),
+    ("wurttemberg",         "WÜR"),
     ("baden",               "BAD"),
 ]
 
@@ -84,6 +83,13 @@ WDAY_DE = {
     "Mo": "Montag", "Di": "Dienstag", "Mi": "Mittwoch",
     "Do": "Donnerstag", "Fr": "Freitag", "Sa": "Samstag", "So": "Sonntag",
 }
+
+# Known country keywords to split location text
+COUNTRY_KEYWORDS = [
+    "Deutschland", "Frankreich", "Österreich", "Oesterreich",
+    "Schweiz", "Italien", "Belgien", "Niederlande", "Spanien",
+    "Tschechien", "Polen", "Dänemark",
+]
 
 
 def _lv_from_state(state_text: str) -> str:
@@ -97,27 +103,26 @@ def _lv_from_state(state_text: str) -> str:
 def _parse_date_cell(cell_text: str):
     """
     Parse date cell, possibly multi-day.
+    Handles \\xa0 (non-breaking space) used as separator on radsport-events.de.
     Examples:
-      '31.05.2026 So'
-      '11.06.2026 Do - 13.06.2026 Sa'
-      '12.06.2026 Fr\n- 13.06.2026 Sa'
-    Returns (date_iso_start, date_iso_end_or_None, datum, datum_end_or_None, wochentag)
+      '31.05.2026\\xa0So'
+      '27.06.2026\\xa0Sa-\\xa028.06.2026\\xa0So'
+    Returns (date_iso, date_iso_end, datum, datum_end, wochentag) or None.
     """
-    clean = re.sub(r"\s+", " ", cell_text).strip()
+    # Normalise non-breaking spaces and runs of whitespace to a single space
+    clean = re.sub(r"[\xa0\s]+", " ", cell_text).strip()
 
-    # Match start date
     start_m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})\s+([A-Za-z]{2})", clean)
     if not start_m:
         return None
 
     d1, m1, y1, wd1 = start_m.groups()
-    date_iso = f"{y1}-{m1}-{d1}"
-    datum    = f"{wd1}, {d1}.{m1}.{y1}"
+    date_iso  = f"{y1}-{m1}-{d1}"
+    datum     = f"{wd1}, {d1}.{m1}.{y1}"
     wochentag = WDAY_DE.get(wd1, "")
 
-    # Match optional end date after first date
     remainder = clean[start_m.end():]
-    end_m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})\s+([A-Za-z]{2})?", remainder)
+    end_m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})(?:\s+([A-Za-z]{2}))?", remainder)
     if end_m:
         d2, m2, y2 = end_m.group(1), end_m.group(2), end_m.group(3)
         date_iso_end = f"{y2}-{m2}-{d2}"
@@ -131,33 +136,82 @@ def _parse_date_cell(cell_text: str):
 
 def _parse_location(cell_text: str):
     """
-    Parse location cell.
-    Examples:
-      '21073 Hamburg\nDeutschland Hamburg'
-      'Motala\nSchweden'
-      '69115 Heidelberg\nDeutschland Baden-Württemberg'
-    Returns (ort, country, lv)
+    Parse location cell from radsport-events.de.
+
+    HTML child elements produce varying line structures when using get_text("\\n"):
+      [city, PLZ, country, state]           (most common)
+      [PLZ, city, country, state]
+      [PLZ+city, country, state]            (concatenated, single line)
+      "PLZCityCountryState"                 (all concatenated, no newlines)
+
+    Approach:
+      1. Detect foreign country anywhere in full text → reject.
+      2. Detect "Deutschland" anywhere in full text → accept.
+      3. Find the country line and extract city from lines before it.
+      4. Fall back to single-line split on "Deutschland".
+
+    Returns (ort, country_raw, lv).
+    country_raw="" means Germany assumed (site is German-focused, accept the event).
     """
-    lines = [l.strip() for l in cell_text.strip().splitlines() if l.strip()]
-    if not lines:
-        return "", "", ""
+    # Normalised full text – use for country/state keyword search
+    full = re.sub(r"[\xa0]", " ", cell_text)
+    full_flat = re.sub(r"\s+", " ", full).strip()
 
-    # First line: optional PLZ + city
-    ort_line = lines[0]
-    plz_m = re.match(r"(\d{4,5})\s+(.+)", ort_line)
-    ort = plz_m.group(2) if plz_m else ort_line
+    # Step 1 – skip explicit foreign events
+    FOREIGN = [
+        "Frankreich", "Österreich", "Oesterreich", "Schweiz", "Italien",
+        "Belgien", "Niederlande", "Spanien", "Tschechien", "Polen",
+        "Dänemark", "France", "Belgium", "Netherlands",
+    ]
+    for fw in FOREIGN:
+        if fw in full_flat:
+            return "foreign", fw, ""
 
-    # Second line: country + optional state
-    country = ""
-    lv = ""
+    # Step 2 – extract LV from full text (works for all formats)
+    lv = _lv_from_state(full_flat)
+
+    # Step 3 – extract city from newline-separated lines
+    lines = [l.strip() for l in full.splitlines() if l.strip()]
     if len(lines) >= 2:
-        country_line = lines[1]
-        parts = country_line.split(None, 1)  # split on first whitespace
-        country = parts[0] if parts else ""
-        state   = parts[1] if len(parts) > 1 else ""
-        lv = _lv_from_state(state)
+        # Find which line contains "Deutschland" (or ends the city block)
+        country_idx = next(
+            (i for i, l in enumerate(lines) if "Deutschland" in l),
+            len(lines)           # not found → treat all lines as pre-country
+        )
+        pre = lines[:country_idx]          # lines before country
+        # First non-PLZ line is the city; PLZ-only line is just digits
+        city_lines = [l for l in pre if not re.fullmatch(r"\d{4,5}", l)]
+        if city_lines:
+            # Remove a leading PLZ from the city line if present
+            plz_m = re.match(r"\d{4,5}\s+(.*)", city_lines[0])
+            ort = plz_m.group(1).strip() if plz_m else city_lines[0]
+        elif pre:
+            ort = pre[-1]   # last pre-country line as fallback
+        else:
+            ort = ""
+        country_raw = "Deutschland" if country_idx < len(lines) else ""
+        return ort or full_flat[:40], country_raw, lv
 
-    return ort, country, lv
+    # Step 4 – single-line: split on "Deutschland"
+    if "Deutschland" in full_flat:
+        before = full_flat[:full_flat.index("Deutschland")]
+        plz_m  = re.match(r"\d{4,5}\s*(.*)", before.strip())
+        if plz_m:
+            ort = plz_m.group(1).strip()
+        else:
+            # PLZ glued to city: "98724Neuhaus am Rennweg"
+            plz_m2 = re.match(r"\d{4,5}(.*)", before.strip())
+            ort = plz_m2.group(1).strip() if plz_m2 else before.strip()
+        return ort or before.strip() or full_flat[:40], "Deutschland", lv
+
+    # Step 5 – no country keyword at all: accept (German cycling site), best-effort city
+    plz_m = re.match(r"\d{4,5}\s*(.*)", full_flat)
+    if plz_m:
+        ort = plz_m.group(1).strip()
+    else:
+        plz_m2 = re.match(r"\d{4,5}(.*)", full_flat)
+        ort = plz_m2.group(1).strip() if plz_m2 else full_flat[:40]
+    return ort or full_flat[:40], "", lv
 
 
 def fetch(year: int) -> list[dict]:
@@ -165,17 +219,16 @@ def fetch(year: int) -> list[dict]:
     Fetch all German cycling events for the given year from radsport-events.de.
     Filters to Germany only; skips arts in SKIP_ARTS.
     """
-    today  = date.today().isoformat()
+    today     = date.today().isoformat()
     events: list[dict] = []
     seen_ids: set[str] = set()
 
     print(f"[radsport-events.de] Fetching {year} cycling events...")
 
-    # Determine total pages first (read page 1)
     last_start = None
-    kal_start  = 1  # first page starts at 1 per observed URLs
+    kal_start  = 1
+    page_num   = 0
 
-    page_num = 0
     while True:
         page_num += 1
         url = BASE if kal_start == 1 else f"{BASE}?kal_Start={kal_start}"
@@ -191,7 +244,7 @@ def fetch(year: int) -> list[dict]:
 
         soup = BeautifulSoup(r.text, "lxml")
 
-        # Detect last page kal_Start from ">|" pagination link
+        # Detect last page from ">|" pagination link
         if last_start is None:
             last_link = soup.find("a", title="Ende")
             if last_link and last_link.get("href"):
@@ -200,126 +253,116 @@ def fetch(year: int) -> list[dict]:
                     last_start = int(m.group(1))
                     print(f"  Last page at kal_Start={last_start}")
 
-        # Find all event rows — each <tr> or container with a kal_Nummer link
-        # The page uses a table with rows per event
-        rows = soup.find_all("tr")
-        if not rows:
-            # Fallback: look for any anchor with kal_Nummer
-            rows = soup.find_all("td")
-
         page_count = 0
-        # Process table rows
-        table = soup.find("table")
-        if not table:
-            print(f"  Page {page_num}: no table found")
-        else:
-            trows = table.find_all("tr")
-            for tr in trows:
-                tds = tr.find_all("td")
-                if len(tds) < 5:
-                    continue
 
-                # Table layout (5 columns):
-                #   col0=date | col1=title | col2=category | col3=distance | col4=location
+        # Each event has an <a class="kalDetl"> link inside a div.kalTbLst.
+        # The grandparent of that link is the per-event container with 4 div.kalTbLst children.
+        for a_tag in soup.find_all("a", class_="kalDetl"):
+            href  = a_tag.get("href", "")
+            num_m = re.search(r"kal_Nummer=(\d+)", href)
+            if not num_m:
+                continue
+            kal_num = num_m.group(1)
+            if kal_num in seen_ids:
+                continue
 
-                # Column 0: date
-                date_text = tds[0].get_text(" ", strip=True)
-                parsed = _parse_date_cell(date_text)
-                if not parsed:
-                    continue
-                date_iso, date_iso_end, datum, datum_end, wochentag = parsed
+            title_div = a_tag.parent   # div.kalTbLst that wraps the link
+            if not title_div:
+                continue
+            row = title_div.parent     # per-event container
+            if not row:
+                continue
 
-                # Filter by year and future
-                if not date_iso.startswith(str(year)):
-                    continue
-                if date_iso < today:
-                    continue
+            cells = row.find_all("div", class_="kalTbLst")
+            if len(cells) < 4:
+                continue
 
-                # Column 1: title + kal_Nummer link
-                a_tag = tds[1].find("a", href=re.compile(r"kal_Nummer=\d+"))
-                if not a_tag:
-                    continue
-                titel = a_tag.get_text(strip=True)
-                href  = a_tag["href"]
-                num_m = re.search(r"kal_Nummer=(\d+)", href)
-                if not num_m:
-                    continue
-                kal_num = num_m.group(1)
-                if kal_num in seen_ids:
-                    continue
-                seen_ids.add(kal_num)
-                url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
+            # Cell 0: date
+            date_text = re.sub(r"[\xa0\s]+", " ", cells[0].get_text()).strip()
+            parsed = _parse_date_cell(date_text)
+            if not parsed:
+                continue
+            date_iso, date_iso_end, datum, datum_end, wochentag = parsed
 
-                # Column 2: category (dedicated column)
-                art_raw = tds[2].get_text(strip=True)
-                art = ART_MAP.get(art_raw, "")
-                if not art:
-                    art_lower = art_raw.lower()
-                    if "rtf" in art_lower or "radtour" in art_lower:
-                        art = "RTF"
-                    elif "brevet" in art_lower:
-                        art = "Brevet"
-                    elif "marathon" in art_lower:
-                        art = "Marathon"
-                    elif "gravel" in art_lower:
-                        art = "Gravelride"
-                    elif "zeitfahr" in art_lower:
-                        art = "CTF"
-                    elif "jedermann" in art_lower:
-                        art = "Marathon"
-                    elif "volksrad" in art_lower:
-                        art = "Volksradfahren"
-                    elif "hobbyrennen" in art_lower:
-                        art = "Marathon"
-                    else:
-                        continue  # skip unknown/unwanted types
+            # Filter: target year and future only
+            if not date_iso.startswith(str(year)):
+                continue
+            if date_iso < today:
+                continue
 
-                if art_raw in SKIP_ARTS or art_raw.lower() in {s.lower() for s in SKIP_ARTS}:
-                    continue
+            # Cell 1: title from link text; category from nested div.uzl
+            titel = a_tag.get_text(strip=True)
+            if not titel:
+                continue
 
-                # Column 3: distance / strecken
-                strecken = tds[3].get_text(" ", strip=True)
+            cat_div = a_tag.find_next_sibling("div", class_="uzl")
+            art_raw = cat_div.get_text(strip=True) if cat_div else ""
 
-                # Column 4: location
-                loc_text = tds[4].get_text("\n", strip=True)
-                ort, country, lv = _parse_location(loc_text)
+            art = ART_MAP.get(art_raw, "")
+            if not art:
+                art_lower = art_raw.lower()
+                if "rtf" in art_lower or "radtour" in art_lower:
+                    art = "RTF"
+                elif "brevet" in art_lower:
+                    art = "Brevet"
+                elif "marathon" in art_lower:
+                    art = "Marathon"
+                elif "gravel" in art_lower:
+                    art = "Gravelride"
+                elif "zeitfahr" in art_lower:
+                    art = "CTF"
+                elif "jedermann" in art_lower or "hobbyrennen" in art_lower:
+                    art = "Marathon"
+                elif "volksrad" in art_lower:
+                    art = "Volksradfahren"
+                else:
+                    continue  # skip unknown/unwanted types
 
-                # Germany only
-                if country.lower() not in ("deutschland", "de", ""):
-                    continue
-                if not country:
-                    continue  # no country info → skip
+            if art_raw in SKIP_ARTS:
+                continue
 
-                events.append({
-                    "art":          art,
-                    "datum":        datum,
-                    "datum_end":    datum_end,
-                    "wochentag":    wochentag,
-                    "date_iso":     date_iso,
-                    "date_iso_end": date_iso_end,
-                    "km":           None,
-                    "lat":          None,
-                    "lon":          None,
-                    "titel":        titel,
-                    "ort":          ort,
-                    "strecken":     strecken,
-                    "verein":       "",
-                    "lv":           lv,
-                    "country":      "DE",
-                    "url":          url_ev,
-                    "serie":        "",
-                })
-                page_count += 1
+            # Cell 2: distance / strecken
+            strecken = cells[2].get_text(" ", strip=True)
+
+            # Cell 3: location
+            loc_text = cells[3].get_text("\n", strip=True)
+            ort, country_raw, lv = _parse_location(loc_text)
+
+            # Germany only: skip events explicitly tagged as foreign
+            if ort == "foreign":
+                continue
+
+            seen_ids.add(kal_num)
+            url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
+
+            events.append({
+                "art":          art,
+                "datum":        datum,
+                "datum_end":    datum_end,
+                "wochentag":    wochentag,
+                "date_iso":     date_iso,
+                "date_iso_end": date_iso_end,
+                "km":           None,
+                "lat":          None,
+                "lon":          None,
+                "titel":        titel,
+                "ort":          ort,
+                "strecken":     strecken,
+                "verein":       "",
+                "lv":           lv,
+                "country":      "DE",
+                "url":          url_ev,
+                "serie":        "",
+            })
+            page_count += 1
 
         print(f"  Page {page_num} (kal_Start={kal_start}): +{page_count} DE events (total {len(events)})")
 
-        # Advance to next page
         if last_start is not None and kal_start >= last_start:
             break
         kal_start += PAGE_STEP
         time.sleep(0.4)
 
-        # Safety cap
         if page_num > 50:
             print("  Safety cap reached (50 pages)")
             break

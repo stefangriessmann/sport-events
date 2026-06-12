@@ -1,48 +1,60 @@
 """
-de_laufen.py – Scraper for laufen.run/kalender (regional running calendar).
+de_laufen.py – Scraper for laufen.run/kalender (national running calendar).
 
-Covers: Sachsen-Anhalt, Harz, Niedersachsen, Hessen, Thüringen.
-Server-rendered Joomla page; pagination via ?start=N (15 items/page).
+The site uses a Joomla CMS and renders events in an HTML <table>.
+Each row: date (DD.MM.YYYY) | event title+link | location | cup | distance
+Some rows are month/year headers — these are skipped.
 """
+from __future__ import annotations  # Python 3.9 compat
 import re
-import math
 import time
-from datetime import date, datetime
+from datetime import date
 
 import requests
 from bs4 import BeautifulSoup
 
-from geocoder import geocode_event
+BASE    = "https://laufen.run/kalender"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)"}
 
-BASE = "https://laufen.run/kalender"
-CHEMNITZ = (50.8333, 12.9167)
-MAX_KM = 200
-HEADERS = {"User-Agent": "sport-events-chemnitz/2.0 (github actions)"}
+WDAY_FROM_ISO = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 
-WDAY_DE = {
-    "Mo": "Montag", "Di": "Dienstag", "Mi": "Mittwoch",
-    "Do": "Donnerstag", "Fr": "Freitag", "Sa": "Samstag", "So": "Sonntag",
-}
-
-# Abbreviated month names in German
-MONTHS = {
-    "Jan": "01", "Feb": "02", "Mär": "03", "Mrz": "03",
-    "Apr": "04", "Mai": "05", "Jun": "06",
-    "Jul": "07", "Aug": "08", "Sep": "09",
-    "Okt": "10", "Nov": "11", "Dez": "12",
-}
-
-# Recognisable running event art keywords
 ART_MAP = [
-    ("trail",   "Trail"),
-    ("berg",    "Trail"),
-    ("forst",   "Trail"),
-    ("ultra",   "Ultra"),
-    ("backyard","Ultra"),
-    ("marathon","Laufen"),
-    ("lauf",    "Laufen"),
-    ("run",     "Laufen"),
-    ("walk",    "Laufen"),
+    ("trail",    "Trail"),
+    ("berg",     "Trail"),
+    ("forst",    "Trail"),
+    ("ultra",    "Ultra"),
+    ("backyard", "Ultra"),
+    ("marathon", "Laufen"),
+    ("lauf",     "Laufen"),
+    ("run",      "Laufen"),
+    ("walk",     "Laufen"),
+    ("nordic",   "Laufen"),
+]
+
+STATE_DETECT = [
+    ("sachsen-anhalt",  "SA"),
+    ("sachsen",         "SAC"),
+    ("thüringen",       "THÜ"),
+    ("thueringen",      "THÜ"),
+    ("bayern",          "BAY"),
+    ("niedersachsen",   "NDS"),
+    ("hessen",          "HES"),
+    ("nordrhein",       "NRW"),
+    ("westfalen",       "NRW"),
+    ("brandenburg",     "BRA"),
+    ("mecklenburg",     "MEV"),
+    ("vorpommern",      "MEV"),
+    ("schleswig",       "SCH"),
+    ("holstein",        "SCH"),
+    ("rheinland-pfalz", "RLP"),
+    ("rheinland",       "RLP"),
+    ("berlin",          "BER"),
+    ("hamburg",         "HAM"),
+    ("bremen",          "BRE"),
+    ("saarland",        "SAA"),
+    ("baden",           "BAD"),
+    ("württemberg",     "WÜR"),
+    ("wuerttemberg",    "WÜR"),
 ]
 
 
@@ -54,159 +66,123 @@ def _detect_art(titel: str) -> str:
     return "Laufen"
 
 
-def _haversine(lat1, lon1, lat2, lon2) -> int:
-    R = 6371
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = (math.sin(dlat / 2) ** 2
-         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2)
-    return int(R * 2 * math.asin(math.sqrt(a)))
+def _detect_lv(text: str) -> str:
+    t = text.lower()
+    for fragment, lv in STATE_DETECT:
+        if fragment in t:
+            return lv
+    return ""
 
 
-def _parse_date(raw: str) -> tuple[str, str, str] | None:
+def fetch(year: int) -> list[dict]:
     """
-    Parse German date strings like:
-    "Sa 07.06.2026", "Samstag, 7. Juni 2026", "07.06.2026"
-    Returns (datum_short, date_iso, wochentag_full) or None.
+    Fetch all German running events for the given year from laufen.run/kalender.
+    The page is server-rendered with a full HTML table — all year events on one page.
     """
-    raw = raw.strip()
-
-    # "Sa, 07.06.2026" or "Sa 07.06.2026"
-    m = re.match(r"([A-Za-z]{2}),?\s*(\d{1,2})\.(\d{2})\.(\d{4})", raw)
-    if m:
-        wd, d, mo, y = m.groups()
-        datum = f"{wd}, {int(d):02d}.{mo}.{y}"
-        return datum, f"{y}-{mo}-{int(d):02d}", WDAY_DE.get(wd, "")
-
-    # "07.06.2026"
-    m = re.match(r"(\d{1,2})\.(\d{2})\.(\d{4})", raw)
-    if m:
-        d, mo, y = m.groups()
-        iso = f"{y}-{mo}-{int(d):02d}"
-        return f"??, {int(d):02d}.{mo}.{y}", iso, ""
-
-    return None
-
-
-def _parse_item(item) -> dict | None:
-    """Parse a calendar list item from laufen.run."""
-    # Title
-    title_el = item.find(["h3", "h4", "strong", "a"])
-    titel = title_el.get_text(strip=True) if title_el else item.get_text(" ", strip=True)[:80]
-    if not titel:
-        return None
-
-    # URL
-    a = item.find("a", href=True)
-    url = a["href"] if a else ""
-    if url and not url.startswith("http"):
-        url = "https://laufen.run" + url
-
-    # Date – search all text for recognisable date patterns
-    text = item.get_text(" ", strip=True)
-    date_m = re.search(r"([A-Za-z]{2}),?\s*(\d{1,2})\.(\d{2})\.(\d{4})", text)
-    if not date_m:
-        return None
-    wd, d, mo, y = date_m.groups()
-    datum = f"{wd}, {int(d):02d}.{mo}.{y}"
-    date_iso = f"{y}-{mo}-{int(d):02d}"
-
-    # Distances (e.g. "5/10/21,1/42,2")
-    strecken_m = re.findall(r"\b(\d{1,3}(?:[,.]\d{1,2})?)\s*km\b", text, re.IGNORECASE)
-    strecken = "/".join(strecken_m) if strecken_m else ""
-
-    art = _detect_art(titel)
-
-    return {
-        "art": art,
-        "datum": datum,
-        "wochentag": WDAY_DE.get(wd, ""),
-        "date_iso": date_iso,
-        "km": None,
-        "lat": None,
-        "lon": None,
-        "titel": titel,
-        "strecken": strecken,
-        "verein": "",
-        "lv": "",
-        "country": "DE",
-        "url": url,
-        "serie": "",
-    }
-
-
-def fetch(year: int, max_km: int = MAX_KM) -> list[dict]:
-    """
-    Fetch running events from laufen.run/kalender.
-    Returns events near Chemnitz (within max_km), sorted by date.
-    """
-    today = date.today().isoformat()
-    events: list[dict] = []
-    seen_urls: set[str] = set()
+    today      = date.today().isoformat()
+    events:    list[dict] = []
+    seen_urls: set[str]   = set()
 
     print(f"[laufen.run] Fetching {year} events...")
 
-    start = 0
-    while True:
-        url = BASE if start == 0 else f"{BASE}?start={start}"
+    html = ""
+    for url in [BASE, f"{BASE}?year={year}"]:
         try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
+            r = requests.get(url, headers=HEADERS, timeout=20)
             r.raise_for_status()
+            if len(r.text) > 10000:
+                html = r.text
+                print(f"  Got {len(html)} bytes from {url}")
+                break
         except Exception as e:
-            print(f"  Error at start={start}: {e}")
-            break
+            print(f"  Error fetching {url}: {e}")
 
-        soup = BeautifulSoup(r.text, "lxml")
+    if not html:
+        print("  Could not fetch laufen.run")
+        return []
 
-        # Items: try various selectors used by Joomla event calendars
-        items = (
-            soup.select(".event-item")
-            or soup.select("article")
-            or soup.select(".list-item")
-            or soup.select("li.item")
-        )
+    soup = BeautifulSoup(html, "lxml")
 
-        if not items:
-            print(f"  No items found at start={start}, stopping.")
-            break
-
-        new = 0
-        for item in items:
-            ev = _parse_item(item)
-            if not ev:
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells_el = row.find_all("td")
+            if len(cells_el) < 2:
                 continue
-            if ev["date_iso"] < today:
+
+            cells = [c.get_text(" ", strip=True) for c in cells_el]
+            date_text = cells[0].strip()
+
+            # Formats: "12.06.2026" or "12.-14.06.2026" or "12.-14.06.2026"
+            date_m = re.match(r"(\d{1,2})(?:\.[-–](\d{1,2}))?\.(\d{2})\.(\d{4})", date_text)
+            if not date_m:
                 continue
-            if not ev["date_iso"].startswith(str(year)):
+
+            d_str, d_end_str, mo_str, yr_str = date_m.groups()
+            if int(yr_str) != year:
                 continue
-            if ev["url"] and ev["url"] in seen_urls:
+
+            date_iso = f"{yr_str}-{mo_str}-{int(d_str):02d}"
+            if date_iso < today:
                 continue
-            if ev["url"]:
-                seen_urls.add(ev["url"])
-            events.append(ev)
-            new += 1
 
-        print(f"  start={start}: {new} new events (total so far: {len(events)})")
-        if new == 0:
-            break
-        start += 15
-        time.sleep(0.5)
+            if d_end_str:
+                date_iso_end = f"{yr_str}-{mo_str}-{int(d_end_str):02d}"
+                datum_end    = f"{int(d_end_str):02d}.{mo_str}.{yr_str}"
+            else:
+                date_iso_end = None
+                datum_end    = None
 
-    print(f"  {len(events)} candidate events total")
+            try:
+                from datetime import date as ddate
+                wd = ddate(int(yr_str), int(mo_str), int(d_str)).weekday()
+                wochentag = WDAY_FROM_ISO[wd]
+                datum = f"{WDAY_FROM_ISO[wd][:2]}, {int(d_str):02d}.{mo_str}.{yr_str}"
+            except Exception:
+                datum = f"{int(d_str):02d}.{mo_str}.{yr_str}"
+                wochentag = ""
 
-    # Geocode + filter by distance
-    print("  Geocoding and filtering by distance...")
-    result: list[dict] = []
-    for ev in events:
-        geo = geocode_event(ev["titel"], country="DE")
-        if geo:
-            ev["lat"], ev["lon"] = round(geo[0], 4), round(geo[1], 4)
-            ev["km"] = _haversine(*CHEMNITZ, *geo)
-        else:
-            ev["km"] = 999
+            # Title + URL from 2nd cell
+            a = cells_el[1].find("a")
+            titel = a.get_text(strip=True) if a else cells[1]
+            if not titel:
+                continue
 
-        if ev["km"] <= max_km:
-            result.append(ev)
+            url_ev = ""
+            if a and a.get("href"):
+                href = a["href"]
+                url_ev = href if href.startswith("http") else "https://laufen.run" + href
 
-    print(f"  {len(result)} events within {max_km} km")
-    return sorted(result, key=lambda e: e["date_iso"])
+            if url_ev and url_ev in seen_urls:
+                continue
+            if url_ev:
+                seen_urls.add(url_ev)
+
+            ort      = cells[2].strip() if len(cells) > 2 else ""
+            cup      = cells[3].strip() if len(cells) > 3 else ""
+            strecken = cells[4].strip() if len(cells) > 4 else ""
+
+            lv  = _detect_lv(ort + " " + titel)
+            art = _detect_art(titel)
+
+            events.append({
+                "art":          art,
+                "datum":        datum,
+                "datum_end":    datum_end,
+                "wochentag":    wochentag,
+                "date_iso":     date_iso,
+                "date_iso_end": date_iso_end,
+                "km":           None,
+                "lat":          None,
+                "lon":          None,
+                "titel":        titel,
+                "ort":          ort,
+                "strecken":  strecken,
+                "verein":    cup,
+                "lv":        lv,
+                "country":   "DE",
+                "url":       url_ev,
+                "serie":     "",
+            })
+
+    print(f"  {len(events)} future events collected")
+    return sorted(events, key=lambda e: e["date_iso"])
