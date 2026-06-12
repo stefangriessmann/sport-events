@@ -84,7 +84,8 @@ def build_event(fields: dict[str, str], issue_num: int) -> dict:
                 snapshot = val
                 break
     snapshot = snapshot or "SNAPSHOT"
-    art       = fields.get("typ", fields.get("art", "Sonstiges"))
+    sport_display = fields.get("sport", "").split("–")[0].strip().split("-")[0].strip().title() or "Sonstiges"
+    art       = fields.get("typ", fields.get("art", sport_display))
 
     return {
         "art":          art,
