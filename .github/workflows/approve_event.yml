@@ -1,0 +1,64 @@
+name: Event-Vorschlag freigeben
+
+# Wird ausgelöst wenn du ein Issue mit dem Label "approved" versiehst
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  approve:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Für git push
+      issues: write     # Für Kommentar + Issue schließen
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Issue-Body sicher als Datei schreiben (vermeidet Shell-Escaping-Probleme)
+      - name: Write issue body to file
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = context.payload.issue.body ?? '';
+            fs.writeFileSync('/tmp/issue_body.txt', body, 'utf8');
+            core.info(`Issue #${context.issue.number} body written (${body.length} chars)`);
+
+      - name: Parse body and append to approved_events.json
+        run: |
+          mkdir -p data
+          python3 scripts/approve_event.py /tmp/issue_body.txt "${{ github.event.issue.number }}"
+
+      - name: Commit approved_events.json
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add data/approved_events.json
+          git diff --cached --quiet && echo "Nothing to commit" && exit 0
+          git commit -m "✅ Event genehmigt (issue #${{ github.event.issue.number }})"
+          git push
+
+      - name: Comment and close issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+              body: [
+                '✅ **Event freigegeben!**',
+                '',
+                'Der Event wurde in `data/approved_events.json` aufgenommen.',
+                'Er erscheint automatisch beim nächsten `run_update.sh`-Lauf in der Eventliste.',
+              ].join('\n'),
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed',
+            });
