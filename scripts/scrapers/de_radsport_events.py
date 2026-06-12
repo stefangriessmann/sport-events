@@ -216,8 +216,11 @@ def fetch(year: int) -> list[dict]:
             trows = table.find_all("tr")
             for tr in trows:
                 tds = tr.find_all("td")
-                if len(tds) < 4:
+                if len(tds) < 5:
                     continue
+
+                # Table layout (5 columns):
+                #   col0=date | col1=title | col2=category | col3=distance | col4=location
 
                 # Column 0: date
                 date_text = tds[0].get_text(" ", strip=True)
@@ -247,21 +250,10 @@ def fetch(year: int) -> list[dict]:
                 seen_ids.add(kal_num)
                 url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
 
-                # Column 2: category
-                # Category is often in a <span> or second text node in column 1 or a dedicated column
-                # Layout: col0=date, col1=title (with category below), col2=distance, col3=location
-                # Actually check how many cols there are
-                cat_text = ""
-                if len(tds) >= 3:
-                    # Category sometimes lives as second line in col1
-                    col1_lines = [l.strip() for l in tds[1].get_text("\n").splitlines() if l.strip()]
-                    cat_text = col1_lines[1] if len(col1_lines) > 1 else ""
-
-                # Normalise category
-                art_raw = cat_text.strip()
+                # Column 2: category (dedicated column)
+                art_raw = tds[2].get_text(strip=True)
                 art = ART_MAP.get(art_raw, "")
                 if not art:
-                    # Try partial match
                     art_lower = art_raw.lower()
                     if "rtf" in art_lower or "radtour" in art_lower:
                         art = "RTF"
@@ -285,13 +277,11 @@ def fetch(year: int) -> list[dict]:
                 if art_raw in SKIP_ARTS or art_raw.lower() in {s.lower() for s in SKIP_ARTS}:
                     continue
 
-                # Column 2: distance / strecken
-                dist_col = tds[2] if len(tds) > 2 else None
-                strecken = dist_col.get_text(" ", strip=True) if dist_col else ""
+                # Column 3: distance / strecken
+                strecken = tds[3].get_text(" ", strip=True)
 
-                # Column 3: location
-                loc_col  = tds[3] if len(tds) > 3 else None
-                loc_text = loc_col.get_text("\n", strip=True) if loc_col else ""
+                # Column 4: location
+                loc_text = tds[4].get_text("\n", strip=True)
                 ort, country, lv = _parse_location(loc_text)
 
                 # Germany only
