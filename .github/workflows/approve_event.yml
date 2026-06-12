@@ -32,13 +32,24 @@ jobs:
           mkdir -p data
           python3 scripts/approve_event.py /tmp/issue_body.txt "${{ github.event.issue.number }}"
 
-      - name: Commit approved_events.json
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install scraper dependencies
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Update index.html with approved event
+        run: python3 scripts/update_snapshots.py
+
+      - name: Commit approved_events.json + index.html
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
-          git add data/approved_events.json
+          git add data/approved_events.json index.html
           git diff --cached --quiet && echo "Nothing to commit" && exit 0
-          git commit -m "✅ Event genehmigt (issue #${{ github.event.issue.number }})"
+          git commit -m "✅ Event genehmigt + index.html aktualisiert (issue #${{ github.event.issue.number }})"
           git push
 
       - name: Comment and close issue
@@ -50,10 +61,10 @@ jobs:
               repo:  context.repo.repo,
               issue_number: context.issue.number,
               body: [
-                '✅ **Event freigegeben!**',
+                '✅ **Event freigegeben und live!**',
                 '',
-                'Der Event wurde in `data/approved_events.json` aufgenommen.',
-                'Er erscheint automatisch beim nächsten `run_update.sh`-Lauf in der Eventliste.',
+                'Der Event wurde in `data/approved_events.json` aufgenommen und `index.html` wurde aktualisiert.',
+                'Er erscheint in ~1 Minute auf der Live-Seite (Netlify-Deploy).',
               ].join('\n'),
             });
             await github.rest.issues.update({
