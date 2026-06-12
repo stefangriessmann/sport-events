@@ -140,6 +140,9 @@ def main():
         )
 
     # ── Phase 2: Manuell freigegebene Events einmischen ────────────────────────
+    # approved_patch: js_var → list of clean events (for below-threshold snapshots)
+    approved_patch: dict = {}
+
     if APPROVED_PATH.exists():
         try:
             approved_raw = json.loads(APPROVED_PATH.read_text(encoding="utf-8"))
@@ -161,6 +164,8 @@ def main():
                             any((e.get("titel"), e.get("date_iso")) == td for e in events_list)
                 if not duplicate:
                     events_list.append(ev_clean)
+                    # also track separately for below-threshold merging
+                    approved_patch.setdefault(snap, []).append(ev_clean)
                     added += 1
 
             if added:
@@ -171,16 +176,80 @@ def main():
             print(f"\n  WARNING: approved_events.json konnte nicht geladen werden: {e}")
 
     # ── Phase 3: HTML schreiben ─────────────────────────────────────────────────
+    def read_existing_snapshot(html: str, var_name: str) -> list:
+        """Parse existing JS snapshot array from HTML back to Python list."""
+        pattern = rf'const {re.escape(var_name)}\s*=\s*(\[[\s\S]*?\]);'
+        m = re.search(pattern, html)
+        if not m:
+            return []
+        js = m.group(1)
+        try:
+            known_keys = [
+                "art","datum","datum_end","wochentag","date_iso","date_iso_end",
+                "km","lat","lon","titel","ort","strecken","verein","lv",
+                "country","url","serie",
+            ]
+            json_str = js
+            for k in known_keys:
+                json_str = json_str.replace(f"{k}:", f'"{k}":')
+            return json.loads(json_str)
+        except Exception as e:
+            print(f"  WARNING: Konnte {var_name} nicht parsen: {e}")
+            return []
+
     changed = False
     for js_var, (events, sport_key) in snapshot_data.items():
-        if not events:
-            print(f"\n  {js_var}: Keine Events – bestehende Daten bleiben.")
-            continue
         MIN_EVENTS = {"SNAPSHOT": 50, "TRI_SNAPSHOT": 20, "LAUF_SNAPSHOT": 20}
         min_required = MIN_EVENTS.get(js_var, 10)
-        if len(events) < min_required:
-            print(f"\n  {js_var}: Nur {len(events)} Events (min {min_required}) – bestehende Daten bleiben.")
+        patch = approved_patch.get(js_var, [])
+
+        if not events:
+            if patch:
+                # Scraper lieferte nichts, aber approved Events vorhanden →
+                # bestehende HTML-Daten lesen und approved einmischen
+                existing = read_existing_snapshot(html, js_var)
+                if existing:
+                    urls = {e.get("url") for e in existing if e.get("url")}
+                    tds  = {(e.get("titel"), e.get("date_iso")) for e in existing}
+                    for ev in patch:
+                        url = ev.get("url", "")
+                        td  = (ev.get("titel", ""), ev.get("date_iso", ""))
+                        if (url and url in urls) or td in tds:
+                            continue
+                        existing.append(ev)
+                    existing.sort(key=lambda e: e.get("date_iso", ""))
+                    print(f"\n  {js_var}: Kein Scraper-Update, {len(patch)} freigegebene(s) Event(s) eingemischt.")
+                    html = update_snapshot(html, js_var, existing)
+                    changed = True
+                else:
+                    print(f"\n  {js_var}: Keine Events – bestehende Daten bleiben.")
+            else:
+                print(f"\n  {js_var}: Keine Events – bestehende Daten bleiben.")
             continue
+
+        if len(events) < min_required:
+            if patch:
+                # Unter Schwellenwert, aber approved Events → in bestehende Daten einmischen
+                existing = read_existing_snapshot(html, js_var)
+                if existing:
+                    urls = {e.get("url") for e in existing if e.get("url")}
+                    tds  = {(e.get("titel"), e.get("date_iso")) for e in existing}
+                    for ev in patch:
+                        url = ev.get("url", "")
+                        td  = (ev.get("titel", ""), ev.get("date_iso", ""))
+                        if (url and url in urls) or td in tds:
+                            continue
+                        existing.append(ev)
+                    existing.sort(key=lambda e: e.get("date_iso", ""))
+                    print(f"\n  {js_var}: Scraper unter Schwellenwert, {len(patch)} freigegebene(s) Event(s) eingemischt.")
+                    html = update_snapshot(html, js_var, existing)
+                    changed = True
+                else:
+                    print(f"\n  {js_var}: Nur {len(events)} Events (min {min_required}) – bestehende Daten bleiben.")
+            else:
+                print(f"\n  {js_var}: Nur {len(events)} Events (min {min_required}) – bestehende Daten bleiben.")
+            continue
+
         print(f"\n  {js_var}: {len(events)} Events")
         html = update_snapshot(html, js_var, events)
         if sport_key:
