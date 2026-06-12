@@ -784,7 +784,7 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 
 
 <header>
-  <h1 id="hdr-sport" style="display:flex;align-items:center;gap:8px"><svg width="32" height="32" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px;flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#F23A1F" stroke="#14110E" stroke-width="4"/><path d="M14,50 Q50,32 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><path d="M14,50 Q50,68 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><text x="50" y="64" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="52" letter-spacing="-2" fill="#FFC11F">B</text></svg>Bockwurst Sport Events Guide</h1>
+  <h1 id="hdr-brand" style="display:flex;align-items:center;gap:10px;margin:0"><svg width="42" height="42" viewBox="0 0 100 100" style="flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#FFC11F" stroke="#14110E" stroke-width="5"/><rect x="18" y="41" width="64" height="19" rx="9.5" fill="#E8B891" stroke="#14110E" stroke-width="4"/><rect x="18" y="41" width="64" height="7" rx="3.5" fill="#ffffff" opacity="0.3"/><path d="M27,51 Q35,45 43,51 T59,51 T75,51" stroke="#F23A1F" stroke-width="4.5" stroke-linecap="round" fill="none"/></svg><span>BOCKWURST <span style="color:#FFF1D6">EVENTS</span></span></h1>
   <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste, Kalender oder Merkliste. <span class="snap-badge" id="snap-date">Stand 11.06.2026</span></p>
 </header>
 <script>
@@ -1720,9 +1720,9 @@ function setSport(s, el) {
     all:  '<svg class="ic"><use href="#ic-trophy"/></svg> Sport Events – Chemnitz'
   };
   const _today=new Date(),_dd=String(_today.getDate()).padStart(2,'0'),_mm=String(_today.getMonth()+1).padStart(2,'0'),_yy=_today.getFullYear(),_standStr=_dd+'.'+_mm+'.'+_yy;
-  const subs  = {rad:"400 km um PLZ 09111 · Stand: "+_standStr,swim:"Freiwasser Wettkämpfe · Stand: "+_standStr,tri:"DTU-Kalender · Stand: "+_standStr,lauf:"laufen.run · Stand: "+_standStr,all:"Radsport · Schwimmen · Triathlon · Laufen · Stand: "+_standStr};
-  document.getElementById("hdr-sport").innerHTML = labels[s];
-  document.getElementById("hdr-sub").innerHTML = subs[s] + ' <span class="snap-badge">Stand '+_standStr+'</span>';
+  const subs  = {rad:"400 km um PLZ 09111",swim:"Freiwasser Wettkämpfe",tri:"DTU-Kalender",lauf:"laufen.run",all:"Radsport · Schwimmen · Triathlon · Laufen"};
+  const sportName = {rad:'Radsport',swim:'Freiwasser',tri:'Triathlon',lauf:'Laufen',all:'Alle Sportarten'}[s] || 'Events';
+  document.getElementById("hdr-sub").innerHTML = '<b>'+sportName+'</b> · ' + subs[s] + ' <span class="snap-badge">Stand '+_standStr+'</span>';
   buildPills(); render();
 }
 
