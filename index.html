@@ -867,16 +867,6 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
       <input type="date" id="date-to" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateTo=this.value;render()">
     </div>
     <div class="filter-group">
-      <label>Monat:</label>
-      <select id="month-f">
-        <option value="">Alle</option>
-        <option value="06">Juni</option><option value="07">Juli</option>
-        <option value="08">August</option><option value="09">September</option>
-        <option value="10">Oktober</option><option value="11">November</option>
-        <option value="12">Dezember</option>
-      </select>
-    </div>
-    <div class="filter-group">
       <button id="reset-all-btn" onclick="resetAllFilters()" style="background:var(--bw-tomato);color:#fff;border:2px solid var(--bw-ink);border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;letter-spacing:.03em;white-space:nowrap">↺ Alle Filter zurücksetzen</button>
     </div>
     <div class="filter-group">
@@ -2055,7 +2045,7 @@ let ALL = SNAPSHOT;
 [...SNAPSHOT,...SWIM_SNAPSHOT,...TRI_SNAPSHOT,...LAUF_SNAPSHOT].forEach(e=>{if(!e.country)e.country="DE";});
 
 let activeTypes = new Set(ALL.map(e=>e.art));
-let selMonth = "", selDateFrom = "", selDateTo = "", tab = "liste";
+let selDateFrom = "", selDateTo = "", tab = "liste";
 let bookmarks = new Set(JSON.parse(localStorage.getItem("rad_bm")||"[]"));
 
 function saveBM() { localStorage.setItem("rad_bm",JSON.stringify([...bookmarks])); updateBMCnt(); }
@@ -2119,7 +2109,7 @@ function buildPills() {
 
 function getVis() {
   const _td=new Date().toISOString().slice(0,10);
-  return ALL.filter(e=>activeTypes.has(e.art)&&e.date_iso>=_td&&(!selDateFrom||e.date_iso>=selDateFrom)&&(!selDateTo||e.date_iso<=selDateTo)&&(!selMonth||e.date_iso.includes("-"+selMonth+"-")));
+  return ALL.filter(e=>activeTypes.has(e.art)&&e.date_iso>=_td&&(!selDateFrom||e.date_iso>=selDateFrom)&&(!selDateTo||e.date_iso<=selDateTo));
 }
 function srt(arr) {
   return [...arr].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
@@ -2236,7 +2226,8 @@ function renderMerkliste() {
 }
 
 function render(keepLimit) {
-  if(!keepLimit) _listLimit = 15;
+  const filterActive = selDateFrom || selDateTo;
+  if(!keepLimit) _listLimit = filterActive ? 99999 : 15;
   const v = srt(getVis());
   updateStats(getVis());
   if(tab==="liste") renderListe(v);
@@ -2259,12 +2250,10 @@ function switchTab(name, el) {
   render();
 }
 
-document.getElementById("month-f").addEventListener("change",function(){selMonth=this.value;render();});
 
 function resetAllFilters() {
   // Monat & Zeitraum
-  selMonth = ""; selDateFrom = ""; selDateTo = "";
-  document.getElementById("month-f").value = "";
+  selDateFrom = ""; selDateTo = "";
   document.getElementById("date-from").value = "";
   document.getElementById("date-to").value = "";
   // Alle Typ-Pills aktivieren
@@ -2353,7 +2342,6 @@ async function submitFb() {
     "datum": (document.getElementById("fb-datum").value || "") + (document.getElementById("fb-datum-end").value ? " bis " + document.getElementById("fb-datum-end").value : ""),
     "ort": document.getElementById("fb-ort") ? document.getElementById("fb-ort").value : "",
     "link": document.getElementById("fb-link") ? document.getElementById("fb-link").value : "",
-    "filter-monat": selMonth || "Alle",
     "filter-sport": tab,
     "filter-typen": [...document.querySelectorAll("#pills .pill.active")].map(p => p.textContent.trim()).join(", "),
   });
