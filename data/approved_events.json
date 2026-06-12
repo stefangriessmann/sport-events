@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "art": "Test",
+    "datum": "Mi, 01.07.2026",
+    "datum_end": null,
+    "wochentag": "Mittwoch",
+    "date_iso": "2026-07-01",
+    "date_iso_end": null,
+    "km": null,
+    "lat": null,
+    "lon": null,
+    "titel": "Testlauf Kassel",
+    "ort": "Kassel",
+    "strecken": "",
+    "verein": "",
+    "lv": "",
+    "country": "DE",
+    "url": "",
+    "serie": "",
+    "_snapshot": "LAUF_SNAPSHOT",
+    "_issue": 1
+  }
+]
