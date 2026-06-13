@@ -12,6 +12,7 @@ from datetime import date
 
 import requests
 from bs4 import BeautifulSoup
+from _geocode import geocode
 
 BASE    = "https://laufen.run/kalender"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)"}
@@ -161,8 +162,9 @@ def fetch(year: int) -> list[dict]:
             cup      = cells[3].strip() if len(cells) > 3 else ""
             strecken = cells[4].strip() if len(cells) > 4 else ""
 
-            lv  = _detect_lv(ort + " " + titel)
-            art = _detect_art(titel)
+            lv    = _detect_lv(ort + " " + titel)
+            art   = _detect_art(titel)
+            coords = geocode(ort)
 
             events.append({
                 "art":          art,
@@ -172,10 +174,11 @@ def fetch(year: int) -> list[dict]:
                 "date_iso":     date_iso,
                 "date_iso_end": date_iso_end,
                 "km":           None,
-                "lat":          None,
-                "lon":          None,
+                "lat":          coords["lat"],
+                "lon":          coords["lon"],
                 "titel":        titel,
                 "ort":          ort,
+                "plz":          "",
                 "strecken":  strecken,
                 "verein":    cup,
                 "lv":        lv,

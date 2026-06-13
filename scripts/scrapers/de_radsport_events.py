@@ -21,6 +21,7 @@ from datetime import date
 
 import requests
 from bs4 import BeautifulSoup
+from _geocode import geocode, geocode_plz
 
 BASE      = "https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php"
 HEADERS   = {
@@ -147,17 +148,17 @@ def _parse_location(cell_text: str):
     Approach:
       1. Detect foreign country anywhere in full text → reject.
       2. Detect "Deutschland" anywhere in full text → accept.
-      3. Find the country line and extract city from lines before it.
+      3. Find the country line and extract city + PLZ from lines before it.
       4. Fall back to single-line split on "Deutschland".
 
-    Returns (ort, country_raw, lv).
+    Returns (ort, plz, country_raw, lv).
     country_raw="" means Germany assumed (site is German-focused, accept the event).
     """
-    # Normalised full text – use for country/state keyword search
-    full = re.sub(r"[\xa0]", " ", cell_text)
+    # Normalised full text
+    full      = re.sub(r"[\xa0]", " ", cell_text)
     full_flat = re.sub(r"\s+", " ", full).strip()
 
-    # Step 1 – skip explicit foreign events
+    # Step 1 – skip explicit foreign events (4-digit PLZ = AT/CH tip-off too)
     FOREIGN = [
         "Frankreich", "Österreich", "Oesterreich", "Schweiz", "Italien",
         "Belgien", "Niederlande", "Spanien", "Tschechien", "Polen",
@@ -165,53 +166,69 @@ def _parse_location(cell_text: str):
     ]
     for fw in FOREIGN:
         if fw in full_flat:
-            return "foreign", fw, ""
+            return "foreign", "", fw, ""
 
-    # Step 2 – extract LV from full text (works for all formats)
+    # Step 2 – extract LV from full text
     lv = _lv_from_state(full_flat)
 
-    # Step 3 – extract city from newline-separated lines
+    # Helper: extract 5-digit German PLZ from a text fragment
+    def _extract_plz(text: str) -> str:
+        m = re.search(r"\b(\d{5})\b", text)
+        return m.group(1) if m else ""
+
+    # Step 3 – newline-separated lines (most common)
     lines = [l.strip() for l in full.splitlines() if l.strip()]
     if len(lines) >= 2:
-        # Find which line contains "Deutschland" (or ends the city block)
         country_idx = next(
             (i for i, l in enumerate(lines) if "Deutschland" in l),
-            len(lines)           # not found → treat all lines as pre-country
+            len(lines)
         )
-        pre = lines[:country_idx]          # lines before country
-        # First non-PLZ line is the city; PLZ-only line is just digits
+        pre = lines[:country_idx]
+        plz = ""
+        # Dedicated PLZ-only line
+        for l in pre:
+            if re.fullmatch(r"\d{5}", l):
+                plz = l
+                break
+        # City lines = non-PLZ-only lines
         city_lines = [l for l in pre if not re.fullmatch(r"\d{4,5}", l)]
         if city_lines:
-            # Remove a leading PLZ from the city line if present
-            plz_m = re.match(r"\d{4,5}\s+(.*)", city_lines[0])
-            ort = plz_m.group(1).strip() if plz_m else city_lines[0]
+            plz_m = re.match(r"(\d{5})\s+(.*)", city_lines[0])
+            if plz_m:
+                plz = plz_m.group(1)
+                ort = plz_m.group(2).strip()
+            else:
+                ort = city_lines[0]
         elif pre:
-            ort = pre[-1]   # last pre-country line as fallback
+            ort = pre[-1]
         else:
             ort = ""
+        if not plz:
+            plz = _extract_plz(" ".join(pre))
         country_raw = "Deutschland" if country_idx < len(lines) else ""
-        return ort or full_flat[:40], country_raw, lv
+        return ort or full_flat[:40], plz, country_raw, lv
 
-    # Step 4 – single-line: split on "Deutschland"
+    # Step 4 – single-line split on "Deutschland"
     if "Deutschland" in full_flat:
         before = full_flat[:full_flat.index("Deutschland")]
-        plz_m  = re.match(r"\d{4,5}\s*(.*)", before.strip())
+        plz    = _extract_plz(before)
+        plz_m  = re.match(r"\d{5}\s*(.*)", before.strip())
         if plz_m:
             ort = plz_m.group(1).strip()
         else:
-            # PLZ glued to city: "98724Neuhaus am Rennweg"
-            plz_m2 = re.match(r"\d{4,5}(.*)", before.strip())
+            plz_m2 = re.match(r"\d{5}(.*)", before.strip())
             ort = plz_m2.group(1).strip() if plz_m2 else before.strip()
-        return ort or before.strip() or full_flat[:40], "Deutschland", lv
+        return ort or before.strip() or full_flat[:40], plz, "Deutschland", lv
 
-    # Step 5 – no country keyword at all: accept (German cycling site), best-effort city
-    plz_m = re.match(r"\d{4,5}\s*(.*)", full_flat)
+    # Step 5 – no country keyword: best-effort
+    plz = _extract_plz(full_flat)
+    plz_m = re.match(r"\d{5}\s*(.*)", full_flat)
     if plz_m:
         ort = plz_m.group(1).strip()
     else:
-        plz_m2 = re.match(r"\d{4,5}(.*)", full_flat)
+        plz_m2 = re.match(r"\d{5}(.*)", full_flat)
         ort = plz_m2.group(1).strip() if plz_m2 else full_flat[:40]
-    return ort or full_flat[:40], "", lv
+    return ort or full_flat[:40], plz, "", lv
 
 
 def fetch(year: int) -> list[dict]:
@@ -326,7 +343,7 @@ def fetch(year: int) -> list[dict]:
 
             # Cell 3: location
             loc_text = cells[3].get_text("\n", strip=True)
-            ort, country_raw, lv = _parse_location(loc_text)
+            ort, plz, country_raw, lv = _parse_location(loc_text)
 
             # Germany only: skip events explicitly tagged as foreign
             if ort == "foreign":
@@ -334,6 +351,7 @@ def fetch(year: int) -> list[dict]:
 
             seen_ids.add(kal_num)
             url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
+            coords = geocode_plz(plz) if plz else geocode(ort)
 
             events.append({
                 "art":          art,
@@ -343,10 +361,11 @@ def fetch(year: int) -> list[dict]:
                 "date_iso":     date_iso,
                 "date_iso_end": date_iso_end,
                 "km":           None,
-                "lat":          None,
-                "lon":          None,
+                "lat":          coords["lat"],
+                "lon":          coords["lon"],
                 "titel":        titel,
                 "ort":          ort,
+                "plz":          plz,
                 "strecken":     strecken,
                 "verein":       "",
                 "lv":           lv,
