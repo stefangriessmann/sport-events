@@ -80,6 +80,12 @@ header p { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: r
 .filters { display: flex; gap: 10px; padding: 0 20px 12px; flex-wrap: wrap; align-items: center; }
 .filter-group { display: flex; align-items: center; gap: 5px; }
 label { font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: #3C342D; white-space: nowrap; letter-spacing: .04em; text-transform: uppercase; }
+/* Gemeinsames Styling für alle Filter-Inputs */
+.fi { font-family: 'Familjen Grotesk', sans-serif; font-size: .8rem; padding: 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: white; color: #0f172a; height: 30px; box-sizing: border-box; transition: border-color .15s; -webkit-appearance: none; appearance: none; }
+.fi:focus { outline: none; border-color: #94a3b8; box-shadow: 0 0 0 2px rgba(148,163,184,.2); }
+#plz-input.fi { width: 72px; }
+#plz-input.loading { border-color: #f59e0b !important; }
+#radius-sel.fi { padding-right: 24px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 7px center; }
 select, input[type=range] { background: white; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 7px; font-size: .8rem; }
 
 /* Table */
@@ -92,6 +98,8 @@ tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(255,193,31,.12); }
 #dist-th, .dist-td { display: none; }
 table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
+#dist-th { text-align: right; }
+.dist-td { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: #64748b; white-space: nowrap; padding-right: 16px; }
 
 /* Calendar */
 .cal-wrap { padding: 0 20px 28px; }
@@ -889,19 +897,17 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
   <div class="filters">
     <div class="filter-group">
       <label>Von:</label>
-      <input type="date" id="date-from" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateFrom=this.value;render()">
+      <input type="date" id="date-from" class="fi" onchange="selDateFrom=this.value;render()">
     </div>
     <div class="filter-group">
       <label>Bis:</label>
-      <input type="date" id="date-to" style="font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a" onchange="selDateTo=this.value;render()">
+      <input type="date" id="date-to" class="fi" onchange="selDateTo=this.value;render()">
     </div>
     <div class="filter-group" id="plz-group">
       <label>PLZ:</label>
-      <input type="text" id="plz-input" maxlength="5" placeholder="z.B. 09111"
-        style="width:70px;font-size:.8rem;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#0f172a"
-        oninput="onPlzInput()">
+      <input type="text" id="plz-input" class="fi" maxlength="5" placeholder="z.B. 09111" oninput="onPlzInput()">
       <label>Radius:</label>
-      <select id="radius-sel" onchange="render()" style="font-size:.8rem;padding:4px 6px">
+      <select id="radius-sel" class="fi" onchange="render()">
         <option value="">–</option>
         <option value="50">50 km</option>
         <option value="100" selected>100 km</option>
@@ -2259,7 +2265,7 @@ async function onPlzInput() {
   if (v.length !== 5 || !/^\d{5}$/.test(v)) { selPlz = ""; render(); return; }
   if (PLZ_MAP[v]) { selPlz = v; render(); return; }
   // Live-Geocoding via Nominatim
-  inp.style.borderColor = "#f59e0b";
+  inp.classList.add("loading");
   try {
     const r = await fetch(
       `https://nominatim.openstreetmap.org/search?postalcode=${v}&country=DE&format=json&limit=1`,
@@ -2268,7 +2274,7 @@ async function onPlzInput() {
     const data = await r.json();
     if (data && data[0]) PLZ_MAP[v] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
   } catch(e) { /* offline – kein Filter */ }
-  inp.style.borderColor = "";
+  inp.classList.remove("loading");
   selPlz = PLZ_MAP[v] ? v : "";
   render();
 }
@@ -2387,7 +2393,7 @@ function renderListe(v) {
       <td><span class="badge" style="background:${cfg.bg};color:${cfg.c}"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span></td>
       <td><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}${e.datum_end?`<span style="color:#94a3b8;font-size:.75rem"> – ${e.datum_end}</span>`:""}</td>
       <td><a class="event-link" href="${e.url}" target="_blank">${e.titel}</a>${flag?`<span class="country-badge">${flag}</span>`:""} ${e.serie?`<span class="serie-badge">${e.serie}</span>`:""}</td>
-      <td class="dist-td" style="text-align:right;font-size:.8rem;color:#64748b;white-space:nowrap">${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"–";return Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))+" km";})()}</td>
+      <td class="dist-td">${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"–";return Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))+" km";})()}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
       <td class="verein-sm">${e.verein} <span style="color:#94a3b8">(${e.lv})</span></td>
       <td style="white-space:nowrap">${starBtn(e.url)}<button class="report-btn" title="Event melden" onclick="openReport(${JSON.stringify(e.titel)},${JSON.stringify(e.url)})">⚑</button></td>`;
