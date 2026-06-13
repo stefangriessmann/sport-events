@@ -33,10 +33,11 @@ SOURCES = [
 ]
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-SCRIPT_DIR     = pathlib.Path(__file__).parent
+SCRIPT_DIR     = pathlib.Path(__file__).resolve().parent
 HTML_PATH      = SCRIPT_DIR.parent / "index.html"
 APPROVED_PATH  = SCRIPT_DIR.parent / "data" / "approved_events.json"
 sys.path.insert(0, str(SCRIPT_DIR))
+sys.path.insert(0, str(SCRIPT_DIR / "scrapers"))  # _geocode.py lives here
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

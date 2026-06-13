@@ -2,18 +2,21 @@
 de_radnet.py – Scraper for breitensport.rad-net.de (BDR Breitensportkalender).
 
 Fetches ALL cycling events across Germany (no distance pre-filter).
-The JS dashboard handles distance filtering dynamically via STATE_GEO + user PLZ.
-
-No geocoding – events are identified by their LV (Bundesland) code.
-The JS uses STATE_GEO[lv] as a fallback for distance calculation.
+For each event, the detail page is fetched once (with cache) to extract Startort PLZ + city.
+Geocoding via _geocode.geocode_plz(plz) or geocode(ort) as fallback.
+Cache: data/startort_cache.json (keyed by event URL).
 """
 from __future__ import annotations  # Python 3.9 compat
 import re
 import time
 from datetime import date, datetime
 
+import json
+from pathlib import Path
+
 import requests
 from bs4 import BeautifulSoup
+from _geocode import geocode_plz, geocode
 
 BASE = "https://breitensport.rad-net.de/breitensportkalender/"
 HEADERS = {"User-Agent": "bockwurst-events/2.0 (github.com/stefangriessmann/sport-events)"}
@@ -42,6 +45,68 @@ WDAY = {
     "Mo": "Montag", "Di": "Dienstag", "Mi": "Mittwoch",
     "Do": "Donnerstag", "Fr": "Freitag", "Sa": "Samstag", "So": "Sonntag",
 }
+
+# ── Startort-Cache ─────────────────────────────────────────────────────────
+_STARTORT_CACHE_PATH = Path("data") / "startort_cache.json"
+_startort_cache: dict | None = None
+
+
+def _load_startort_cache() -> dict:
+    global _startort_cache
+    if _startort_cache is None:
+        if _STARTORT_CACHE_PATH.exists():
+            with open(_STARTORT_CACHE_PATH, encoding="utf-8") as f:
+                _startort_cache = json.load(f)
+        else:
+            _startort_cache = {}
+    return _startort_cache
+
+
+def _save_startort_cache() -> None:
+    _STARTORT_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_STARTORT_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(_startort_cache, f, ensure_ascii=False, indent=2)
+
+
+def _fetch_startort(detail_url: str) -> dict[str, str]:
+    """
+    Fetch rad-net detail page and extract Startort (PLZ + city).
+    Returns {"ort": str, "plz": str} – empty strings if not found.
+    Caches results in startort_cache.json keyed by URL.
+    """
+    cache = _load_startort_cache()
+    if detail_url in cache:
+        return cache[detail_url]
+
+    result = {"ort": "", "plz": ""}
+    try:
+        time.sleep(0.5)   # rate-limit detail fetches
+        r = requests.get(detail_url, headers=HEADERS, timeout=15)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "lxml")
+
+        # <dt>Startort</dt><dd>Straße<br>PLZ Stadt<br>…</dd>
+        dt = soup.find("dt", string=re.compile(r"Startort", re.I))
+        if dt:
+            dd = dt.find_next_sibling("dd")
+            if dd:
+                text = dd.get_text(" ", strip=True)
+                # Extract 5-digit PLZ + city: "21255 Tostedt/Todtglüsingen"
+                m = re.search(r"\b(\d{5})\s+(.+?)(?:\s+Geschäftsstelle|\s+Route|$)", text)
+                if m:
+                    result["plz"] = m.group(1)
+                    result["ort"] = m.group(2).strip()
+                else:
+                    # Fallback: just the PLZ
+                    plz_m = re.search(r"\b(\d{5})\b", text)
+                    if plz_m:
+                        result["plz"] = plz_m.group(1)
+    except Exception as e:
+        print(f"  [radnet] Detail fetch error for {detail_url}: {e}")
+
+    cache[detail_url] = result
+    _save_startort_cache()
+    return result
 
 
 def _parse_entry(li) -> dict | None:
@@ -125,10 +190,12 @@ def _parse_entry(li) -> dict | None:
         "wochentag": WDAY.get(datum[:2], ""),
         "date_iso":  date_iso,
         "date_iso_end": date_iso_end,
-        "km":        None,   # JS calculates from lv → STATE_GEO
-        "lat":       None,
+        "km":        None,
+        "lat":       None,   # filled in fetch() after detail-page lookup
         "lon":       None,
         "titel":     titel,
+        "ort":       "",     # filled in fetch() after detail-page lookup
+        "plz":       "",     # filled in fetch() after detail-page lookup
         "strecken":  strecken,
         "verein":    verein,
         "lv":        LV_MAP.get(lv_raw, lv_raw),
@@ -192,5 +259,28 @@ def fetch(year: int) -> list[dict]:
             seen.add(e["url"])
             unique.append(e)
 
+    # Enrich with Startort from detail pages (rate-limited, cached in startort_cache.json)
+    print(f"  Enriching {len(unique)} events with Startort (cache hits skip HTTP)...")
+    cache = _load_startort_cache()
+    new_fetches = 0
+    for i, e in enumerate(unique):
+        was_cached = e["url"] in cache
+        startort = _fetch_startort(e["url"])   # sleeps 0.5s only on cache miss
+        e["ort"] = startort["ort"]
+        e["plz"] = startort["plz"]
+        if e["plz"]:
+            coords = geocode_plz(e["plz"])
+        elif e["ort"]:
+            coords = geocode(e["ort"])
+        else:
+            coords = {"lat": None, "lon": None}
+        e["lat"] = coords["lat"]
+        e["lon"] = coords["lon"]
+        if not was_cached:
+            new_fetches += 1
+        if (i + 1) % 50 == 0:
+            print(f"    {i + 1}/{len(unique)} enriched (new fetches so far: {new_fetches})...")
+
+    print(f"  {new_fetches} new detail pages fetched, {len(unique) - new_fetches} from cache")
     print(f"  {len(unique)} unique future events collected (all Germany)")
     return sorted(unique, key=lambda e: e["date_iso"])
