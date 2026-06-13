@@ -66,16 +66,39 @@ def _nominatim(params: dict) -> dict[str, float | None]:
     return {"lat": None, "lon": None}
 
 
+def _first_segment(ort: str) -> str:
+    """Extract first recognisable place from a compound string like 'Stiege/Alexisbad/Meisdorf'."""
+    import re as _re
+    # Split on / or " - " or " ("
+    m = _re.split(r"/| - | \(", ort.strip())
+    first = m[0].strip() if m else ort.strip()
+    return first if first != ort.strip() else ""
+
+
 def geocode(ort: str) -> dict[str, float | None]:
-    """Return {lat, lon} for a German city name via Nominatim."""
+    """Return {lat, lon} for a German city name via Nominatim.
+
+    Falls back to the first segment of compound names (e.g. 'Stiege/Alexisbad').
+    Null results are NOT cached so the next run can retry with improved logic.
+    """
     if not ort or not ort.strip():
         return {"lat": None, "lon": None}
     cache = _load_cache()
     key   = _normalise(ort)
-    if key not in cache:
-        cache[key] = _nominatim({"q": f"{ort},Deutschland"})
+    if key in cache and cache[key]["lat"] is not None:
+        return cache[key]
+    # Try full string
+    result = _nominatim({"q": f"{ort},Deutschland"})
+    if result["lat"] is None:
+        # Try first segment for compound names
+        first = _first_segment(ort)
+        if first:
+            result = _nominatim({"q": f"{first},Deutschland"})
+    # Only cache successful results – null results are retried next run
+    if result["lat"] is not None:
+        cache[key] = result
         _save_cache()
-    return cache[key]
+    return result
 
 
 def geocode_plz(plz: str) -> dict[str, float | None]:
