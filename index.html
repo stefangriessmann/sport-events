@@ -2429,7 +2429,12 @@ function getVis() {
     const r=parseInt(document.getElementById("radius-sel").value)||100;
     filtered=filtered.filter(e=>{
       const coords=eLoc(e);
-      if(!coords) return false; // kein Ort bekannt → bei PLZ-Filter ausblenden
+      if(!coords) {
+        // Ort bekannt aber kein Geocoding → ausblenden (Distanz nicht prüfbar)
+        if(e.ort && e.ort.trim()) return false;
+        // Kein Ort eingetragen (z.B. Triathlon) → immer zeigen
+        return true;
+      }
       return haversine(cLat,cLon,coords[0],coords[1])<=r;
     });
   }
