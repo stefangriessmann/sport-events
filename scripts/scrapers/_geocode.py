@@ -6,22 +6,24 @@ Usage:
     coords = geocode("Chemnitz")  # {"lat": 50.832, "lon": 12.923}
 
 Rate limit: 1 req/s (Nominatim ToS).
-Cache: ~/Claude/data/geocache.json (key = normalised city name).
+Cache: data/geocache.json (key = normalised city name).
+PLZ lookup: data/plz_map.json (GeoNames, ~10.800 entries) – no Nominatim needed.
 """
 from __future__ import annotations
 import json
-import os
 import re
 import time
 from pathlib import Path
 
 import requests
 
-CACHE_PATH = Path("data") / "geocache.json"
-HEADERS    = {"User-Agent": "bockwurst-events/2.0 stefan.griessmann@web.de"}
-API_URL    = "https://nominatim.openstreetmap.org/search"
+CACHE_PATH    = Path("data") / "geocache.json"
+PLZ_MAP_PATH  = Path("data") / "plz_map.json"
+HEADERS       = {"User-Agent": "bockwurst-events/2.0 stefan.griessmann@web.de"}
+API_URL       = "https://nominatim.openstreetmap.org/search"
 
 _cache: dict[str, dict] | None = None
+_plz_map: dict[str, list] | None = None
 _last_request = 0.0
 
 
@@ -101,16 +103,44 @@ def geocode(ort: str) -> dict[str, float | None]:
     return result
 
 
+def _load_plz_map() -> dict[str, list]:
+    """Load data/plz_map.json (GeoNames DE, ~10.800 PLZs) into memory once."""
+    global _plz_map
+    if _plz_map is None:
+        if PLZ_MAP_PATH.exists():
+            with open(PLZ_MAP_PATH, encoding="utf-8") as f:
+                _plz_map = json.load(f)
+        else:
+            _plz_map = {}
+    return _plz_map
+
+
 def geocode_plz(plz: str) -> dict[str, float | None]:
-    """Return {lat, lon} for a German PLZ via Nominatim postalcode lookup (more accurate than city name)."""
+    """Return {lat, lon} for a German PLZ.
+
+    Primary source: data/plz_map.json (GeoNames, offline, ~10.800 PLZs).
+    Fallback: Nominatim + geocache.
+    Null results from Nominatim are NOT cached so next run retries.
+    """
     if not plz or len(plz) != 5 or not plz.isdigit():
         return {"lat": None, "lon": None}
+
+    # Primary: plz_map.json – instant, no network
+    plz_map = _load_plz_map()
+    if plz in plz_map:
+        coords = plz_map[plz]
+        return {"lat": coords[0], "lon": coords[1]}
+
+    # Fallback: geocache + Nominatim
     cache = _load_cache()
     key   = f"plz:{plz}"
-    if key not in cache:
-        cache[key] = _nominatim({"postalcode": plz, "country": "DE"})
+    if key in cache and cache[key].get("lat") is not None:
+        return cache[key]
+    result = _nominatim({"postalcode": plz, "country": "DE"})
+    if result["lat"] is not None:
+        cache[key] = result
         _save_cache()
-    return cache[key]
+    return result
 
 
 if __name__ == "__main__":

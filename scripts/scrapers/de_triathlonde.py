@@ -64,32 +64,48 @@ def _fetch_detail_location(url: str) -> str:
 
         location = ""
 
-        # Strategy 1: Drupal field for location/city
-        # Common field names: field-ort, field-veranstaltungsort, field-stadt, field-city
-        for sel in [
-            "[class*='field--name-field-ort']",
-            "[class*='field--name-field-veranstaltungsort']",
-            "[class*='field--name-field-stadt']",
-            "[class*='field--name-field-city']",
-            "[class*='field-name-field-ort']",
-        ]:
-            el = soup.select_one(sel)
-            if el:
-                txt = el.get_text(strip=True)
-                if txt and len(txt) < 60:
-                    location = txt
-                    break
+        # Strategy 1: DTU RDFa microdata – <span class="locality">City</span>
+        # Page structure: <p property="location" typeof="Place">
+        #   <span property="address" typeof="PostalAddress">
+        #     <span property="addressRegion">
+        #       <span class="locality">Roth</span>, <span property="addressLocality">Bayern</span>
+        #     </span>
+        #   </span>
+        # </p>
+        loc_el = soup.find("span", class_="locality")
+        if loc_el:
+            txt = loc_el.get_text(strip=True)
+            if txt and 2 < len(txt) < 60:
+                location = txt
 
-        # Strategy 2: Schema.org microdata
+        # Strategy 2: Drupal field selectors
         if not location:
-            loc_el = soup.find(attrs={"itemprop": "location"}) or \
-                     soup.find(attrs={"itemprop": "addressLocality"})
-            if loc_el:
-                txt = loc_el.get_text(strip=True)
-                if txt and len(txt) < 60:
-                    location = txt
+            for sel in [
+                "[class*='field--name-field-ort']",
+                "[class*='field--name-field-veranstaltungsort']",
+                "[class*='field--name-field-stadt']",
+                "[class*='field--name-field-city']",
+                "[class*='field-name-field-ort']",
+            ]:
+                el = soup.select_one(sel)
+                if el:
+                    txt = el.get_text(strip=True)
+                    if txt and len(txt) < 60:
+                        location = txt
+                        break
 
-        # Strategy 3: Look for "Ort:" or "Veranstaltungsort:" label in page text
+        # Strategy 3: Schema.org itemprop or RDFa property for addressLocality
+        if not location:
+            for attr in [{"itemprop": "addressLocality"}, {"property": "addressLocality"},
+                         {"itemprop": "location"}, {"property": "location"}]:
+                loc_el = soup.find(attrs=attr)
+                if loc_el:
+                    txt = loc_el.get_text(strip=True)
+                    if txt and 2 < len(txt) < 60:
+                        location = txt
+                        break
+
+        # Strategy 4: "Ort:" / "Veranstaltungsort:" label in page text
         if not location:
             page_text = soup.get_text("\n")
             for pattern in [
@@ -103,7 +119,7 @@ def _fetch_detail_location(url: str) -> str:
                         location = candidate
                         break
 
-        # Strategy 4: First comma-separated text in meta description or title
+        # Strategy 5: First comma-separated text in meta description
         if not location:
             meta_desc = soup.find("meta", attrs={"name": "description"})
             if meta_desc and meta_desc.get("content"):
@@ -112,33 +128,6 @@ def _fetch_detail_location(url: str) -> str:
                     candidate = parts[0].strip()
                     if 2 < len(candidate) < 50 and candidate.lower() not in ("triathlon","duathlon","swimrun"):
                         location = candidate
-
-        # Strategy 5: Text immediately before h1 (triathlondeutschland.de pattern:
-        # "City, State" appears as plain text between the date and the event title h1)
-        if not location:
-            h1 = soup.find("h1")
-            if h1:
-                # Check previous sibling(s) and parent's preceding text
-                for el in [h1.find_previous_sibling(), h1.parent.find_previous_sibling() if h1.parent else None]:
-                    if not el:
-                        continue
-                    txt = el.get_text(strip=True)
-                    if "," in txt and 3 < len(txt) < 80:
-                        parts = txt.split(",", 1)
-                        if 2 < len(parts[0]) < 50:
-                            location = parts[0].strip()
-                            break
-                # Fallback: look at all text nodes in main content before h1
-                if not location:
-                    main = soup.find("main") or soup.find(id="main-content") or soup.find(class_=re.compile(r"main|content"))
-                    if main:
-                        all_text = [s.strip() for s in main.stripped_strings]
-                        for i, chunk in enumerate(all_text[:20]):
-                            if "," in chunk and 3 < len(chunk) < 80:
-                                parts = chunk.split(",", 1)
-                                if 2 < len(parts[0]) < 50 and parts[0][0].isupper():
-                                    location = parts[0].strip()
-                                    break
 
         cache[url] = location
         _save_loc_cache()

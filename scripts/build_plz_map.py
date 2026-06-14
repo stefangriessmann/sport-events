@@ -136,9 +136,14 @@ def fetch_plz_map() -> dict:
             plz_map = {}
             for key, val in geocache.items():
                 if key.startswith("plz:") and isinstance(val, dict) and "lat" in val and "lon" in val:
+                    if val["lat"] is None or val["lon"] is None:
+                        continue  # skip null/failed geocoding results
                     plz = key[4:].zfill(5)
                     if len(plz) == 5:
-                        plz_map[plz] = [round(float(val["lat"]), 4), round(float(val["lon"]), 4)]
+                        try:
+                            plz_map[plz] = [round(float(val["lat"]), 4), round(float(val["lon"]), 4)]
+                        except (TypeError, ValueError):
+                            continue
             if plz_map:
                 print(f"[build_plz_map] geocache: {len(plz_map)} PLZ entries", file=sys.stderr)
                 return plz_map
