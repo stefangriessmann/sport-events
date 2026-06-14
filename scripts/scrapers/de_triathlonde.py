@@ -5,15 +5,124 @@ The DTU calendar is server-rendered (Drupal 10), paginated.
 URL structure changed: date filter params are now required.
 Use date_from[min]=today & date_from[max]=12/31/year to get upcoming events for target year.
 Start from page 0. Stop after 3 consecutive empty pages.
+
+Location extraction: calendar list view doesn't include city names, so we fetch
+each event's detail page to get the location. Results are cached in data/tri_location_cache.json.
 """
 from __future__ import annotations
+import json
 import re
 import time
 from datetime import date, datetime
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
 from _geocode import geocode
+
+# --- Location detail-page cache ---
+_LOC_CACHE_PATH = Path("data") / "tri_location_cache.json"
+_loc_cache: dict[str, str] | None = None
+_last_req = 0.0
+
+def _load_loc_cache() -> dict[str, str]:
+    global _loc_cache
+    if _loc_cache is None:
+        if _LOC_CACHE_PATH.exists():
+            with open(_LOC_CACHE_PATH, encoding="utf-8") as f:
+                _loc_cache = json.load(f)
+        else:
+            _loc_cache = {}
+    return _loc_cache
+
+def _save_loc_cache() -> None:
+    _LOC_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_LOC_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(_loc_cache, f, ensure_ascii=False, indent=2)
+
+def _fetch_detail_location(url: str) -> str:
+    """
+    Fetch an event detail page and extract the location/city name.
+    Caches results so repeated scraper runs don't re-fetch.
+    Returns empty string if location not found.
+    """
+    global _last_req
+    cache = _load_loc_cache()
+    if url in cache:
+        return cache[url]
+
+    # Rate limit: max 1 req/s
+    elapsed = time.time() - _last_req
+    if elapsed < 1.0:
+        time.sleep(1.0 - elapsed)
+
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        _last_req = time.time()
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "lxml")
+
+        location = ""
+
+        # Strategy 1: Drupal field for location/city
+        # Common field names: field-ort, field-veranstaltungsort, field-stadt, field-city
+        for sel in [
+            "[class*='field--name-field-ort']",
+            "[class*='field--name-field-veranstaltungsort']",
+            "[class*='field--name-field-stadt']",
+            "[class*='field--name-field-city']",
+            "[class*='field-name-field-ort']",
+        ]:
+            el = soup.select_one(sel)
+            if el:
+                txt = el.get_text(strip=True)
+                if txt and len(txt) < 60:
+                    location = txt
+                    break
+
+        # Strategy 2: Schema.org microdata
+        if not location:
+            loc_el = soup.find(attrs={"itemprop": "location"}) or \
+                     soup.find(attrs={"itemprop": "addressLocality"})
+            if loc_el:
+                txt = loc_el.get_text(strip=True)
+                if txt and len(txt) < 60:
+                    location = txt
+
+        # Strategy 3: Look for "Ort:" or "Veranstaltungsort:" label in page text
+        if not location:
+            page_text = soup.get_text("\n")
+            for pattern in [
+                r"(?:Ort|Veranstaltungsort|Stadt|Austragungsort)\s*:\s*([^\n,]{2,50})",
+                r"(?:Location|Place)\s*:\s*([^\n,]{2,50})",
+            ]:
+                m = re.search(pattern, page_text, re.IGNORECASE)
+                if m:
+                    candidate = m.group(1).strip()
+                    if candidate and len(candidate) < 60:
+                        location = candidate
+                        break
+
+        # Strategy 4: First comma-separated text in meta description or title
+        if not location:
+            meta_desc = soup.find("meta", attrs={"name": "description"})
+            if meta_desc and meta_desc.get("content"):
+                parts = meta_desc["content"].split(",")
+                if len(parts) >= 2:
+                    candidate = parts[0].strip()
+                    if 2 < len(candidate) < 50 and candidate.lower() not in ("triathlon","duathlon","swimrun"):
+                        location = candidate
+
+        cache[url] = location
+        _save_loc_cache()
+        return location
+
+    except Exception as e:
+        _last_req = time.time()
+        print(f"  [detail] Error fetching {url}: {e}")
+        cache[url] = ""  # cache failure too to avoid retry storms
+        _save_loc_cache()
+        return ""
 
 BASE    = "https://www.triathlondeutschland.de/termine/veranstaltungskalender"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)"}
@@ -217,8 +326,13 @@ def fetch(year: int) -> list[dict]:
             if date_iso < today_iso:
                 continue
 
-            lv     = _lv_from_state(state or surrounding)
-            art    = _parse_art(titel)
+            lv  = _lv_from_state(state or surrounding)
+            art = _parse_art(titel)
+
+            # If list view didn't yield location, fetch detail page
+            if not location and full_url:
+                location = _fetch_detail_location(full_url)
+
             coords = geocode(location)
 
             seen_urls.add(full_url)
