@@ -1902,5 +1902,13 @@
   "beverstedt-wellen": {
     "lat": 53.4058601,
     "lon": 8.8485968
+  },
+  "breitungen/werra": {
+    "lat": 50.7581715,
+    "lon": 10.3336776
+  },
+  "nordstemmen-adensen": {
+    "lat": 52.1763239,
+    "lon": 9.729259
   }
 }

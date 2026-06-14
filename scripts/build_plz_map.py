@@ -11,7 +11,8 @@ Sources tried in order:
   1. downloads.suche-postleitzahl.org (CSV)
   2. raw.githubusercontent.com/zauberware (JSON)
   3. data/plz_map.json (local cache from previous run)
-  4. keep existing PLZ_MAP in index.html (no filter, graceful degradation)
+  4. data/geocache.json (event geocoding cache, ~289 PLZ entries)
+  5. keep existing PLZ_MAP in index.html (no filter, graceful degradation)
 """
 import json
 import re
@@ -85,6 +86,25 @@ def fetch_plz_map() -> dict:
         print("[build_plz_map] Using local cache data/plz_map.json", file=sys.stderr)
         with open(CACHE_PATH, encoding="utf-8") as f:
             return json.load(f)
+
+    # Source 4: geocache.json (event geocoding cache with plz:XXXXX entries)
+    geocache_path = Path(__file__).parent.parent / "data" / "geocache.json"
+    if geocache_path.exists():
+        try:
+            print("[build_plz_map] Trying geocache.json fallback...", file=sys.stderr)
+            with open(geocache_path, encoding="utf-8") as f:
+                geocache = json.load(f)
+            plz_map = {}
+            for key, val in geocache.items():
+                if key.startswith("plz:") and isinstance(val, dict) and "lat" in val and "lon" in val:
+                    plz = key[4:].zfill(5)
+                    if len(plz) == 5:
+                        plz_map[plz] = [round(float(val["lat"]), 4), round(float(val["lon"]), 4)]
+            if plz_map:
+                print(f"[build_plz_map] geocache: {len(plz_map)} PLZ entries", file=sys.stderr)
+                return plz_map
+        except Exception as e:
+            print(f"[build_plz_map] geocache failed: {e}", file=sys.stderr)
 
     print("[build_plz_map] WARNING: all sources failed, PLZ_MAP stays empty", file=sys.stderr)
     return {}

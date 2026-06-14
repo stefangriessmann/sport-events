@@ -113,6 +113,33 @@ def _fetch_detail_location(url: str) -> str:
                     if 2 < len(candidate) < 50 and candidate.lower() not in ("triathlon","duathlon","swimrun"):
                         location = candidate
 
+        # Strategy 5: Text immediately before h1 (triathlondeutschland.de pattern:
+        # "City, State" appears as plain text between the date and the event title h1)
+        if not location:
+            h1 = soup.find("h1")
+            if h1:
+                # Check previous sibling(s) and parent's preceding text
+                for el in [h1.find_previous_sibling(), h1.parent.find_previous_sibling() if h1.parent else None]:
+                    if not el:
+                        continue
+                    txt = el.get_text(strip=True)
+                    if "," in txt and 3 < len(txt) < 80:
+                        parts = txt.split(",", 1)
+                        if 2 < len(parts[0]) < 50:
+                            location = parts[0].strip()
+                            break
+                # Fallback: look at all text nodes in main content before h1
+                if not location:
+                    main = soup.find("main") or soup.find(id="main-content") or soup.find(class_=re.compile(r"main|content"))
+                    if main:
+                        all_text = [s.strip() for s in main.stripped_strings]
+                        for i, chunk in enumerate(all_text[:20]):
+                            if "," in chunk and 3 < len(chunk) < 80:
+                                parts = chunk.split(",", 1)
+                                if 2 < len(parts[0]) < 50 and parts[0][0].isupper():
+                                    location = parts[0].strip()
+                                    break
+
         cache[url] = location
         _save_loc_cache()
         return location
