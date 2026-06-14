@@ -8,24 +8,51 @@ Replaces the line:  const PLZ_MAP = {};
 with the full minified map (~120 KB).
 
 Sources tried in order:
-  1. downloads.suche-postleitzahl.org (CSV)
-  2. raw.githubusercontent.com/zauberware (JSON)
-  3. data/plz_map.json (local cache from previous run)
-  4. data/geocache.json (event geocoding cache, ~289 PLZ entries)
-  5. keep existing PLZ_MAP in index.html (no filter, graceful degradation)
+  1. GeoNames DE.zip (download.geonames.org) – ~8200 entries, most reliable
+  2. downloads.suche-postleitzahl.org (CSV)
+  3. raw.githubusercontent.com/zauberware (JSON)
+  4. data/plz_map.json (local cache from previous successful run)
+  5. data/geocache.json (event geocoding cache, ~400 PLZ entries)
+  6. keep existing PLZ_MAP in index.html (no filter, graceful degradation)
 """
+import io
 import json
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 import requests
 
-INDEX_HTML   = Path(__file__).parent.parent / "index.html"
-CACHE_PATH   = Path(__file__).parent.parent / "data" / "plz_map.json"
-HEADERS      = {"User-Agent": "bockwurst-events/2.0 stefan.griessmann@web.de"}
-URL_CSV      = "https://downloads.suche-postleitzahl.org/v2/public/plz_einwohner.csv"
-URL_JSON     = "https://raw.githubusercontent.com/zauberware/postal-codes-json-xml-csv/master/data/DE/zipcodes.de.json"
+INDEX_HTML      = Path(__file__).parent.parent / "index.html"
+CACHE_PATH      = Path(__file__).parent.parent / "data" / "plz_map.json"
+HEADERS         = {"User-Agent": "bockwurst-events/2.0 stefan.griessmann@web.de"}
+URL_GEONAMES    = "https://download.geonames.org/export/zip/DE.zip"
+URL_CSV         = "https://downloads.suche-postleitzahl.org/v2/public/plz_einwohner.csv"
+URL_JSON        = "https://raw.githubusercontent.com/zauberware/postal-codes-json-xml-csv/master/data/DE/zipcodes.de.json"
+
+
+def _parse_geonames(content: bytes) -> dict:
+    """Parse DE.zip from GeoNames.
+    Tab-separated: country | postal_code | place_name | ... | latitude | longitude | ...
+    Columns: 0=country, 1=postal_code, 9=latitude, 10=longitude
+    """
+    plz_map = {}
+    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        with zf.open("DE.txt") as f:
+            for line in f:
+                parts = line.decode("utf-8").strip().split("\t")
+                if len(parts) < 11:
+                    continue
+                plz = parts[1].strip().zfill(5)
+                try:
+                    lat = round(float(parts[9]), 4)
+                    lon = round(float(parts[10]), 4)
+                except (ValueError, IndexError):
+                    continue
+                if len(plz) == 5 and plz not in plz_map:
+                    plz_map[plz] = [lat, lon]
+    return plz_map
 
 
 def _parse_csv(text: str) -> dict:
@@ -57,7 +84,19 @@ def _parse_json(data: list) -> dict:
 
 
 def fetch_plz_map() -> dict:
-    # Source 1: CSV
+    # Source 1: GeoNames DE.zip – all ~8200 German PLZs
+    try:
+        print("[build_plz_map] Trying GeoNames DE.zip...", file=sys.stderr)
+        r = requests.get(URL_GEONAMES, headers=HEADERS, timeout=60)
+        r.raise_for_status()
+        plz_map = _parse_geonames(r.content)
+        if plz_map:
+            print(f"[build_plz_map] GeoNames: {len(plz_map)} entries", file=sys.stderr)
+            return plz_map
+    except Exception as e:
+        print(f"[build_plz_map] GeoNames failed: {e}", file=sys.stderr)
+
+    # Source 2: CSV (suche-postleitzahl.org)
     try:
         print("[build_plz_map] Trying CSV source...", file=sys.stderr)
         r = requests.get(URL_CSV, headers=HEADERS, timeout=30)
@@ -69,7 +108,7 @@ def fetch_plz_map() -> dict:
     except Exception as e:
         print(f"[build_plz_map] CSV failed: {e}", file=sys.stderr)
 
-    # Source 2: JSON fallback
+    # Source 3: JSON (zauberware GitHub)
     try:
         print("[build_plz_map] Trying JSON fallback...", file=sys.stderr)
         r2 = requests.get(URL_JSON, headers=HEADERS, timeout=30)
@@ -81,13 +120,13 @@ def fetch_plz_map() -> dict:
     except Exception as e:
         print(f"[build_plz_map] JSON failed: {e}", file=sys.stderr)
 
-    # Source 3: local cache
+    # Source 4: local plz_map.json cache
     if CACHE_PATH.exists():
         print("[build_plz_map] Using local cache data/plz_map.json", file=sys.stderr)
         with open(CACHE_PATH, encoding="utf-8") as f:
             return json.load(f)
 
-    # Source 4: geocache.json (event geocoding cache with plz:XXXXX entries)
+    # Source 5: geocache.json (plz:XXXXX entries from event geocoding)
     geocache_path = Path(__file__).parent.parent / "data" / "geocache.json"
     if geocache_path.exists():
         try:
