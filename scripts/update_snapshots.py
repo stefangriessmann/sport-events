@@ -89,8 +89,10 @@ def update_static_badge_date(html: str, new_date: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--year",    type=int, default=date.today().year)
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--year",      type=int, default=date.today().year)
+    parser.add_argument("--dry-run",   action="store_true")
+    parser.add_argument("--no-scrape", action="store_true",
+                        help="Skip all scrapers – only inject approved_events.json into existing snapshot.")
     args = parser.parse_args()
 
     if not HTML_PATH.exists():
@@ -106,39 +108,46 @@ def main():
     # snapshot_data: js_var → (events_list, sport_key)
     snapshot_data: dict = {}
 
-    for module_path, js_var, sport_key in SOURCES:
-        modules = [module_path] if isinstance(module_path, str) else module_path
-        print(f"\n── {', '.join(modules)} → {js_var} ──────────────────")
+    if args.no_scrape:
+        # Skip scrapers – pre-populate with empty lists so approved events can
+        # be injected into the existing HTML snapshot in Phase 2/3.
+        print("\n── --no-scrape: Scraper übersprungen, nur approved_events.json wird eingemischt ──")
+        for module_path, js_var, sport_key in SOURCES:
+            snapshot_data[js_var] = ([], sport_key)
+    else:
+        for module_path, js_var, sport_key in SOURCES:
+            modules = [module_path] if isinstance(module_path, str) else module_path
+            print(f"\n── {', '.join(modules)} → {js_var} ──────────────────")
 
-        all_events = []
-        seen_urls: set = set()
-        seen_titledate: set = set()
+            all_events = []
+            seen_urls: set = set()
+            seen_titledate: set = set()
 
-        for mp in modules:
-            try:
-                mod   = importlib.import_module(mp)
-                batch = mod.fetch(args.year)
-                print(f"  {mp}: {len(batch)} events")
-            except Exception as e:
-                print(f"  SCRAPER ERROR ({mp}): {e}")
-                batch = []
+            for mp in modules:
+                try:
+                    mod   = importlib.import_module(mp)
+                    batch = mod.fetch(args.year)
+                    print(f"  {mp}: {len(batch)} events")
+                except Exception as e:
+                    print(f"  SCRAPER ERROR ({mp}): {e}")
+                    batch = []
 
-            for ev in batch:
-                key_url = ev.get("url", "")
-                key_td  = (ev.get("titel", ""), ev.get("date_iso", ""))
-                if key_url and key_url in seen_urls:
-                    continue
-                if key_td in seen_titledate:
-                    continue
-                if key_url:
-                    seen_urls.add(key_url)
-                seen_titledate.add(key_td)
-                all_events.append(ev)
+                for ev in batch:
+                    key_url = ev.get("url", "")
+                    key_td  = (ev.get("titel", ""), ev.get("date_iso", ""))
+                    if key_url and key_url in seen_urls:
+                        continue
+                    if key_td in seen_titledate:
+                        continue
+                    if key_url:
+                        seen_urls.add(key_url)
+                    seen_titledate.add(key_td)
+                    all_events.append(ev)
 
-        snapshot_data[js_var] = (
-            sorted(all_events, key=lambda e: e.get("date_iso", "")),
-            sport_key,
-        )
+            snapshot_data[js_var] = (
+                sorted(all_events, key=lambda e: e.get("date_iso", "")),
+                sport_key,
+            )
 
     # ── Phase 2: Manuell freigegebene Events einmischen ────────────────────────
     # approved_patch: js_var → list of clean events (for below-threshold snapshots)

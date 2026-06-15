@@ -41,7 +41,7 @@ jobs:
         run: pip install requests beautifulsoup4 lxml
 
       - name: Update index.html with approved event
-        run: python3 scripts/update_snapshots.py
+        run: python3 scripts/update_snapshots.py --no-scrape
 
       - name: Commit approved_events.json + index.html
         run: |
