@@ -69,12 +69,28 @@ def _nominatim(params: dict) -> dict[str, float | None]:
 
 
 def _first_segment(ort: str) -> str:
-    """Extract first recognisable place from a compound string like 'Stiege/Alexisbad/Meisdorf'."""
+    """Extract first recognisable place from a compound string.
+
+    Handles:
+    - 'Stiege/Alexisbad/Meisdorf'  → 'Stiege'
+    - 'Hassel OT Wischer'          → 'Hassel'   (German Ortsteil notation)
+    - 'Heideblick-Bornsdorf'       → 'Heideblick'  (hyphenated compound)
+    """
     import re as _re
-    # Split on / or " - " or " ("
-    m = _re.split(r"/| - | \(", ort.strip())
-    first = m[0].strip() if m else ort.strip()
-    return first if first != ort.strip() else ""
+    ort = ort.strip()
+    # German Ortsteil: "Hauptort OT Ortsteil" → try Hauptort
+    ot_m = _re.match(r'^(.+?)\s+OT\s+', ort)
+    if ot_m:
+        return ot_m.group(1).strip()
+    # Split on /, " - ", " ("
+    parts = _re.split(r'[/]| - | \(', ort)
+    if len(parts) > 1:
+        return parts[0].strip()
+    # Hyphenated compound: "Heideblick-Bornsdorf" → "Heideblick"
+    hyp = ort.split('-')
+    if len(hyp) > 1 and len(hyp[0]) > 3:
+        return hyp[0].strip()
+    return ""
 
 
 def geocode(ort: str) -> dict[str, float | None]:

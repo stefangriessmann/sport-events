@@ -34,6 +34,36 @@ LV_MAP = {
     "BRE": "BRE",
 }
 
+# LV display-code → (lat, lon) of state centroid / capital, used as fallback
+# when the detail page is unavailable (rate-limit).
+LV_COORD_FALLBACK: dict[str, tuple[float, float]] = {
+    "BAY": (48.79, 11.50),   # Bayern
+    "NRW": (51.43, 7.66),    # Nordrhein-Westfalen
+    "BRA": (52.52, 13.40),   # Brandenburg
+    "SAC": (51.05, 13.74),   # Sachsen
+    "SA":  (51.50, 11.97),   # Sachsen-Anhalt
+    "THÜ": (50.98, 11.03),   # Thüringen
+    "NDS": (52.37, 9.74),    # Niedersachsen
+    "HES": (50.11, 8.68),    # Hessen
+    "SCH": (54.32, 10.12),   # Schleswig-Holstein
+    "RLP": (50.00, 7.27),    # Rheinland-Pfalz
+    "BER": (52.52, 13.40),   # Berlin
+    "BAD": (48.99, 8.41),    # Baden
+    "WÜR": (49.79, 9.95),    # Württemberg
+    "SAA": (49.24, 6.99),    # Saarland
+    "HAM": (53.58, 10.02),   # Hamburg
+    "BRE": (53.08, 8.80),    # Bremen
+    "MEV": (53.64, 11.40),   # Mecklenburg-Vorpommern
+}
+
+LV_STATE_NAMES: dict[str, str] = {
+    "BAY": "Bayern", "NRW": "Nordrhein-Westfalen", "BRA": "Brandenburg",
+    "SAC": "Sachsen", "SA": "Sachsen-Anhalt", "THÜ": "Thüringen",
+    "NDS": "Niedersachsen", "HES": "Hessen", "SCH": "Schleswig-Holstein",
+    "RLP": "Rheinland-Pfalz", "BER": "Berlin", "BAD": "Baden", "WÜR": "Württemberg",
+    "SAA": "Saarland", "HAM": "Hamburg", "BRE": "Bremen", "MEV": "Mecklenburg-Vorpommern",
+}
+
 # art values to skip (non-events or permanent routes)
 SKIP_ARTS = {
     "CTF-Permanente", "RTF-Permanente", "RTF nach GPS", "vRTF",
@@ -80,13 +110,24 @@ def _fetch_startort(detail_url: str) -> dict[str, str]:
 
     result = {"ort": "", "plz": ""}
     try:
-        time.sleep(0.5)   # rate-limit detail fetches
+        time.sleep(1.5)   # rate-limit: increased from 0.5s to reduce blocking
         r = requests.get(detail_url, headers=HEADERS, timeout=15)
         r.raise_for_status()
+
+        # Detect rad-net rate-limit page ("Bitte warten" / "automatisierter Zugriffe").
+        # Do NOT cache – the next run will retry.
+        if "automatisierter" in r.text or "bitte warten" in r.text.lower():
+            print(f"  [radnet] Rate-limited: {detail_url[-50:]!r} – skipped (retry next run)")
+            return result  # not cached
+
         soup = BeautifulSoup(r.text, "lxml")
 
         # <tr><th>Startort</th><td>Straße<br>PLZ Stadt<br>Geschäftsstelle…</td></tr>
-        th = soup.find("th", string=re.compile(r"Startort", re.I))
+        # Use get_text() to handle nested elements robustly
+        th = next(
+            (t for t in soup.find_all("th") if re.search(r"Startort", t.get_text(), re.I)),
+            None,
+        )
         if th:
             td = th.find_next_sibling("td")
             if td:
@@ -276,6 +317,12 @@ def fetch(year: int) -> list[dict]:
             coords = {"lat": None, "lon": None}
         e["lat"] = coords["lat"]
         e["lon"] = coords["lon"]
+        # Fallback: when detail page was rate-limited or PLZ unknown,
+        # use LV state centroid so every event has approximate coordinates.
+        if e["lat"] is None and e["lv"] in LV_COORD_FALLBACK:
+            e["lat"], e["lon"] = LV_COORD_FALLBACK[e["lv"]]
+        if not e["ort"] and e["lv"] in LV_STATE_NAMES:
+            e["ort"] = LV_STATE_NAMES[e["lv"]]
         if not was_cached:
             new_fetches += 1
         if (i + 1) % 50 == 0:

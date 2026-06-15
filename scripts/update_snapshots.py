@@ -173,6 +173,19 @@ def main():
                 duplicate = (url and any(e.get("url") == url for e in events_list)) or \
                             any((e.get("titel"), e.get("date_iso")) == td for e in events_list)
                 if not duplicate:
+                    # Geocode if ort/plz is set but lat/lon are missing
+                    if not ev_clean.get("lat") and (ev_clean.get("plz") or ev_clean.get("ort")):
+                        try:
+                            sys.path.insert(0, str(SCRIPT_DIR / "scrapers"))
+                            from _geocode import geocode_plz as _gp, geocode as _gc
+                            _coords = _gp(ev_clean["plz"]) if ev_clean.get("plz") else {"lat": None, "lon": None}
+                            if _coords["lat"] is None and ev_clean.get("ort"):
+                                _coords = _gc(ev_clean["ort"])
+                            if _coords["lat"] is not None:
+                                ev_clean["lat"] = _coords["lat"]
+                                ev_clean["lon"] = _coords["lon"]
+                        except Exception as _ge:
+                            print(f"  [geocode approved] {ev_clean.get('titel','?')}: {_ge}")
                     events_list.append(ev_clean)
                     # also track separately for below-threshold merging
                     approved_patch.setdefault(snap, []).append(ev_clean)
@@ -265,6 +278,17 @@ def main():
         if sport_key:
             html = update_stand_date(html, sport_key, today_fmt)
         changed = True
+
+    # ── Phase 4: Vergangene Events aus manuell gepflegten Snapshots entfernen ──
+    MANUAL_SNAPSHOTS = ["SWIM_SNAPSHOT"]
+    for var_name in MANUAL_SNAPSHOTS:
+        existing = read_existing_snapshot(html, var_name)
+        future = [e for e in existing if e.get("date_iso", "9999") >= today_iso]
+        if len(future) < len(existing):
+            purged = len(existing) - len(future)
+            print(f"\n  {var_name}: {purged} vergangene(s) Event(s) entfernt.")
+            html = update_snapshot(html, var_name, future)
+            changed = True
 
     if not changed:
         print("\nKeine Snapshots aktualisiert.")
