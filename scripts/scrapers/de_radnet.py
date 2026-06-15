@@ -32,6 +32,9 @@ LV_MAP = {
     "MEV": "MEV", "SCH": "SCH", "RLP": "RLP", "BER": "BER",
     "BAD": "BAD", "WÜR": "WÜR", "SAA": "SAA", "HAM": "HAM",
     "BRE": "BRE",
+    # Additional rad-net LV codes not in the standard BDR list:
+    "WTB": "WÜR",   # Württemberg (combined BW region used by some events)
+    "SAR": "SAA",   # Saarland (alternative code used by rad-net)
 }
 
 # LV display-code → (lat, lon) of state centroid / capital, used as fallback

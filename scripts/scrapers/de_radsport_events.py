@@ -30,6 +30,24 @@ HEADERS   = {
 
 PAGE_STEP = 21
 
+# LV fallback: state centroid coords + names (mirrors de_radnet.py – kept in sync manually)
+LV_COORD_FALLBACK: dict[str, tuple[float, float]] = {
+    "BAY": (48.79, 11.50), "NRW": (51.43, 7.66),  "BRA": (52.52, 13.40),
+    "SAC": (51.05, 13.74), "SA":  (51.50, 11.97),  "THÜ": (50.98, 11.03),
+    "NDS": (52.37, 9.74),  "HES": (50.11, 8.68),   "SCH": (54.32, 10.12),
+    "RLP": (50.00, 7.27),  "BER": (52.52, 13.40),  "BAD": (48.99, 8.41),
+    "WÜR": (49.79, 9.95),  "SAA": (49.24, 6.99),   "HAM": (53.58, 10.02),
+    "BRE": (53.08, 8.80),  "MEV": (53.64, 11.40),
+}
+LV_STATE_NAMES: dict[str, str] = {
+    "BAY": "Bayern",         "NRW": "Nordrhein-Westfalen", "BRA": "Brandenburg",
+    "SAC": "Sachsen",        "SA":  "Sachsen-Anhalt",      "THÜ": "Thüringen",
+    "NDS": "Niedersachsen",  "HES": "Hessen",              "SCH": "Schleswig-Holstein",
+    "RLP": "Rheinland-Pfalz","BER": "Berlin",              "BAD": "Baden",
+    "WÜR": "Württemberg",    "SAA": "Saarland",            "HAM": "Hamburg",
+    "BRE": "Bremen",         "MEV": "Mecklenburg-Vorpommern",
+}
+
 SKIP_ARTS = {
     "Etappenfahrt", "Sonstige", "Vintage-Tour", "Triathlon", "Duathlon",
     "Swimrun", "Swim & Run", "24 h Rennen", "12 h Rennen",
@@ -163,6 +181,9 @@ def _parse_location(cell_text: str):
         "Frankreich", "Österreich", "Oesterreich", "Schweiz", "Italien",
         "Belgien", "Niederlande", "Spanien", "Tschechien", "Polen",
         "Dänemark", "France", "Belgium", "Netherlands",
+        "Kroatien", "Croatia", "Hrvatska",
+        "Slowenien", "Slovenia", "Ungarn", "Hungary",
+        "Rumänien", "Romania", "Bulgarien", "Luxemburg",
     ]
     for fw in FOREIGN:
         if fw in full_flat:
@@ -352,6 +373,11 @@ def fetch(year: int) -> list[dict]:
             seen_ids.add(kal_num)
             url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
             coords = geocode_plz(plz) if plz else geocode(ort)
+            # LV fallback: use state centroid when geocoding failed but LV is known
+            if coords["lat"] is None and lv in LV_COORD_FALLBACK:
+                coords = {"lat": LV_COORD_FALLBACK[lv][0], "lon": LV_COORD_FALLBACK[lv][1]}
+            if not ort and lv in LV_STATE_NAMES:
+                ort = LV_STATE_NAMES[lv]
 
             events.append({
                 "art":          art,
