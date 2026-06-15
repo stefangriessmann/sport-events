@@ -2478,7 +2478,7 @@ function renderMerkliste() {
 }
 
 function render(keepLimit) {
-  const filterActive = selDateFrom || selDateTo;
+  const filterActive = selDateFrom || selDateTo || selPlz;
   if(!keepLimit) _listLimit = filterActive ? 99999 : 15;
   const v = srt(getVis());
   updateStats(getVis());
@@ -2656,7 +2656,7 @@ function quickDate(kind,el){
 }
 (function(){var mq=matchMedia('(max-width:720px)');function u(){document.body.classList.toggle('viewmobile',mq.matches);}if(mq.addEventListener)mq.addEventListener('change',u);else if(mq.addListener)mq.addListener(u);u();})();
 
-buildPills(); updateBMCnt(); render();
+buildPills(); render();
 </script>
 
 <script>
