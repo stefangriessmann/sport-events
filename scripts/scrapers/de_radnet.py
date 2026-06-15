@@ -85,14 +85,14 @@ def _fetch_startort(detail_url: str) -> dict[str, str]:
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "lxml")
 
-        # <dt>Startort</dt><dd>Straße<br>PLZ Stadt<br>…</dd>
-        dt = soup.find("dt", string=re.compile(r"Startort", re.I))
-        if dt:
-            dd = dt.find_next_sibling("dd")
-            if dd:
-                text = dd.get_text(" ", strip=True)
+        # <tr><th>Startort</th><td>Straße<br>PLZ Stadt<br>Geschäftsstelle…</td></tr>
+        th = soup.find("th", string=re.compile(r"Startort", re.I))
+        if th:
+            td = th.find_next_sibling("td")
+            if td:
+                text = td.get_text(" ", strip=True)
                 # Extract 5-digit PLZ + city: "21255 Tostedt/Todtglüsingen"
-                m = re.search(r"\b(\d{5})\s+(.+?)(?:\s+Geschäftsstelle|\s+Route|$)", text)
+                m = re.search(r"\b(\d{5})\s+(.+?)(?:\s+Geschäftsstelle|\s+Route\b|$)", text)
                 if m:
                     result["plz"] = m.group(1)
                     result["ort"] = m.group(2).strip()
