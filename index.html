@@ -113,11 +113,6 @@ table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
 .card-title a:hover { color: #F23A1F; }
 .card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
 
-/* Bookmarks */
-.star-btn { background: none; border: none; cursor: pointer; font-size: 1.05rem; padding: 2px; line-height: 1; transition: transform .1s; flex-shrink: 0; margin-top: 2px; }
-.star-btn:hover { transform: scale(1.25); }
-.empty-state { text-align: center; padding: 56px 20px; color: #94a3b8; font-size: .88rem; line-height: 1.6; }
-
 /* Shared */
 .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: .69rem; font-weight: 700; white-space: nowrap; }
 .event-link { font-family: 'Familjen Grotesk', sans-serif; color: #14110E; text-decoration: none; font-weight: 700; }
@@ -716,8 +711,6 @@ td { padding: 14px 13px !important; color: var(--bw-ink) !important; }
 .fb-cancel { background:none; border:none; color:#94a3b8; font-size:.88rem; cursor:pointer; padding:8px; }
 .fb-success { text-align:center; padding:32px 20px; font-size:.95rem; color:#3C342D; }
 .fb-success .fb-ok-icon { font-size:2.5rem; margin-bottom:10px; }
-.report-btn { background:none; border:none; cursor:pointer; color:#cbd5e1; font-size:.8rem; padding:2px 5px; line-height:1; transition:color .15s; }
-.report-btn:hover { color:var(--bw-tomato); }
 .suggest-btn { background:var(--bw-ink); color:var(--bw-cream); border:2px solid var(--bw-ink); border-radius:20px; padding:6px 14px; font-size:.8rem; font-weight:600; cursor:pointer; white-space:nowrap; }
 .suggest-btn:hover { background:#2a2520; }
 
@@ -789,8 +782,6 @@ body.viewmobile #evt-tbl td:nth-child(5) { order:4; flex:1 0 100%; }
 body.viewmobile #evt-tbl td:nth-child(6) { order:5; flex:1; font-size:.86rem !important; }
 body.viewmobile #evt-tbl td:nth-child(7) { order:6; display:flex; gap:8px; align-items:center; }
 body.viewmobile .star-btn,
-body.viewmobile .report-btn { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
-body.viewmobile .report-btn { font-size:1.15rem; color:#94a3b8; }
 body.viewmobile .star-btn .ic { width:23px; height:23px; }
 body.viewmobile #evt-tbl td:nth-child(5)::before { content:"Strecken"; display:block; font-family:var(--bw-font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:#94a3b8; margin-bottom:3px; }
 body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-font-mono); font-size:.82rem; background:var(--bw-paper); border:1.5px solid rgba(20,17,14,.18); border-radius:6px; padding:2px 7px; margin:0 3px 3px 0; color:var(--bw-ink); }
@@ -884,7 +875,7 @@ body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-fo
 
 <header>
   <h1 id="hdr-sport" style="display:flex;align-items:center;gap:8px"><svg width="32" height="32" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px;flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#F23A1F" stroke="#14110E" stroke-width="4"/><path d="M14,50 Q50,32 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><path d="M14,50 Q50,68 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><text x="50" y="64" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="52" letter-spacing="-2" fill="#FFC11F">B</text></svg>Bockwurst Sport Events Guide</h1>
-  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste, Kalender oder Merkliste. <span class="snap-badge" id="snap-date">Stand 15.06.2026</span></p>
+  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste oder Kalender. <span class="snap-badge" id="snap-date">Stand 15.06.2026</span></p>
 </header>
 <script>
 (function(){var d=new Date(),dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yy=d.getFullYear();var el=document.getElementById('snap-date');if(el)el.textContent='Stand '+dd+'.'+mm+'.'+yy;})();
@@ -954,7 +945,6 @@ body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-fo
   <div class="tabs">
     <div class="tab active" onclick="switchTab('liste',this)"><svg class="ic"><use href="#ic-list"/></svg> Liste</div>
     <div class="tab" onclick="switchTab('kalender',this)"><svg class="ic"><use href="#ic-calendar"/></svg> Kalender</div>
-    <div class="tab" onclick="switchTab('merken',this)"><svg class="ic"><use href="#ic-star"/></svg> Merkliste <span id="bm-cnt"></span></div>
   </div>
 
   <div class="sport-bar">
@@ -1024,10 +1014,6 @@ body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-fo
     <div class="cal-wrap" id="cal-body"></div>
   </div>
 
-  <!-- Merkliste -->
-  <div id="tab-merken" style="display:none">
-    <div id="bm-body"></div>
-  </div>
       <!-- Paginierung / Mehr laden -->
       <div class="be-more" id="mehr-zone" style="display:none">
         <button onclick="loadMore()">Mehr Events laden ↓</button>
@@ -1069,11 +1055,11 @@ const SNAPSHOT = [
   {art:"Gravelride", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.2419, lon:6.6984, titel:"5. Gravelfondo Überherrn", ort:"Überherrn-Altforweiler Sportplatz Altforweiler", plz:"66802", strecken:"130", verein:"RSC Überherrn-Saar e.V.", lv:"SAA", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/5.-gravelfondo-Ueberherrn;9976301.html", serie:""},
   {art:"Brevet", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:53.5697, lon:9.9092, titel:"Brevet zu den Plöner Seen & Gravel-Nord 0/ 120/ 188/", ort:"Hamburg Goethe-Gymnasium Hamburg-Lurup", plz:"22547", strecken:"215", verein:"RSG Blankenese", lv:"HAM", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/brevet-zu-den-ploener-seen-&-gravel-nord;9976327.html", serie:""},
   {art:"Gravelride", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:53.5697, lon:9.9092, titel:"Brevet zu den Plöner Seen & Gravel-Nord 75/ 85/", ort:"Hamburg Goethe-Gymnasium Hamburg-Lurup", plz:"22547", strecken:"100", verein:"RSG Blankenese", lv:"HAM", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/brevet-zu-den-ploener-seen-&-gravel-nord;9976328.html", serie:""},
-  {art:"RTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.6837, lon:8.6184, titel:"Cycling for Charity, SSG Bensheim 55/ 112/", ort:"Bensheim Geschwister Scholl Schule", plz:"64625", strecken:"170", verein:"SSG Bensheim Abt. Radsport 1984 e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/cycling-for-charity,-ssg-bensheim;9976722.html", serie:""},
+  {art:"RTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.6837, lon:8.6184, titel:"Cycling for Charity, SSG Bensheim 65/ 127/", ort:"Bensheim Geschwister Scholl Schule", plz:"64625", strecken:"185", verein:"SSG Bensheim Abt. Radsport 1984 e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/cycling-for-charity,-ssg-bensheim;9976722.html", serie:""},
   {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.6837, lon:8.6184, titel:"Cycling for Charity, SSG Bensheim", ort:"Bensheim Geschwister Scholl Schule", plz:"64625", strecken:"220", verein:"SSG Bensheim Abt. Radsport 1984 e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/cycling-for-charity,-ssg-bensheim;9976723.html", serie:""},
-  {art:"Gravelride", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.6837, lon:8.6184, titel:"Cycling for Charity, SSG Bensheim 50/", ort:"Bensheim Geschwister Scholl Schule", plz:"64625", strecken:"70", verein:"SSG Bensheim Abt. Radsport 1984 e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/cycling-for-charity,-ssg-bensheim;9976724.html", serie:""},
-  {art:"CTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"Schwaben Gravel Trophy Lauf #5 in Buchloe 55/", ort:"Bayern", plz:"", strecken:"80", verein:"RVA Buchloe", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/schwaben-gravel-trophy-lauf-5-in-buchloe;9976987.html", serie:""},
-  {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Düsseldorf", ort:"Nordrhein-Westfalen", plz:"", strecken:"300", verein:"200/ 300/ 400 Cycling Club Düsseldorf e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/duesseldorf-300;9977044.html", serie:""},
+  {art:"Gravelride", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:49.6837, lon:8.6184, titel:"Cycling for Charity, SSG Bensheim 46/ 62/", ort:"Bensheim Geschwister Scholl Schule", plz:"64625", strecken:"108", verein:"SSG Bensheim Abt. Radsport 1984 e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/cycling-for-charity,-ssg-bensheim;9976724.html", serie:""},
+  {art:"CTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:48.0372, lon:10.7255, titel:"Schwaben Gravel Trophy Lauf #5 in Buchloe 55/", ort:"Buchloe Parkplatz am Freibad/an der VfL Turnhalle", plz:"86807", strecken:"80", verein:"RVA Buchloe", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/schwaben-gravel-trophy-lauf-5-in-buchloe;9976987.html", serie:""},
+  {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:51.2302, lon:6.7135, titel:"Düsseldorf", ort:"Düsseldorf ALMA SPORTS CLUB, Performance Center / Beach- & Event-Halle", plz:"40549", strecken:"300", verein:"200/ 300/ 400 Cycling Club Düsseldorf e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/duesseldorf-300;9977044.html", serie:""},
   {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:51.098481, lon:14.514475, titel:"Bergfahren am Czorneboh", ort:"Cunewalde", plz:"", strecken:"4,3 km", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1535", serie:""},
   {art:"RTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:50.6814, lon:8.3037, titel:"MfK-Spenden-Radtour", ort:"Herborn", plz:"35745", strecken:"100 km", verein:"", lv:"HES", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1658", serie:""},
   {art:"RTF", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:52.3586, lon:9.7558, titel:"(B)rocken-Benefiz-Sternfahrt", ort:"Hannover", plz:"30173", strecken:"199 km", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1676", serie:""},
@@ -1088,9 +1074,9 @@ const SNAPSHOT = [
   {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:null, km:null, lat:50.9746, lon:11.0297, titel:"Brocken Hero", ort:"Erfurt", plz:"99084", strecken:"320 km 4100 Hm", verein:"", lv:"THÜ", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=3193", serie:""},
   {art:"Marathon", datum:"Sa, 20.06.2026", datum_end:"21.06.2026", wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:"2026-06-21", km:null, lat:49.8091374, lon:8.6564366, titel:"Styrkeprøven / Trondheim - Oslo", ort:"Trondheim", plz:"", strecken:"520 km", verein:"", lv:"", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1569", serie:""},
   {art:"Brevet", datum:"Sa, 20.06.2026", datum_end:"23.06.2026", wochentag:"Samstag", date_iso:"2026-06-20", date_iso_end:"2026-06-23", km:null, lat:51.3406321, lon:12.3747329, titel:"ultra500", ort:"Leipzig", plz:"", strecken:"500 km 5000 Hm", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=2325", serie:""},
-  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Zu den Löwensteiner Bergen", ort:"Baden", plz:"", strecken:"200", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9975751.html", serie:""},
-  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"Jura-Radmarathon", ort:"Bayern", plz:"", strecken:"2026", verein:"206 SV 1959 Lupburg e.V. - Radsport -", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/jura-radmarathon-2026;9975753.html", serie:""},
-  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.32, lon:10.12, titel:"Bike Challenge Mittelholstein", ort:"Schleswig-Holstein", plz:"", strecken:"210", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/bike-challenge-mittelholstein;9975807.html", serie:""},
+  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Zu den Löwensteiner Bergen", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"200", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9975751.html", serie:""},
+  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.1551, lon:11.7564, titel:"Jura-Radmarathon", ort:"Lupburg Sportheim", plz:"92331", strecken:"2026", verein:"206 SV 1959 Lupburg e.V. - Radsport -", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/jura-radmarathon-2026;9975753.html", serie:""},
+  {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.1674, lon:9.8544, titel:"Bike Challenge Mittelholstein", ort:"Nortorf Kramer-Scheune", plz:"24589", strecken:"210", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/bike-challenge-mittelholstein;9975807.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"3. BORA bike day HERFORD - RTF 44/ 71/ 83/ 110/", ort:"Nordrhein-Westfalen", plz:"", strecken:"163", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-rtf;9975808.html", serie:""},
   {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"3. BORA bike day HERFORD - Radmarathon", ort:"Nordrhein-Westfalen", plz:"", strecken:"210", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-radmarathon;9975809.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"RTF im Wittelsbacher Land 56/ 92/ 132/", ort:"Bayern", plz:"", strecken:"154", verein:"RSC Aichach 1977 e.V.", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rtf-im-wittelsbacher-land;9975975.html", serie:""},
@@ -1364,6 +1350,7 @@ const SNAPSHOT = [
   {art:"Sonstige", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:54.32, lon:10.12, titel:"HBK", ort:"Schleswig-Holstein", plz:"", strecken:"2026", verein:"265/ 911/ 1160/ 1527 Audax Club Schleswig-Holstein v. 2000 e.V.", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/hbk-2026;9977000.html", serie:""},
   {art:"RTF", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"Rhön300 100/", ort:"Bayern", plz:"", strecken:"170", verein:"BRV Radsportbezirk Unterfranken Ost", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rhoen300;9977068.html", serie:""},
   {art:"Marathon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"RHÖN300 230/", ort:"Bayern", plz:"", strecken:"300", verein:"BRV Radsportbezirk Unterfranken Ost", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rhOen300;9977069.html", serie:""},
+  {art:"Gravelride", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"Rhön300 70/", ort:"Bayern", plz:"", strecken:"100", verein:"BRV Radsportbezirk Unterfranken Ost", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rhoen300;9977070.html", serie:""},
   {art:"RTF", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:51.7571, lon:8.73, titel:"Libori RTF", ort:"Paderborn", plz:"33104", strecken:"47 / 76 / 110 / 150 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1749", serie:""},
   {art:"RTF", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:50.8387, lon:7.214, titel:"RTF 'Täler und Höhen'", ort:"Lohmar", plz:"53797", strecken:"46 / 78 / 113 / 151 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1750", serie:""},
   {art:"Marathon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:49.3357, lon:10.7874, titel:"ANtour", ort:"Heilsbronn", plz:"91560", strecken:"165 / 300 km", verein:"", lv:"BAY", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1751", serie:""},
@@ -1575,6 +1562,7 @@ const SNAPSHOT = [
   {art:"RTF", datum:"So, 06.09.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-09-06", date_iso_end:null, km:null, lat:50.2833, lon:8.8333, titel:"Wetterau-Vogelsberg-Rundfahrt", ort:"Niddatal-Ilbenstadt", plz:"61194", strecken:"45 / 82 / 115 / 155 km", verein:"", lv:"HES", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=3148", serie:""},
   {art:"CTF", datum:"Di, 08.09.2026", datum_end:null, wochentag:"Dienstag", date_iso:"2026-09-08", date_iso_end:null, km:null, lat:53.8922, lon:10.6471, titel:"Zeitfahrcup RST Lübeck #5", ort:"Obernwohlde", plz:"23617", strecken:"27 km", verein:"", lv:"SCH", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1478", serie:""},
   {art:"CTF", datum:"Do, 10.09.2026", datum_end:null, wochentag:"Donnerstag", date_iso:"2026-09-10", date_iso_end:null, km:null, lat:51.1775, lon:7.1661, titel:"Klingenheld #2", ort:"Remscheid", plz:"42857", strecken:"0,849 km 80 Hm", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1817", serie:""},
+  {art:"Sonstige", datum:"Fr, 11.09.2026", datum_end:null, wochentag:"Freitag", date_iso:"2026-09-11", date_iso_end:null, km:null, lat:50.11, lon:8.68, titel:"Trainingslager Italienische Alpen", ort:"Hessen", plz:"", strecken:"2026", verein:"611 Radfahrer-Club 1903 Ilbenstadt e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/trainingslager-italienische-alpen-2026;9977088.html", serie:""},
   {art:"RTF", datum:"Sa, 12.09.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-09-12", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Pott's Leeze Tour 42/ 76/ 117/", ort:"Nordrhein-Westfalen", plz:"", strecken:"150", verein:"RSF 67 Ahlen e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/potts-leeze-tour;9975826.html", serie:""},
   {art:"Gravelride", datum:"Sa, 12.09.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-09-12", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Pott's Gravelride 45/ 75/", ort:"Nordrhein-Westfalen", plz:"", strecken:"120", verein:"RSF 67 Ahlen e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/potts-gravelride;9975904.html", serie:""},
   {art:"Marathon", datum:"Sa, 12.09.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-09-12", date_iso_end:null, km:null, lat:52.37, lon:9.74, titel:"Weser-Elbe-Rad Marathon", ort:"Niedersachsen", plz:"", strecken:"211", verein:"TSV Bremervörde e.V.", lv:"NDS", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/weser-elbe-rad-marathon;9976250.html", serie:""},
@@ -2280,28 +2268,6 @@ async function onPlzInput() {
   if (!selPlz && v.length===5) inp.classList.add("plz-err");
   render();
 }
-let bookmarks = new Set(JSON.parse(localStorage.getItem("rad_bm")||"[]"));
-
-function saveBM() { localStorage.setItem("rad_bm",JSON.stringify([...bookmarks])); updateBMCnt(); }
-function updateBMCnt() { const n=bookmarks.size; document.getElementById("bm-cnt").textContent=n?"("+n+")":""; }
-function toggleBM(url, btn) {
-  if(bookmarks.has(url)){
-    bookmarks.delete(url);
-    btn.classList.remove("bm-active");
-    const use=btn.querySelector("svg"); if(use){use.style.fill="none";use.style.stroke="currentColor";}
-  } else {
-    bookmarks.add(url);
-    btn.classList.add("bm-active");
-    const use=btn.querySelector("svg"); if(use){use.style.fill="#FFC11F";use.style.stroke="#FFC11F";}
-  }
-  saveBM(); if(tab==="merken") renderMerkliste();
-  updateStats(getVis());
-}
-function starBtn(url) {
-  const bm = bookmarks.has(url);
-  return `<button class="star-btn${bm?' bm-active':''}" onclick="toggleBM('${url.replace(/'/g,"\\'")}',this)"><svg class="ic" style="fill:${bm?'#FFC11F':'none'};stroke:${bm?'#FFC11F':'currentColor'}"><use href="#ic-star"/></svg></button>`;
-}
-
 function setSport(s, el) {
   SPORT = s;
   if(s==='rad') ALL=SNAPSHOT;
@@ -2373,7 +2339,6 @@ function updateStats(v) {
     <div class="stat"><div class="stat-val">${v.length}</div><div class="stat-label">Events</div></div>
     <div class="stat"><div class="stat-val">${(()=>{const m=new Date().toISOString().slice(0,7);return v.filter(e=>e.date_iso.startsWith(m)).length;})()}</div><div class="stat-label">Diesen Monat</div></div>
     ${next?`<div class="stat"><div class="stat-val sm">${cd}</div><div class="stat-label">${next.titel.slice(0,22)}${next.titel.length>22?"…":""}</div></div>`:""}
-    <div class="stat"><div class="stat-val">${bookmarks.size}</div><div class="stat-label">⭐ Gemerkt</div></div>
   `;
 }
 
@@ -2403,7 +2368,7 @@ function renderListe(v) {
       <td class="dist-td">${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"–";return Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))+" km";})()}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
       <td class="verein-sm">${e.verein} <span style="color:#94a3b8">(${e.lv})</span></td>
-      <td style="white-space:nowrap">${starBtn(e.url)}<button class="report-btn" title="Event melden" onclick="openReport(${JSON.stringify(e.titel).replace(/&/g,'&amp;').replace(/"/g,'&quot;')},${JSON.stringify(e.url).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})">⚑</button></td>`;
+      <td></td>`;
     tb.appendChild(tr);
   });
   const tbl=document.getElementById("evt-tbl");
@@ -2432,7 +2397,6 @@ function renderKalender(v) {
         <div class="card-head">
           <div><span class="badge" style="background:${cfg.bg};color:${cfg.c};margin-bottom:4px;display:inline-flex;align-items:center;gap:4px"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span>${flag?` <span class="country-badge">${flag}</span>`:""}
           <div class="card-title"><a href="${e.url}" target="_blank">${e.titel}</a>${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"";return`<span class="dist-badge">${Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))} km</span>`;})()} </div></div>
-          ${starBtn(e.url)}
         </div>
         <div class="card-meta">
           <span style="font-size:.76rem;color:#64748b"><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}</span>
@@ -2446,37 +2410,6 @@ function renderKalender(v) {
   });
 }
 
-function renderMerkliste() {
-  const body=document.getElementById("bm-body");
-  const allData=[...SNAPSHOT,...SWIM_SNAPSHOT,...TRI_SNAPSHOT,...LAUF_SNAPSHOT];
-  const bmd=allData.filter(e=>bookmarks.has(e.url)).sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
-  if(!bmd.length){body.innerHTML='<div class="empty-state">☆ Noch keine Events gemerkt.<br>Klick auf ☆ in der Liste oder im Kalender<br>um Events zu speichern.</div>';return;}
-  body.innerHTML="";
-  const wrap=document.createElement("div"); wrap.style.cssText="padding:0 20px 28px";
-  const cards=document.createElement("div"); cards.className="cards";
-  bmd.forEach(e=>{
-    const cfg=g(e.art); const we=e.wochentag==="Samstag"||e.wochentag==="Sonntag";
-    const flag=COUNTRY_FLAG[e.country]||"";
-    const sH=e.strecken?e.strecken.split("/").map(s=>`<span class="km-tag">${s}</span>`).join(""):"";
-    const card=document.createElement("div"); card.className="card";
-    card.style.borderLeft=`3px solid ${cfg.c}`;
-    card.innerHTML=`
-      <div class="card-head">
-        <div><span class="badge" style="background:${cfg.bg};color:${cfg.c};margin-bottom:4px;display:inline-flex;align-items:center;gap:4px"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span>${flag?` <span class="country-badge">${flag}</span>`:""}
-        <div class="card-title"><a href="${e.url}" target="_blank">${e.titel}</a></div></div>
-        ${starBtn(e.url)}
-      </div>
-      <div class="card-meta">
-        <span style="font-size:.76rem;color:#64748b"><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}</span>
-        <span style="font-size:.73rem;color:#94a3b8">~${e.km} km</span>
-      </div>
-      ${sH?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:6px">${sH}</div>`:""}
-    `;
-    cards.appendChild(card);
-  });
-  wrap.appendChild(cards); body.appendChild(wrap);
-}
-
 function render(keepLimit) {
   const filterActive = selDateFrom || selDateTo || selPlz;
   if(!keepLimit) _listLimit = filterActive ? 99999 : 15;
@@ -2484,7 +2417,6 @@ function render(keepLimit) {
   updateStats(getVis());
   if(tab==="liste") renderListe(v);
   else if(tab==="kalender") renderKalender(v);
-  else renderMerkliste();
 }
 
 function loadMore() {
@@ -2498,7 +2430,7 @@ function loadMore() {
 function switchTab(name, el) {
   tab=name;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); el.classList.add("active");
-  ["liste","kalender","merken"].forEach(t=>document.getElementById("tab-"+t).style.display=t===name?"block":"none");
+  ["liste","kalender"].forEach(t=>document.getElementById("tab-"+t).style.display=t===name?"block":"none");
   render();
 }
 
@@ -2516,26 +2448,10 @@ function resetAllFilters() {
 }
 
 // ── Feedback Modal ─────────────────────────────────────────────────────────
-let _fbModus = "melden", _fbChip = "", _fbSport = "", _fbEventUrl = "";
-
-function openReport(titel, url) {
-  _fbModus = "melden"; _fbChip = ""; _fbEventUrl = url;
-  document.getElementById("fb-title").textContent = "Event melden";
-  document.getElementById("fb-event-row").style.display = "block";
-  document.getElementById("fb-event-name").value = titel;
-  document.getElementById("fb-problem-row").style.display = "block";
-  document.getElementById("fb-suggest-fields").style.display = "none";
-  document.querySelectorAll("#fb-chips .fb-chip").forEach(c => c.classList.remove("sel"));
-  document.getElementById("fb-content").style.display = "block";
-  document.getElementById("fb-success").style.display = "none";
-  document.getElementById("fb-overlay").classList.remove("hidden");
-}
+let _fbSport = "";
 
 function openSuggest() {
-  _fbModus = "vorschlagen"; _fbSport = ""; _fbEventUrl = "";
-  document.getElementById("fb-title").textContent = "Event vorschlagen";
-  document.getElementById("fb-event-row").style.display = "none";
-  document.getElementById("fb-problem-row").style.display = "none";
+  _fbSport = "";
   document.getElementById("fb-suggest-fields").style.display = "block";
   document.querySelectorAll("#fb-sport-chips .fb-chip").forEach(c => c.classList.remove("sel"));
   document.getElementById("fb-subtype-row").style.display = "none";
@@ -2548,10 +2464,6 @@ function openSuggest() {
 
 function closeFb() { document.getElementById("fb-overlay").classList.add("hidden"); }
 
-function selectChip(el, val) {
-  document.querySelectorAll("#fb-chips .fb-chip").forEach(c => c.classList.remove("sel"));
-  el.classList.add("sel"); _fbChip = val;
-}
 const SPORT_TYPES = {
   rad:  ["RTF","Marathon","Radmarathon-Cup","CTF","Gravelride","Brevet","Volksradfahren"],
   swim: ["Freiwasser","Swim & Run"],
@@ -2582,54 +2494,34 @@ function selectMainSport(el, sportKey) {
 }
 
 async function submitFb() {
-  if (_fbModus === "vorschlagen") {
-    // ── Event-Vorschlag → Netlify Function → GitHub Issue ───────────────────
-    const name   = document.getElementById("fb-suggest-name").value.trim();
-    const datum  = document.getElementById("fb-datum").value || "";
-    const datumE = document.getElementById("fb-datum-end")?.value || "";
-    const ort    = document.getElementById("fb-ort")?.value || "";
-    const link   = document.getElementById("fb-link")?.value || "";
+  // ── Event-Vorschlag → Netlify Function → GitHub Issue ─────────────────────
+  const name   = document.getElementById("fb-suggest-name").value.trim();
+  const datum  = document.getElementById("fb-datum").value || "";
+  const datumE = document.getElementById("fb-datum-end")?.value || "";
+  const ort    = document.getElementById("fb-ort")?.value || "";
+  const link   = document.getElementById("fb-link")?.value || "";
 
-    const issueBody = [
-      `**Sport:** ${_fbSport}`,
-      `**Typ:** ${_fbChip || "Sonstiges"}`,
-      `**Name:** ${name}`,
-      `**Datum:** ${datum}`,
-      datumE ? `**Datum-Ende:** ${datumE}` : null,
-      ort    ? `**Ort:** ${ort}`           : null,
-      link   ? `**Link:** ${link}`         : null,
-    ].filter(Boolean).join("\n");
+  const issueBody = [
+    `**Sport:** ${_fbSport}`,
+    `**Name:** ${name}`,
+    `**Datum:** ${datum}`,
+    datumE ? `**Datum-Ende:** ${datumE}` : null,
+    ort    ? `**Ort:** ${ort}`           : null,
+    link   ? `**Link:** ${link}`         : null,
+  ].filter(Boolean).join("\n");
 
-    try {
-      const resp = await fetch("/.netlify/functions/create-issue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title:  `[Event-Vorschlag] ${name}${datum ? " – " + datum : ""}`,
-          body:   issueBody,
-          labels: ["pending"],
-        }),
-      });
-      if (!resp.ok) console.warn("Issue konnte nicht erstellt werden:", resp.status);
-    } catch(e) { /* silent */ }
-
-  } else {
-    // ── Fehler melden → Netlify Forms ────────────────────────────────────────
-    const body = new URLSearchParams({
-      "form-name": "event-feedback",
-      "bot-field": "",
-      "modus":      _fbModus,
-      "event-name": document.getElementById("fb-event-name").value,
-      "event-url":  _fbEventUrl,
-      "problem-typ":_fbChip,
-      "sport":      _fbSport,
-      "filter-sport":  tab,
-      "filter-typen":  [...document.querySelectorAll("#pills .pill.active")].map(p => p.textContent.trim()).join(", "),
+  try {
+    const resp = await fetch("/.netlify/functions/create-issue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title:  `[Event-Vorschlag] ${name}${datum ? " – " + datum : ""}`,
+        body:   issueBody,
+        labels: ["pending"],
+      }),
     });
-    try {
-      await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
-    } catch(e) { /* silent */ }
-  }
+    if (!resp.ok) console.warn("Issue konnte nicht erstellt werden:", resp.status);
+  } catch(e) { /* silent */ }
 
   document.getElementById("fb-content").style.display = "none";
   document.getElementById("fb-success").style.display = "block";
@@ -2892,27 +2784,12 @@ document.addEventListener("DOMContentLoaded",function(){
 <div class="fb-overlay hidden" id="fb-overlay" onclick="if(event.target===this)closeFb()">
   <div class="fb-box" id="fb-box">
     <div class="fb-head">
-      <h4 id="fb-title">Event melden</h4>
+      <h4>Event vorschlagen</h4>
       <button class="fb-close" onclick="closeFb()">✕</button>
     </div>
     <div id="fb-content">
       <div class="fb-body">
-        <div id="fb-event-row" style="display:none">
-          <label>Event</label>
-          <input type="text" id="fb-event-name" readonly style="color:#64748b">
-        </div>
-        <!-- Melden: Problem-Typ -->
-        <div id="fb-problem-row">
-          <label>Problem</label>
-          <div class="fb-chip-row" id="fb-chips">
-            <button type="button" class="fb-chip" onclick="selectChip(this,'Veranstaltung abgesagt')">Abgesagt</button>
-            <button type="button" class="fb-chip" onclick="selectChip(this,'Falsche Angaben')">Falsche Angaben</button>
-            <button type="button" class="fb-chip" onclick="selectChip(this,'Duplikat')">Duplikat</button>
-            <button type="button" class="fb-chip" onclick="selectChip(this,'Fehlt – sollte aufgenommen werden')">Fehlt im Kalender</button>
-            <button type="button" class="fb-chip" onclick="selectChip(this,'Anderes')">Anderes</button>
-          </div>
-        </div>
-        <!-- Vorschlagen: Sport + Datum + Ort + Link -->
+        <!-- Sport + Datum + Ort + Link -->
         <div id="fb-suggest-fields" style="display:none">
           <label>Sportart</label>
           <div class="fb-chip-row" id="fb-sport-chips">
