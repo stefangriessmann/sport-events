@@ -57,12 +57,12 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Familjen Grotesk', system-ui, sans-serif; background: var(--bw-paper,#FFF8E8); color: var(--bw-ink,#14110E); min-height: 100vh; }
 
-header { background: #14110E; color: #FFF8E8; padding: 16px 20px 14px; border-bottom: 4px solid #FFC11F; }
+header { background: #14110E; color: #FFF8E8; padding: 16px var(--bw-edge) 14px; border-bottom: 4px solid #FFC11F; }
 header h1 { font-family: 'Archivo Black', sans-serif; font-size: 1.4rem; text-transform: uppercase; letter-spacing: -0.03em; color: #FFC11F; line-height: 1; }
 header p { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: rgba(255,248,232,.5); margin-top: 5px; letter-spacing: .04em; }
 
 /* Tabs */
-.tabs { display: flex; background: #FFF1D6; border-bottom: 2.5px solid #14110E; padding: 0 20px; }
+.tabs { display: flex; background: #FFF1D6; border-bottom: 2.5px solid #14110E; padding: 0 var(--bw-edge); }
 .tab { font-family: 'JetBrains Mono', monospace; padding: 9px 16px; font-size: .72rem; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -2.5px; color: #3C342D; transition: all .15s; white-space: nowrap; }
 .tab.active { color: #F23A1F; border-bottom-color: #F23A1F; }
 
@@ -130,7 +130,7 @@ table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
 
 
 /* Sport selector */
-.sport-bar { display:flex; gap:8px; padding:12px 20px 8px; flex-wrap:wrap; border-bottom:2.5px solid #14110E; background:#FFF1D6; }
+.sport-bar { display:flex; gap:8px; padding:12px var(--bw-edge) 8px; flex-wrap:wrap; border-bottom:2.5px solid #14110E; background:#FFF1D6; }
 .sport-btn { font-family:'Familjen Grotesk',sans-serif; font-weight:700; padding:6px 15px; border-radius:999px; border:2px solid #14110E; font-size:.8rem; cursor:pointer; background:#FFF8E8; color:#14110E; transition:all .15s; white-space:nowrap; }
 .sport-btn:hover { background:#FFF1D6; }
 .sport-btn.active { background:#14110E; color:#FFC11F; border-color:#14110E; }
@@ -169,6 +169,8 @@ table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
   --sp-sea-dark:     #136487;
   --sp-sun:          #FFD12E;
   --yt-red:          #FF0033;
+  --bw-maxw:         1400px;
+  --bw-edge:         max(20px, calc((100% - 1400px) / 2 + 20px));
 }
 
 
@@ -414,27 +416,27 @@ a { color: var(--bw-tomato); text-decoration-thickness: 2px; text-underline-offs
    ============================================================ */
 .sp-hero { position:relative; display:grid; grid-template-columns:1.25fr 1fr; background:var(--bw-ink); color:var(--bw-cream);
   border-radius:var(--bw-radius-lg); overflow:hidden; border:var(--bw-border); }
-.sp-hero__l { padding:28px 36px; position:relative; z-index:2; display:flex; flex-direction:column; justify-content:center; }
+.sp-hero__l { padding:34px 40px; position:relative; z-index:2; display:flex; flex-direction:column; justify-content:center; }
 .sp-amb { display:inline-flex; align-items:center; gap:7px; background:var(--bw-mustard); color:var(--bw-ink);
   font-family:var(--bw-font-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; padding:5px 10px; border-radius:var(--bw-radius-pill); }
 .sp-hero h3 { font-family:var(--bw-font-display); font-size:38px; line-height:.85; letter-spacing:-.04em; text-transform:uppercase; margin:14px 0 0; color:var(--bw-cream); }
 .sp-hero h3 .sea { color:var(--sp-sun); }
-.sp-hero .sp-sub { font-size:14px; line-height:1.45; opacity:.8; margin-top:10px; max-width:340px; }
+.sp-hero .sp-sub { font-size:14px; line-height:1.45; opacity:.8; margin-top:12px; max-width:360px; }
 .sp-hero__r { position:relative; min-height:220px; }
 .sp-hero__photo { position:absolute; inset:0; background-size:cover; background-position:60% center;
   background-color:var(--sp-sea-dark); background-image:repeating-linear-gradient(135deg,var(--sp-sea-dark) 0 16px,#1a577a 16px 17px); }
 .sp-hero__grad { position:absolute; inset:0; z-index:1; background:linear-gradient(90deg,var(--bw-ink) 0%,rgba(20,17,14,0) 55%); }
-.sp-cta { display:inline-flex; align-items:center; gap:10px; margin-top:18px; background:var(--sp-sun); color:var(--bw-ink);
-  font-family:var(--bw-font-display); font-size:14px; letter-spacing:.06em; text-transform:uppercase; padding:13px 20px;
+.sp-cta { display:flex; width:100%; align-items:center; justify-content:center; gap:10px; margin-top:24px; background:var(--sp-sun); color:var(--bw-ink);
+  font-family:var(--bw-font-display); font-size:15px; letter-spacing:.06em; text-transform:uppercase; padding:16px 22px;
   border-radius:var(--bw-radius-pill); text-decoration:none; border:2.5px solid var(--bw-ink); box-shadow:0 4px 0 var(--bw-ink); }
 @media (max-width:640px){ .sp-hero{grid-template-columns:1fr;} .sp-hero__r{min-height:140px;order:-1;} }
 
 /* Countdown */
-.promo-cd-label { font-family:var(--bw-font-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--sp-sun); margin-top:14px; }
-.promo-cd { display:flex; gap:8px; margin-top:8px; }
-.promo-cd .u { background:rgba(255,255,255,.1); border:1px solid rgba(255,209,46,.4); border-radius:8px; padding:7px 0; min-width:54px; text-align:center; }
-.promo-cd .u b { font-family:var(--bw-font-display); font-size:24px; line-height:1; letter-spacing:-.02em; color:var(--sp-sun); display:block; }
-.promo-cd .u span { font-family:var(--bw-font-mono); font-size:8px; letter-spacing:.14em; text-transform:uppercase; opacity:.75; }
+.promo-cd-label { font-family:var(--bw-font-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--sp-sun); margin-top:20px; }
+.promo-cd { display:flex; gap:10px; margin-top:10px; }
+.promo-cd .u { background:rgba(255,255,255,.08); border:1px solid rgba(255,209,46,.4); border-radius:10px; padding:12px 6px; min-width:80px; text-align:center; }
+.promo-cd .u b { font-family:var(--bw-font-display); font-size:30px; line-height:1; letter-spacing:-.02em; color:var(--sp-sun); display:block; }
+.promo-cd .u span { font-family:var(--bw-font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; opacity:.75; }
 
 /* ============================================================
    YOUTUBE · SUBSCRIBE STRIP   (ausgewählt)
@@ -455,7 +457,7 @@ a { color: var(--bw-tomato); text-decoration-thickness: 2px; text-underline-offs
 
 /* ── Promo-Zone ── */
 .promo-zone {
-  padding: 20px 24px;
+  padding: 20px var(--bw-edge);
   background: var(--bw-paper, #FFF8E8);
   display: grid;
   grid-template-columns: 1.7fr 1fr;
@@ -464,7 +466,7 @@ a { color: var(--bw-tomato); text-decoration-thickness: 2px; text-underline-offs
   border-bottom: 2.5px solid #14110E;
 }
 .promo-zone .sp-hero { height: 100%; min-height: 200px; }
-.promo-zone .sp-hero h3 { font-size: clamp(30px, 3vw, 42px); }
+.promo-zone .sp-hero h3 { font-size: clamp(32px, 3vw, 46px); }
 @media (max-width: 880px) {
   .promo-zone { grid-template-columns: 1fr; padding: 14px 16px; }
   .promo-zone .sp-hero__r { min-height: 160px; }
@@ -636,7 +638,7 @@ aside.page-sidebar { display: none !important; }
 /* ── Eventsuche section heading ── */
 .section-heading {
   display: flex; align-items: center; gap: 14px;
-  padding: 22px 24px 10px;
+  padding: 22px var(--bw-edge) 10px;
   border-top: 2.5px solid #14110E;
 }
 .section-heading h2 {
@@ -1105,11 +1107,11 @@ const SNAPSHOT = [
   {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.8753, lon:7.0202, titel:"17. Rodenkirchener Eifelmarathon", ort:"Köln Michaelshoven", plz:"50999", strecken:"200", verein:"RTC Rodenkirchen 1980 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/17.-rodenkirchener-eifelmarathon;9976151.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.4996, lon:7.5495, titel:"Dortmund Nord trifft Westfalia Sölde 41/ 71/ 111 TuS Westfalia Dortmund-Sölde", ort:"Dortmund Adolf-Schulte-Schule in Do-Aplerbeck", plz:"44287", strecken:"1885/1911", verein:"e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/dortmund-nord-trifft-westfalia-soelde;9976259.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Kraichgau-Stromberg Rundfahrt 75/ 121/", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"156", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-stromberg-rundfahrt;9976268.html", serie:""},
-  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Zu den Löwensteiner Bergen 0 RSV Victoria Rot", ort:"Baden", plz:"", strecken:"1912", verein:"e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9976269.html", serie:""},
-  {art:"Gravelride", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Kraichgau Gravel 50/", ort:"Baden", plz:"", strecken:"75", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-gravel;9976270.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.79, lon:9.95, titel:"33. Bergeles Tour 94/", ort:"Württemberg", plz:"", strecken:"145", verein:"TV Birenbach - Radsport -", lv:"WÜR", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/33.-bergeles-tour;9976304.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.32, lon:10.12, titel:"Bike Challenge Mittelholstein 53/ 81/", ort:"Schleswig-Holstein", plz:"", strecken:"110", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/bike-challenge-mittelholstein;9976405.html", serie:""},
-  {art:"Gravelride", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.32, lon:10.12, titel:"Gravel Challenge Mittelholstein 50/ 80/", ort:"Schleswig-Holstein", plz:"", strecken:"111", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/gravel-challenge-mittelholstein;9976407.html", serie:""},
+  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Zu den Löwensteiner Bergen 0 RSV Victoria Rot", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"1912", verein:"e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9976269.html", serie:""},
+  {art:"Gravelride", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Kraichgau Gravel 50/", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"75", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-gravel;9976270.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.7473, lon:9.6611, titel:"33. Bergeles Tour 94/", ort:"Birenbach Sportplatz", plz:"73102", strecken:"145", verein:"TV Birenbach - Radsport -", lv:"WÜR", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/33.-bergeles-tour;9976304.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.1674, lon:9.8544, titel:"Bike Challenge Mittelholstein 53/ 81/", ort:"Nortorf Kramer-Scheune", plz:"24589", strecken:"110", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/bike-challenge-mittelholstein;9976405.html", serie:""},
+  {art:"Gravelride", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.1674, lon:9.8544, titel:"Gravel Challenge Mittelholstein 50/ 80/", ort:"Nortorf Kramer-Scheune", plz:"24589", strecken:"111", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/gravel-challenge-mittelholstein;9976407.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.11, lon:8.68, titel:"Schwalm-Tal RTF 45/ 75/", ort:"Hessen", plz:"", strecken:"110", verein:"VfB 1921 Schrecksbach e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/schwalm-tal-rtf;9976450.html", serie:""},
   {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.11, lon:8.68, titel:"Schwalm-Tal & Höhen-Marathon", ort:"Hessen", plz:"", strecken:"204", verein:"VfB 1921 Schrecksbach e.V.", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/schwalm-tal-&-hoehen-marathon;9976451.html", serie:""},
   {art:"CTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.0, lon:7.27, titel:"29. CTF Rund um die Burg Olbrück 34/", ort:"Rheinland-Pfalz", plz:"", strecken:"49", verein:"RSC \"Wildpferde\" Weibern e.V.", lv:"RLP", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/29.-ctf-rund-um-die-burg-olbrueck;9976526.html", serie:""},
