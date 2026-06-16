@@ -273,6 +273,27 @@ def main():
                 print(f"\n  {js_var}: Nur {len(events)} Events (min {min_required}) – bestehende Daten bleiben.")
             continue
 
+        # Relativer Schutz: Wenn neuer Count < 70% des bestehenden → nicht überschreiben
+        # (Schutz gegen radnet-Timeout der zu kleinerem Snapshot führt)
+        existing_for_guard = read_existing_snapshot(html, js_var)
+        if existing_for_guard and len(existing_for_guard) >= min_required and len(events) < 0.70 * len(existing_for_guard):
+            print(f"\n  ⚠️  {js_var}: Neuer Count {len(events)} < 70% des bestehenden {len(existing_for_guard)} → Snapshot NICHT überschrieben (Timeout-Schutz).")
+            if patch:
+                urls = {e.get("url") for e in existing_for_guard if e.get("url")}
+                tds  = {(e.get("titel"), e.get("date_iso")) for e in existing_for_guard}
+                merged = list(existing_for_guard)
+                for ev in patch:
+                    url = ev.get("url", "")
+                    td  = (ev.get("titel", ""), ev.get("date_iso", ""))
+                    if (url and url in urls) or td in tds:
+                        continue
+                    merged.append(ev)
+                merged.sort(key=lambda e: e.get("date_iso", ""))
+                print(f"     {len(patch)} freigegebene(s) Event(s) trotzdem eingemischt.")
+                html = update_snapshot(html, js_var, merged)
+                changed = True
+            continue
+
         print(f"\n  {js_var}: {len(events)} Events")
         html = update_snapshot(html, js_var, events)
         if sport_key:

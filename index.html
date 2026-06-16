@@ -71,7 +71,7 @@ header p { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: r
 .stat { background: #FFF1D6; border: 2.5px solid #14110E; border-radius: 12px; padding: 11px 16px; min-width: 100px; flex: 1; box-shadow: 0 4px 0 #14110E; }
 .stat-val { font-family: 'Archivo Black', sans-serif; font-size: 1.5rem; color: #F23A1F; line-height: 1.1; letter-spacing: -0.02em; }
 .stat-val.sm { font-size: .95rem; line-height: 1.3; }
-.stat-label { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: #3C342D; margin-top: 3px; text-transform: uppercase; letter-spacing: .08em; }
+.stat-label { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: #3C342D; margin-top: 3px; text-transform: uppercase; letter-spacing: .08em; overflow-wrap: anywhere; }
 
 /* Pills + Filters */
 .type-pills { display: flex; gap: 6px; padding: 0 20px 10px; flex-wrap: wrap; }
@@ -100,7 +100,9 @@ tr:hover td { background: rgba(255,193,31,.12); }
 #dist-th, .dist-td { display: none; }
 table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
 #dist-th { text-align: right; }
-.dist-td { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: .83rem; color: #64748b !important; white-space: nowrap; }
+.dist-td { text-align: right; white-space: nowrap; }
+.dist-val { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #14110E; background: #e0e7ff; border-radius: 5px; padding: 2px 6px; }
+.dist-tilde { color: #F23A1F; }
 
 /* Calendar */
 .cal-wrap { padding: 0 20px 28px; }
@@ -120,7 +122,10 @@ table.plz-on #dist-th, table.plz-on .dist-td { display: table-cell; }
 .wday { display: inline-block; width: 22px; height: 22px; border-radius: 4px; font-size: .67rem; font-weight: 700; text-align: center; line-height: 22px; background: #e2e8f0; color: #64748b; margin-right: 4px; }
 .wday.we { background: #dcfce7; color: #16a34a; }
 .verein-sm { color: #64748b; font-size: .78rem; }
-.no-results { text-align: center; padding: 44px; color: #3C342D; font-size: .88rem; font-family: 'Familjen Grotesk',sans-serif; background: #FFF1D6; border-radius: 12px; margin: 0 0 20px; border: 2.5px solid #14110E; display: none; }
+.no-results { text-align: center; padding: 38px 24px; color: #14110E; font-family: 'Familjen Grotesk',sans-serif; background: #fff; border-radius: 14px; margin: 0 0 20px; border: 2.5px solid #14110E; box-shadow: 0 4px 0 #14110E; display: none; }
+.nr-emoji { font-size: 2rem; line-height: 1; margin-bottom: 10px; }
+.nr-title { font-family: 'Archivo Black', sans-serif; font-size: 1.05rem; margin-bottom: 6px; letter-spacing: .01em; }
+.nr-sub { font-size: .86rem; color: #6b6256; line-height: 1.55; max-width: 300px; margin: 0 auto; }
 .snap-badge { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 4px; padding: 1px 6px; font-size: .68rem; font-weight: 600; margin-left: 6px; }
 
 
@@ -747,6 +752,13 @@ body.viewmobile .filters .filter-group { flex-direction:column; align-items:stre
 body.viewmobile .filters .filter-group label { font-size:.8rem !important; }
 body.viewmobile .filters .fi { width:100% !important; height:50px; font-size:1rem; }
 body.viewmobile #plz-input.fi { width:100% !important; }
+/* iOS-Datums-/Select-Inputs nicht über den Rand laufen lassen */
+body.viewmobile .filters input[type=date].fi,
+body.viewmobile .filters select.fi { -webkit-appearance:none; appearance:none; min-width:0; max-width:100%; }
+/* Statistik-Kacheln: festes 2-Spalten-Raster, kein horizontaler Überlauf */
+body.viewmobile .stats { display:grid !important; grid-template-columns:1fr 1fr; gap:9px; padding:14px 0; }
+body.viewmobile .stat { min-width:0; }
+body.viewmobile .stat .stat-label { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 body.viewmobile #reset-all-btn,
 body.viewmobile .suggest-btn { width:100%; min-height:50px; font-size:.95rem !important; }
 body.viewmobile .qd-chip { flex:1 1 calc(50% - 4px); min-height:46px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
@@ -767,24 +779,32 @@ body.viewmobile #evt-tbl td { display:block; }
 body.viewmobile #evt-tbl { border:0; background:transparent; box-shadow:none; border-radius:0; }
 body.viewmobile #evt-tbl thead { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 body.viewmobile #evt-tbl tr {
-  display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px;
-  background:var(--bw-cream); border:2.5px solid var(--bw-ink); border-radius:14px;
-  box-shadow:0 4px 0 var(--bw-ink); padding:14px 15px; margin-bottom:12px; }
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 9px;
+  background:#fff; border:2.5px solid var(--bw-ink); border-radius:14px;
+  box-shadow:0 4px 0 var(--bw-ink); padding:13px 15px 11px; margin-bottom:13px; }
 body.viewmobile #evt-tbl tr:hover td { background:transparent; }
 body.viewmobile #evt-tbl td { padding:0 !important; border:0 !important; }
 body.viewmobile #evt-tbl td:nth-child(3) { order:0; flex:1 0 100%; }
-body.viewmobile #evt-tbl td:nth-child(3) .event-link { font-size:1.12rem !important; line-height:1.18; display:inline-block; }
+body.viewmobile #evt-tbl td:nth-child(3) .event-link { font-size:1.05rem !important; line-height:1.2; display:inline-block; }
 body.viewmobile #evt-tbl td:nth-child(1) { order:1; }
-body.viewmobile #evt-tbl td:nth-child(2) { order:2; font-family:var(--bw-font-mono); font-size:.84rem; color:var(--bw-ink-soft); display:flex; align-items:center; gap:5px; }
+body.viewmobile #evt-tbl td:nth-child(2) { order:2; font-family:var(--bw-font-mono); font-size:.8rem; color:var(--bw-ink-soft); display:flex; align-items:center; gap:5px; }
 body.viewmobile #evt-tbl td.dist-td { display:none; }
-body.viewmobile #evt-tbl.plz-on td.dist-td { display:block !important; order:3; font-size:.82rem; }
-body.viewmobile #evt-tbl td:nth-child(5) { order:4; flex:1 0 100%; }
-body.viewmobile #evt-tbl td:nth-child(6) { order:5; flex:1; font-size:.86rem !important; }
-body.viewmobile #evt-tbl td:nth-child(7) { order:6; display:flex; gap:8px; align-items:center; }
+body.viewmobile #evt-tbl.plz-on td.dist-td { display:inline-block !important; order:3; font-size:.76rem; }
+body.viewmobile #evt-tbl td:nth-child(5) { order:4; flex:1 0 100%; margin-top:1px; }
+body.viewmobile #evt-tbl td:nth-child(5)::before { content:"Strecken"; font-family:var(--bw-font-mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:#a59a86; margin-right:7px; vertical-align:middle; }
+body.viewmobile #evt-tbl td:nth-child(5) > div { display:inline-flex !important; flex-wrap:wrap; gap:5px; vertical-align:middle; }
+body.viewmobile #evt-tbl .km-tag { display:inline-block; white-space:nowrap; font-family:var(--bw-font-mono); font-size:.78rem; background:var(--bw-paper); border:1.5px solid rgba(20,17,14,.16); border-radius:6px; padding:2px 7px; margin:0 3px 3px 0; color:var(--bw-ink); }
+body.viewmobile #evt-tbl td:nth-child(6) { order:5; flex:1 0 55%; font-size:.8rem !important; color:var(--bw-ink-soft) !important; border-top:1.5px solid rgba(20,17,14,.10); margin-top:9px; padding-top:9px !important; }
+body.viewmobile #evt-tbl td:nth-child(7) { order:6; display:flex; gap:4px; align-items:center; border-top:1.5px solid rgba(20,17,14,.10); margin-top:9px; padding-top:5px !important; }
 body.viewmobile .star-btn,
-body.viewmobile .star-btn .ic { width:23px; height:23px; }
-body.viewmobile #evt-tbl td:nth-child(5)::before { content:"Strecken"; display:block; font-family:var(--bw-font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:#94a3b8; margin-bottom:3px; }
-body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-font-mono); font-size:.82rem; background:var(--bw-paper); border:1.5px solid rgba(20,17,14,.18); border-radius:6px; padding:2px 7px; margin:0 3px 3px 0; color:var(--bw-ink); }
+body.viewmobile .report-btn { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+body.viewmobile .report-btn { font-size:1.1rem; color:#b3a890; }
+body.viewmobile .star-btn .ic { width:22px; height:22px; }
+/* 6Points-Foto am Handy nicht oben/unten beschneiden (Bild ist 3:2) */
+@media (max-width:640px){
+  .promo-zone .sp-hero__r { aspect-ratio:3/2; min-height:0; }
+  .sp-hero__photo { background-position:center center; }
+}
 </style>
 <script data-goatcounter="https://bockwurst-events.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
@@ -875,7 +895,7 @@ body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-fo
 
 <header>
   <h1 id="hdr-sport" style="display:flex;align-items:center;gap:8px"><svg width="32" height="32" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px;flex-shrink:0"><circle cx="50" cy="50" r="46" fill="#F23A1F" stroke="#14110E" stroke-width="4"/><path d="M14,50 Q50,32 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><path d="M14,50 Q50,68 86,50" stroke="#FFC11F" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/><text x="50" y="64" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="52" letter-spacing="-2" fill="#FFC11F">B</text></svg>Bockwurst Sport Events Guide</h1>
-  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste oder Kalender. <span class="snap-badge" id="snap-date">Stand 15.06.2026</span></p>
+  <p id="hdr-sub">Finde Rennrad-, Triathlon- &amp; Lauf-Events in deiner Nähe — als Liste oder Kalender. <span class="snap-badge" id="snap-date">Stand 16.06.2026</span></p>
 </header>
 <script>
 (function(){var d=new Date(),dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yy=d.getFullYear();var el=document.getElementById('snap-date');if(el)el.textContent='Stand '+dd+'.'+mm+'.'+yy;})();
@@ -1001,11 +1021,11 @@ body.viewmobile #evt-tbl .km-tag { display:inline-block; font-family:var(--bw-fo
     <div class="table-wrap">
       <table id="evt-tbl">
         <thead><tr>
-          <th>Art</th><th>Datum</th><th>Event</th><th id="dist-th">km</th><th>Strecken</th><th>Verein</th><th></th>
+          <th>Art</th><th>Datum</th><th>Event</th><th id="dist-th">Distanz PLZ</th><th>Strecken</th><th>Verein</th><th></th>
         </tr></thead>
         <tbody id="evt-body"></tbody>
       </table>
-      <div class="no-results" id="no-res">Keine Events – Filter anpassen</div>
+      <div class="no-results" id="no-res"><div class="nr-emoji">🔍</div><div class="nr-title">Keine Events gefunden</div><div class="nr-sub">Erweitere den Radius, wähle „Alle Termine" oder setze die Filter zurück.</div></div>
     </div>
   </div>
 
@@ -1077,14 +1097,14 @@ const SNAPSHOT = [
   {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Zu den Löwensteiner Bergen", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"200", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9975751.html", serie:""},
   {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.1551, lon:11.7564, titel:"Jura-Radmarathon", ort:"Lupburg Sportheim", plz:"92331", strecken:"2026", verein:"206 SV 1959 Lupburg e.V. - Radsport -", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/jura-radmarathon-2026;9975753.html", serie:""},
   {art:"Radmarathon-Cup", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:54.1674, lon:9.8544, titel:"Bike Challenge Mittelholstein", ort:"Nortorf Kramer-Scheune", plz:"24589", strecken:"210", verein:"RSG Mittelpunkt Nortorf", lv:"SCH", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/bike-challenge-mittelholstein;9975807.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"3. BORA bike day HERFORD - RTF 44/ 71/ 83/ 110/", ort:"Nordrhein-Westfalen", plz:"", strecken:"163", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-rtf;9975808.html", serie:""},
-  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"3. BORA bike day HERFORD - Radmarathon", ort:"Nordrhein-Westfalen", plz:"", strecken:"210", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-radmarathon;9975809.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"RTF im Wittelsbacher Land 56/ 92/ 132/", ort:"Bayern", plz:"", strecken:"154", verein:"RSC Aichach 1977 e.V.", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rtf-im-wittelsbacher-land;9975975.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.11, lon:8.68, titel:"Mittelhessen Rundfahrt 20/ 45/ 72/", ort:"Hessen", plz:"", strecken:"117", verein:"RV \"Germania 04\" Nieder-Weisel", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/mittelhessen-rundfahrt;9975993.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"23. Rodenkirchener RTF 50/ 75/ 112/", ort:"Nordrhein-Westfalen", plz:"", strecken:"150", verein:"RTC Rodenkirchen 1980 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/23.-rodenkirchener-rtf;9976150.html", serie:""},
-  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"17. Rodenkirchener Eifelmarathon", ort:"Nordrhein-Westfalen", plz:"", strecken:"200", verein:"RTC Rodenkirchen 1980 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/17.-rodenkirchener-eifelmarathon;9976151.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Dortmund Nord trifft Westfalia Sölde 41/ 71/ 111 TuS Westfalia Dortmund-Sölde", ort:"Nordrhein-Westfalen", plz:"", strecken:"1885/1911", verein:"e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/dortmund-nord-trifft-westfalia-soelde;9976259.html", serie:""},
-  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Kraichgau-Stromberg Rundfahrt 75/ 121/", ort:"Baden", plz:"", strecken:"156", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-stromberg-rundfahrt;9976268.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:52.1005, lon:8.6723, titel:"3. BORA bike day HERFORD - RTF 44/ 71/ 83/ 110/", ort:"Herford BORA Flagship Store", plz:"32052", strecken:"163", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-rtf;9975808.html", serie:""},
+  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:52.1005, lon:8.6723, titel:"3. BORA bike day HERFORD - Radmarathon", ort:"Herford BORA Flagship Store", plz:"32052", strecken:"210", verein:"RC Endspurt Herford", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/3.-bora-bike-day-herford-radmarathon;9975809.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.4576, lon:11.1341, titel:"RTF im Wittelsbacher Land 56/ 92/ 132/", ort:"Aichach Sporthalle Gymnasium", plz:"86551", strecken:"154", verein:"RSC Aichach 1977 e.V.", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/rtf-im-wittelsbacher-land;9975975.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.4339, lon:8.6712, titel:"Mittelhessen Rundfahrt 20/ 45/ 72/", ort:"Butzbach Nieder-Weisel Mehrzweckhalle", plz:"35510", strecken:"117", verein:"RV \"Germania 04\" Nieder-Weisel", lv:"HES", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/mittelhessen-rundfahrt;9975993.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.8753, lon:7.0202, titel:"23. Rodenkirchener RTF 50/ 75/ 112/", ort:"Köln Michaelshoven", plz:"50999", strecken:"150", verein:"RTC Rodenkirchen 1980 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/23.-rodenkirchener-rtf;9976150.html", serie:""},
+  {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:50.8753, lon:7.0202, titel:"17. Rodenkirchener Eifelmarathon", ort:"Köln Michaelshoven", plz:"50999", strecken:"200", verein:"RTC Rodenkirchen 1980 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/17.-rodenkirchener-eifelmarathon;9976151.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:51.4996, lon:7.5495, titel:"Dortmund Nord trifft Westfalia Sölde 41/ 71/ 111 TuS Westfalia Dortmund-Sölde", ort:"Dortmund Adolf-Schulte-Schule in Do-Aplerbeck", plz:"44287", strecken:"1885/1911", verein:"e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/dortmund-nord-trifft-westfalia-soelde;9976259.html", serie:""},
+  {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.2659, lon:8.618, titel:"Kraichgau-Stromberg Rundfahrt 75/ 121/", ort:"St. Leon-Rot OT Rot Parkring-Sporthalle Rot", plz:"68789", strecken:"156", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-stromberg-rundfahrt;9976268.html", serie:""},
   {art:"Marathon", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Zu den Löwensteiner Bergen 0 RSV Victoria Rot", ort:"Baden", plz:"", strecken:"1912", verein:"e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/zu-den-loewensteiner-bergen;9976269.html", serie:""},
   {art:"Gravelride", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:48.99, lon:8.41, titel:"Kraichgau Gravel 50/", ort:"Baden", plz:"", strecken:"75", verein:"RSV Victoria Rot 1912 e.V.", lv:"BAD", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/kraichgau-gravel;9976270.html", serie:""},
   {art:"RTF", datum:"So, 21.06.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-06-21", date_iso_end:null, km:null, lat:49.79, lon:9.95, titel:"33. Bergeles Tour 94/", ort:"Württemberg", plz:"", strecken:"145", verein:"TV Birenbach - Radsport -", lv:"WÜR", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/33.-bergeles-tour;9976304.html", serie:""},
@@ -1273,6 +1293,7 @@ const SNAPSHOT = [
   {art:"Marathon", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Warburger Diemel-Sauerland-Marathon", ort:"Nordrhein-Westfalen", plz:"", strecken:"204", verein:"RSV '98 Warburg e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/warburger-diemel-sauerland-marathon;9976276.html", serie:""},
   {art:"RTF", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Lengerich Teuto-Ride RTF durch das Tecklenbu...... 45/ 78/ 118/", ort:"Nordrhein-Westfalen", plz:"", strecken:"153", verein:"RSV Concordia Lengerich e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/lengerich-teuto-ride-rtf-durch-das-tecklenburger-land-tmt;9976748.html", serie:""},
   {art:"Gravelride", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Gravel for Barbecue 79/", ort:"Nordrhein-Westfalen", plz:"", strecken:"101", verein:"RSC Werne 79 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/gravel-for-barbecue;9976756.html", serie:""},
+  {art:"RTF", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:52.1866, lon:7.8604, titel:"Teuto-Ride Lengerich", ort:"Lengerich", plz:"49525", strecken:"45 / 78 / 118 / 153 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1699", serie:""},
   {art:"CTF", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:48.9526, lon:11.3975, titel:"Bergzeitfahren Kipfenberg", ort:"Kipfenberg", plz:"85110", strecken:"3 km 150 Hm", verein:"", lv:"BAY", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1752", serie:""},
   {art:"Marathon", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:51.4901, lon:9.1464, titel:"Warburger Diemel Sauerland Marathon", ort:"Warburg", plz:"34414", strecken:"40 / 73 / 103 /  204 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=2902", serie:""},
   {art:"Marathon", datum:"Sa, 18.07.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-07-18", date_iso_end:null, km:null, lat:51.4035, lon:12.3418, titel:"Velofondo 9h11", ort:"Leipzig", plz:"04158", strecken:"9h11min im Zweierteam", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=3045", serie:""},
@@ -1323,7 +1344,6 @@ const SNAPSHOT = [
   {art:"Marathon", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:49.79, lon:9.95, titel:"Nordschwarzwald - Radmarathon", ort:"Württemberg", plz:"", strecken:"241", verein:"Radfahrerverein Pfeil Magstadt e.V.", lv:"WÜR", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/nordschwarzwald-radmarathon;9977057.html", serie:""},
   {art:"RTF", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"SHADES OF SPEED 75/ 118/ 140/", ort:"Bayern", plz:"", strecken:"170", verein:"SHADES OF SPEED", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/shades-of-speed;9977079.html", serie:""},
   {art:"Marathon", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:48.79, lon:11.5, titel:"SHADES OF SPEED 215/", ort:"Bayern", plz:"", strecken:"306", verein:"SHADES OF SPEED", lv:"BAY", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/shades-of-speed;9977080.html", serie:""},
-  {art:"RTF", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:52.1866, lon:7.8604, titel:"Teuto-Ride Lengerich", ort:"Lengerich", plz:"49525", strecken:"45 / 78 / 118 / 153 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1699", serie:""},
   {art:"Marathon", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:50.5, lon:12.2167, titel:"Vogtland Radmarathon", ort:"Plauen / OT Großfriesen", plz:"08541", strecken:"76 / 136 / 210 km", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1734", serie:""},
   {art:"RTF", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:50.5925, lon:9.5423, titel:"Rund um das Tal der kalten Lüder", ort:"Großenlüder-Kleinlüder", plz:"36137", strecken:"54 / 89 km 560 / 1100 Hm", verein:"", lv:"HES", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1758", serie:""},
   {art:"Marathon", datum:"So, 26.07.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-07-26", date_iso_end:null, km:null, lat:48.7447, lon:8.9668, titel:"Nordschwarzwald-Radmarathon", ort:"Magstadt", plz:"71106", strecken:"33 / 81 / 112 / 160 / 204 / 250 km", verein:"", lv:"WÜR", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=2395", serie:""},
@@ -1460,7 +1480,7 @@ const SNAPSHOT = [
   {art:"Gravelride", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:49.24, lon:6.99, titel:"Panorame Tour im Biosphärenreservat Bliesgau", ort:"Saarland", plz:"", strecken:"100", verein:"RSC St. Ingbert e.V.", lv:"SAA", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/panorame-tour-im-biosphaerenreservat-bliesgau;9976858.html", serie:""},
   {art:"RTF", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Essener Rad Genuss 45/ 75/", ort:"Nordrhein-Westfalen", plz:"", strecken:"116", verein:"Essener RG 1900 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/essener-rad-genuss;9976946.html", serie:""},
   {art:"Gravelride", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:51.43, lon:7.66, titel:"Essener Rad Genuss 53/", ort:"Nordrhein-Westfalen", plz:"", strecken:"86", verein:"Essener RG 1900 e.V.", lv:"NRW", country:"DE", url:"https://breitensport.rad-net.de/breitensportkalender/termine/2026/essener-rad-genuss;9976951.html", serie:""},
-  {art:"Marathon", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:50.3999659, lon:12.4822605, titel:"20.Erzgebirgstour I Edition 1 - West", ort:"Westerzgebirge", plz:"", strecken:"", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1560", serie:""},
+  {art:"Marathon", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:50.5167, lon:12.95, titel:"Erzgebirgstour - Dreierlei im Gebirg", ort:"Crottendorf", plz:"09474", strecken:"90 km 2200 Hm", verein:"", lv:"SAC", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1560", serie:""},
   {art:"RTF", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:50.5619, lon:9.7131, titel:"Osthessen-Rundfahrt", ort:"Petersberg", plz:"36100", strecken:"25 / 50 / 75 / 113 / 145 km", verein:"", lv:"HES", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1578", serie:""},
   {art:"RTF", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:51.4753, lon:11.9973, titel:"MZ-Radpartie", ort:"Halle", plz:"06112", strecken:"20 / 42  / 84 km", verein:"", lv:"SA", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1580", serie:""},
   {art:"RTF", datum:"So, 23.08.2026", datum_end:null, wochentag:"Sonntag", date_iso:"2026-08-23", date_iso_end:null, km:null, lat:50.7754, lon:7.197, titel:"Sankt Augustiner RTF", ort:"Sankt Augustin", plz:"53757", strecken:"25 / 53 / 76 / 105 / 134 km", verein:"", lv:"NRW", country:"DE", url:"https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php?kal_Aktion=detail&kal_Nummer=1901", serie:""},
@@ -1854,6 +1874,8 @@ const TRI_SNAPSHOT = [
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:51.2143386, lon:9.4033047, titel:"3. Edermünder Triathlon", ort:"Edermünde", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/3-edermuender-triathlon", serie:""},
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:50.6867695, lon:10.9142385, titel:"31. Ilmenauer Teamtriathlon 2026", ort:"Ilmenau", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/31-ilmenauer-teamtriathlon-2026", serie:""},
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:54.6882591, lon:8.9260721, titel:"Hallig-Dreeathlon Bike - Run - Swim - Run - Bike", ort:"Langenhorn", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/hallig-dreeathlon-bike-run-swim-run-bike", serie:""},
+  {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:49.5401213, lon:8.5785313, titel:"42. Viernheimer V-Card-Triathlon", ort:"Viernheim", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/42-viernheimer-v-card-triathlon", serie:""},
+  {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:49.5401213, lon:8.5785313, titel:"42. Viernheimer V-Card-Triathlon / Para Triathlon", ort:"Viernheim", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/42-viernheimer-v-card-triathlon-para-triathlon", serie:""},
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:53.162999, lon:12.4868962, titel:"17. Iron Power Bauer", ort:"Wittstock/Dosse", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/17-iron-power-bauer", serie:""},
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:52.2277037, lon:11.0104702, titel:"36. Elm-Lappwald Triathlon", ort:"Helmstedt", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/36-elm-lappwald-triathlon", serie:""},
   {art:"Triathlon", datum:"Sa, 01.08.2026", datum_end:null, wochentag:"Samstag", date_iso:"2026-08-01", date_iso_end:null, km:null, lat:51.8485211, lon:11.5345948, titel:"8. Salzlandsparkassen - Triathlon", ort:"Hecklingen", plz:"", strecken:"", verein:"", lv:"", country:"DE", url:"https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender/08-2026/8-salzlandsparkassen-triathlon", serie:""},
@@ -1975,6 +1997,7 @@ const TRI_SNAPSHOT = [
 
 // ── Lauf Snapshot (laufen.run + eigene Recherche, Stand 10.06.2026) ───────────
 const LAUF_SNAPSHOT = [
+  {art:"Trail", datum:"Di, 16.06.2026", datum_end:null, wochentag:"Dienstag", date_iso:"2026-06-16", date_iso_end:null, km:null, lat:52.0872985, lon:10.1605747, titel:"21. Wohldenberger Waldlauf", ort:"Holle", plz:"", strecken:"400 m / 1,5 km / 4 km / 10 km / HM", verein:"", lv:"", country:"DE", url:"https://rw-wohldenberg.de/waldlauf/", serie:""},
   {art:"Laufen", datum:"Mi, 17.06.2026", datum_end:null, wochentag:"Mittwoch", date_iso:"2026-06-17", date_iso_end:null, km:null, lat:52.1503721, lon:10.3593147, titel:"95. Terrainkurweg Marathon", ort:"Salzgitter", plz:"", strecken:"M", verein:"", lv:"", country:"DE", url:"https://laufen-im-vorharz.webnode.page/", serie:""},
   {art:"Laufen", datum:"Mi, 17.06.2026", datum_end:null, wochentag:"Mittwoch", date_iso:"2026-06-17", date_iso_end:null, km:null, lat:51.8344172, lon:10.7862526, titel:"12. Harzer Firmenlauf", ort:"Wernigerode", plz:"", strecken:"2,5 km", verein:"", lv:"", country:"DE", url:"https://harzer-firmenlauf.de/", serie:""},
   {art:"Laufen", datum:"Mi, 17.06.2026", datum_end:null, wochentag:"Mittwoch", date_iso:"2026-06-17", date_iso_end:null, km:null, lat:50.628912, lon:11.1213163, titel:"4. Stadtwald-Firmenlauf", ort:"Oberhain (Königsee)", plz:"", strecken:"5,5 km", verein:"", lv:"", country:"DE", url:"https://laufvereinkoenigsee.de/firmenlauf", serie:""},
@@ -2365,7 +2388,7 @@ function renderListe(v) {
       <td><span class="badge" style="background:${cfg.bg};color:${cfg.c}"><svg class="ic ic-sm"><use href="#${cfg.i}"/></svg> ${cfg.l}</span></td>
       <td><span class="wday ${we?"we":""}">${e.datum.split(", ")[0]}</span>${e.datum.split(", ")[1]||e.datum}${e.datum_end?`<span style="color:#94a3b8;font-size:.75rem"> – ${e.datum_end}</span>`:""}</td>
       <td><a class="event-link" href="${e.url}" target="_blank">${e.titel}</a>${flag?`<span class="country-badge">${flag}</span>`:""} ${e.serie?`<span class="serie-badge">${e.serie}</span>`:""}</td>
-      <td class="dist-td">${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"–";return Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))+" km";})()}</td>
+      <td class="dist-td">${(()=>{if(!selPlz||!PLZ_MAP[selPlz])return"";const c=eLoc(e);if(!c)return"–";return `<span class="dist-val"><span class="dist-tilde">≈</span> ${Math.round(haversine(PLZ_MAP[selPlz][0],PLZ_MAP[selPlz][1],c[0],c[1]))} km</span>`;})()}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">${sH}</div></td>
       <td class="verein-sm">${e.verein} <span style="color:#94a3b8">(${e.lv})</span></td>
       <td></td>`;
@@ -2380,7 +2403,7 @@ function renderListe(v) {
 function renderKalender(v) {
   // pre-compute km per event for this render pass
   const body=document.getElementById("cal-body"); body.innerHTML="";
-  if(!v.length){body.innerHTML='<div style="text-align:center;padding:44px;color:#94a3b8">Keine Events – Filter anpassen</div>';return;}
+  if(!v.length){body.innerHTML='<div class="no-results" style="display:block"><div class="nr-emoji">🔍</div><div class="nr-title">Keine Events gefunden</div><div class="nr-sub">Erweitere den Radius, wähle „Alle Termine" oder setze die Filter zurück.</div></div>';return;}
   const byM={};
   v.forEach(e=>{const m=e.date_iso.slice(5,7);(byM[m]=byM[m]||[]).push(e);});
   Object.keys(byM).sort().forEach(m=>{

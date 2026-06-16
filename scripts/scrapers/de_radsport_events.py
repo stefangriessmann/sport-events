@@ -370,6 +370,10 @@ def fetch(year: int) -> list[dict]:
             if ort == "foreign":
                 continue
 
+            # Skip virtual/online events (e.g. Zwift vRTF) – no physical location
+            if "virtuell" in ort.lower():
+                continue
+
             seen_ids.add(kal_num)
             url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
             coords = geocode_plz(plz) if plz else geocode(ort)

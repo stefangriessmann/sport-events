@@ -140,7 +140,7 @@ def _fetch_detail_location(url: str) -> str:
         _save_loc_cache()
         return ""
 
-BASE    = "https://www.triathlondeutschland.de/termine/veranstaltungskalender"
+BASE    = "https://www.triathlondeutschland.de/aktive/wettkaempfe/veranstaltungskalender"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)"}
 
 MONTH_DE = {
@@ -236,12 +236,7 @@ def fetch(year: int) -> list[dict]:
     print(f"[triathlondeutschland.de] Fetching {year} events from page 0 with date filter...")
 
     for page in range(0, 100):   # safety cap: 100 pages × 20 events = 2000 max
-        url = (
-            f"{BASE}"
-            f"?date_from%5Bmin%5D={today_str}"
-            f"&date_from%5Bmax%5D={year_end}"
-            f"&page={page}"
-        )
+        url = f"{BASE}?page={page}"
         try:
             r = requests.get(url, headers=HEADERS, timeout=20)
             r.raise_for_status()
