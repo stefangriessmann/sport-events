@@ -3270,5 +3270,9 @@
   "bielefeld": {
     "lat": 52.0191005,
     "lon": 8.531007
+  },
+  "kreuzau-obermaubach": {
+    "lat": 50.7468554,
+    "lon": 6.4893293
   }
 }

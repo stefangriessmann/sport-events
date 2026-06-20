@@ -26,9 +26,9 @@ from datetime import date
 # module_path may be a string or a list of strings – multiple scrapers are
 # merged and deduplicated (by url, then title+date_iso) into one JS variable.
 SOURCES = [
-    (["scrapers.de_radnet", "scrapers.de_radsport_events"], "SNAPSHOT",      "rad"),
-    ("scrapers.de_triathlonde",                             "TRI_SNAPSHOT",  "tri"),
-    ("scrapers.de_laufen",                                  "LAUF_SNAPSHOT", "lauf"),
+    (["scrapers.de_radnet", "scrapers.de_radsport_events"],          "SNAPSHOT",      "rad"),
+    ("scrapers.de_triathlonde",                                       "TRI_SNAPSHOT",  "tri"),
+    (["scrapers.de_laufen", "scrapers.de_mammutmarsch"],              "LAUF_SNAPSHOT", "lauf"),
     # SWIM_SNAPSHOT is manually curated – not auto-updated
 ]
 

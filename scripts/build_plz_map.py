@@ -1,11 +1,11 @@
 """
-build_plz_map.py – Downloads German PLZ data and injects const PLZ_MAP into index.html.
+build_plz_map.py – Downloads German PLZ data and writes data/plz_map.json.
 
 Run from ~/sport-events/:
     python3 scripts/build_plz_map.py
 
-Replaces the line:  const PLZ_MAP = {};
-with the full minified map (~120 KB).
+The file is served as a static asset and fetched lazily by the browser
+only when the user enters a PLZ. Fallback: live Nominatim geocoding.
 
 Sources tried in order:
   1. GeoNames DE.zip (download.geonames.org) – ~8200 entries, most reliable
@@ -13,19 +13,16 @@ Sources tried in order:
   3. raw.githubusercontent.com/zauberware (JSON)
   4. data/plz_map.json (local cache from previous successful run)
   5. data/geocache.json (event geocoding cache, ~400 PLZ entries)
-  6. keep existing PLZ_MAP in index.html (no filter, graceful degradation)
 """
 import io
 import json
-import re
 import sys
 import zipfile
 from pathlib import Path
 
 import requests
 
-INDEX_HTML      = Path(__file__).parent.parent / "index.html"
-CACHE_PATH      = Path(__file__).parent.parent / "data" / "plz_map.json"
+CACHE_PATH = Path(__file__).parent.parent / "data" / "plz_map.json"
 HEADERS         = {"User-Agent": "bockwurst-events/2.0 stefan.griessmann@web.de"}
 URL_GEONAMES    = "https://download.geonames.org/export/zip/DE.zip"
 URL_CSV         = "https://downloads.suche-postleitzahl.org/v2/public/plz_einwohner.csv"
@@ -154,25 +151,23 @@ def fetch_plz_map() -> dict:
     return {}
 
 
-def inject(plz_map: dict) -> None:
+def save(plz_map: dict) -> None:
+    """Write plz_map.json to data/ directory (served as static asset)."""
     if not plz_map:
-        print("[build_plz_map] Empty map – skipping injection", file=sys.stderr)
+        print("[build_plz_map] Empty map – skipping", file=sys.stderr)
         return
 
-    # Save to local cache for future offline runs
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
-        json.dump(plz_map, f, ensure_ascii=False)
+        json.dump(plz_map, f, ensure_ascii=False, separators=(",", ":"))
+    size_kb = CACHE_PATH.stat().st_size // 1024
+    print(f"[build_plz_map] Wrote {len(plz_map)} entries ({size_kb} KB) → {CACHE_PATH}", file=sys.stderr)
 
-    html = INDEX_HTML.read_text(encoding="utf-8")
-    inner = ",".join(f'"{k}":{json.dumps(v)}' for k, v in sorted(plz_map.items()))
-    new_line = f"const PLZ_MAP = {{{inner}}};"
-    html = re.sub(r"const PLZ_MAP = \{.*?\};", new_line, html, count=1)
-    INDEX_HTML.write_text(html, encoding="utf-8")
-    size_kb = len(new_line.encode()) // 1024
-    print(f"[build_plz_map] Injected {len(plz_map)} entries ({size_kb} KB) into index.html", file=sys.stderr)
+
+# Keep old name as alias so existing callers don't break
+inject = save
 
 
 if __name__ == "__main__":
     plz_map = fetch_plz_map()
-    inject(plz_map)
+    save(plz_map)
