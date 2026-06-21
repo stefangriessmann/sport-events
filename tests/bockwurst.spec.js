@@ -759,3 +759,5 @@ test.describe('10 · Pagination (Mehr laden)', () => {
     expect(await getRowCount(page)).toBe(PAGE_SIZE);
   });
 });
+
+// CI-Re-Run 2026-06-21T20:15Z – Resend-Mailversand verifizieren
