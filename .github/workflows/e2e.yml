@@ -62,3 +62,12 @@ jobs:
           name: playwright-report-${{ github.ref_name }}
           path: playwright-report/
           retention-days: 7
+
+      - name: Ergebnis-Mail (Resend)
+        if: always()
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          python3 scripts/notify_resend.py \
+            "[bockwurst.cc] E2E-Tests ${{ job.status }} (${{ github.ref_name }})" \
+            "Playwright E2E auf ${{ github.ref_name }}: ${{ job.status }} · Ziel: ${{ steps.url.outputs.base }} · Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

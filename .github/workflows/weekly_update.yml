@@ -2,7 +2,7 @@ name: Weekly Data Update
 
 on:
   schedule:
-    - cron: '0 3 * * 1'   # Montags 03:00 UTC
+    - cron: '0 3 * * 1'   # Montags 03:00 UTC (≈ 05:00 deutsche Sommerzeit)
   workflow_dispatch:        # Manueller Trigger über GitHub UI
 
 jobs:
@@ -39,3 +39,15 @@ jobs:
           git add data/plz_map.json || true   # optional – nur falls generiert
           git diff --staged --quiet || git commit -m "chore: weekly data update $(date +%Y-%m-%d)"
           git push
+
+      - name: Ergebnis-Mail (Resend)
+        if: always()
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          STAND=$(python3 -c "import json;print(json.load(open('data/meta.json'))['stand'])" 2>/dev/null || echo '?')
+          COUNTS=$(python3 -c "import json;c=json.load(open('data/meta.json'))['counts'];print('Rad %s, Tri %s, Lauf %s, Swim %s'%(c['rad'],c['tri'],c['lauf'],c['swim']))" 2>/dev/null || echo '?')
+          RUN="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          python3 scripts/notify_resend.py \
+            "[bockwurst.cc] Scraping ${{ job.status }} – Stand $STAND" \
+            "Weekly Data Update: ${{ job.status }} · Stand: $STAND · Events: $COUNTS · Run: $RUN"

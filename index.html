@@ -1019,20 +1019,35 @@ function openModal(){
     <div class="mhead"><h3>${t.title}</h3><button class="x" id="mx">×</button></div>
     <p class="msub">${t.sub}</p>
     <form class="mform" id="mform">
-      <div class="full"><label>${t.titel}</label><input required placeholder="${lang==='de'?'z.B. 12. Erzgebirgs-Marathon':'e.g. 12th Ore Mountains Marathon'}"></div>
-      <div><label>${t.sportL}</label><select>${Object.entries(SPORTS).map(([k,s])=>`<option>${lang==='de'?s.de:s.en}</option>`).join('')}</select></div>
-      <div><label>${t.datum}</label><input type="date" value="2026-07-15"></div>
-      <div><label>${t.ort}</label><input placeholder="${lang==='de'?'Chemnitz':'Chemnitz'}"></div>
-      <div><label>${t.plz}</label><input maxlength="5" placeholder="09111"></div>
-      <div class="full"><label>${t.strecke}</label><input placeholder="${lang==='de'?'z.B. 50 / 100 / 150 km':'e.g. 50 / 100 / 150 km'}"></div>
-      <div class="full"><label>${t.link}</label><input type="url" placeholder="https://"></div>
+      <div class="full"><label>${t.titel}</label><input id="f-titel" required placeholder="${lang==='de'?'z.B. 12. Erzgebirgs-Marathon':'e.g. 12th Ore Mountains Marathon'}"></div>
+      <div><label>${t.sportL}</label><select id="f-sport">${Object.entries(SPORTS).map(([k,s])=>`<option>${lang==='de'?s.de:s.en}</option>`).join('')}</select></div>
+      <div><label>${t.datum}</label><input id="f-datum" type="date" value="2026-07-15"></div>
+      <div><label>${t.ort}</label><input id="f-ort" placeholder="${lang==='de'?'Chemnitz':'Chemnitz'}"></div>
+      <div><label>${t.plz}</label><input id="f-plz" maxlength="5" placeholder="09111"></div>
+      <div class="full"><label>${t.strecke}</label><input id="f-strecke" placeholder="${lang==='de'?'z.B. 50 / 100 / 150 km':'e.g. 50 / 100 / 150 km'}"></div>
+      <div class="full"><label>${t.link}</label><input id="f-link" type="url" placeholder="https://"></div>
       <button class="msubmit" type="submit">${t.submit}</button>
       <div class="mnote">${t.note}</div>
     </form></div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('mx').onclick=()=>ov.remove();
-  document.getElementById('mform').onsubmit=e=>{ e.preventDefault(); ov.querySelector('.modal').innerHTML=`<div class="ok"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div><h3>${t.okT}</h3><p>${t.okP}</p></div>`; setTimeout(()=>ov.remove(),2600); };
+  document.getElementById('mform').onsubmit=async e=>{ e.preventDefault();
+    const btn=ov.querySelector('.msubmit'); if(btn){btn.disabled=true; btn.textContent=(lang==='de'?'Senden…':'Sending…');}
+    const g=id=>{const el=document.getElementById(id); return el?el.value.trim():'';};
+    const titel=g('f-titel'), sportV=g('f-sport'), datum=g('f-datum'), ort=g('f-ort'), plz=g('f-plz'), strecke=g('f-strecke'), link=g('f-link');
+    const body=['**Sport:** '+sportV,'**Typ:** '+sportV,'**Name:** '+titel,'**Datum:** '+datum,'**Ort:** '+ort,'**PLZ:** '+plz,'**Strecke:** '+strecke,'**Link:** '+link,'','—','Eingereicht über das Vorschlagsformular auf bockwurst.cc'].join('\n');
+    try{
+      const r=await fetch('/.netlify/functions/create-issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Event-Vorschlag: '+(titel||'(ohne Titel)'),body})});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      ov.querySelector('.modal').innerHTML=`<div class="ok"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div><h3>${t.okT}</h3><p>${t.okP}</p></div>`;
+      setTimeout(()=>ov.remove(),2600);
+    }catch(err){
+      if(btn){btn.disabled=false; btn.textContent=t.submit;}
+      let m=ov.querySelector('.mform-err'); if(!m){m=document.createElement('div'); m.className='mform-err'; m.style.cssText='color:#dc2626;font-size:13px;margin-top:8px'; ov.querySelector('.mform').appendChild(m);}
+      m.textContent=(lang==='de'?'Senden fehlgeschlagen – bitte später erneut versuchen.':'Sending failed – please try again later.');
+    }
+  };
 }
 const _flogo=document.getElementById('flogo');
 if(_flogo) _flogo.innerHTML=`<span class="lk"><span style="font-family:'Bricolage Grotesque';font-weight:800;letter-spacing:-.035em;font-size:21px;color:#fff;display:inline-flex;align-items:center">bockwurst<span style="color:${COB}">.</span><span style="display:inline-flex">${cWheel(COB,21)}${cWheel(PINK,21)}</span></span></span>`;
