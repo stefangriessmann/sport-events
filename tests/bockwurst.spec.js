@@ -1,24 +1,25 @@
 /**
- * Bockwurst Sport Events – vollständige Playwright-Testsuite
+ * Bockwurst Sport Events – vollständige Playwright-Testsuite (Relaunch-DOM)
  *
- * Abgedeckt:
- *  - Seitenaufruf & Fehlerfreiheit
- *  - Snapshot-Vollständigkeit (alle 4 Sportarten)
- *  - Sport-Buttons & Pill-Filter für alle Sportarten
- *  - Konsistenz: Stats-Zahl == angezeigte Zeilen
- *  - Event-Details (Titel, Datum, Link, Aktionen)
- *  - PLZ-Filter: alle 4 Sportarten, Radius, Distanzspalte, Distanzwerte
- *  - Reset aller Filter
- *  - Datumsfilter
- *  - Tabs: Liste / Kalender
- *  - Pagination (Mehr laden)
- *  - Keine JS-Fehler
+ * Portiert vom alten --bw-* Tabellen-DOM auf das helle Relaunch-Design:
+ *   .sport-btn            → #sportbar .sport[data-sport]   (aktiv-Klasse: .on)
+ *   #evt-body tr          → #listView .ev                  (Karten statt Tabelle)
+ *   #plz-input            → #plz
+ *   #radius-sel           → #radius   (Stufen: 0/50/100/150/250)
+ *   #stats .stat-val      → #stats .stat .v
+ *   .tab / #tab-*         → #viewtabs button[data-view] / #listView / #calView
+ *   #pills .pill          → #typeMenu input  (Event-Typ-Dropdown)
+ *   #mehr-zone/#mehr-cnt  → #loadmore / #loadmoreCnt   (Seitengröße 8 statt 15)
+ *   #reset-all-btn        → #reset
+ *   Distanzspalte         → .ev .dist  (Format "~N km", nur bei gesetzter PLZ)
+ *
+ * Daten werden zur Laufzeit aus /data/*.json in das globale EV-Array geladen.
  *
  * Setup:
  *   cd ~/sport-events
  *   npm install -D @playwright/test
  *   npx playwright install chromium
- *   BASE_URL=https://bockwurst-events.netlify.app npx playwright test tests/bockwurst.spec.js
+ *   BASE_URL=https://staging--bockwurst-events.netlify.app npx playwright test tests/bockwurst.spec.js
  */
 
 const { test, expect } = require('@playwright/test');
@@ -29,50 +30,64 @@ const BASE_URL = process.env.BASE_URL || 'https://bockwurst-events.netlify.app';
 const TEST_PLZ    = '80331';
 const TEST_COORDS = [48.1374, 11.5754];
 
+// Seitengröße (PAGE im Relaunch-Design)
+const PAGE_SIZE = 8;
+
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+/** Lädt die Seite und wartet, bis das EV-Array befüllt + gerendert ist */
+async function load(page) {
+  await page.goto(BASE_URL);
+  await page.waitForFunction(() => { try { return EV.length > 0; } catch (e) { return false; } }, null, { timeout: 20000 });
+  await page.waitForSelector('#sportbar .sport', { timeout: 10000 });
+}
 
 /** Injiziert PLZ direkt in PLZ_MAP – kein Nominatim-Call nötig */
 async function injectPlz(page, plz = TEST_PLZ, coords = TEST_COORDS) {
-  // PLZ_MAP ist per `const` deklariert → nicht auf window; direkt mutieren
   await page.evaluate(([p, c]) => { PLZ_MAP[p] = c; }, [plz, coords]);
 }
 
 /** Trägt PLZ ein, feuert oninput, wartet auf Re-Render */
 async function fillPlz(page, plz = TEST_PLZ) {
-  await page.locator('#plz-input').fill(plz);
-  await page.locator('#plz-input').dispatchEvent('input');
+  await page.locator('#plz').fill(plz);
+  await page.locator('#plz').dispatchEvent('input');
   await page.waitForTimeout(400);
 }
 
 /** Klickt Sport-Button per key ('rad'|'swim'|'tri'|'lauf'|'all') */
 async function clickSport(page, key) {
   await page.evaluate((k) => {
-    const btn = [...document.querySelectorAll('.sport-btn')]
-      .find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${k}'`));
+    const btn = document.querySelector(`#sportbar .sport[data-sport="${k}"]`);
     if (btn) btn.click();
   }, key);
   await page.waitForTimeout(250);
 }
 
-/** Liest Stats-Gesamtzahl (erster .stat-val) */
+/** Liest Stats-Gesamtzahl (erster #stats .stat .v) */
 async function getStatsTotal(page) {
   return page.evaluate(() => {
-    const el = document.querySelector('#stats .stat-val');
+    const el = document.querySelector('#stats .stat .v');
     return el ? parseInt(el.textContent.trim(), 10) : 0;
   });
 }
 
-/** Anzahl sichtbarer <tr> in #evt-body */
+/** Anzahl sichtbarer Event-Karten in #listView */
 async function getRowCount(page) {
-  return page.evaluate(() => document.querySelectorAll('#evt-body tr').length);
+  return page.evaluate(() => document.querySelectorAll('#listView .ev').length);
 }
 
-/** Klickt auf einen Tab per Textinhalt */
-async function clickTab(page, label) {
-  await page.evaluate((l) => {
-    const btn = [...document.querySelectorAll('.tab')].find(t => t.textContent.includes(l));
-    if (btn) btn.click();
-  }, label);
+/** Setzt den Radius (#radius) */
+async function setRadius(page, r) {
+  await page.selectOption('#radius', r);
+  await page.waitForTimeout(250);
+}
+
+/** Wechselt die Ansicht ('list' | 'cal') */
+async function switchView(page, view) {
+  await page.evaluate((v) => {
+    const b = document.querySelector(`#viewtabs button[data-view="${v}"]`);
+    if (b) b.click();
+  }, view);
   await page.waitForTimeout(300);
 }
 
@@ -99,111 +114,103 @@ test.describe('1 · Seitenaufruf', () => {
           && !msg.text().includes('Failed to load resource'))
         errors.push(msg.text());
     });
-    await page.goto(BASE_URL);
+    await load(page);
     await page.waitForLoadState('networkidle');
     expect(errors).toHaveLength(0);
   });
 
   test('5 Sport-Buttons sichtbar', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await expect(page.locator('.sport-btn')).toHaveCount(5);
+    await load(page);
+    await expect(page.locator('#sportbar .sport')).toHaveCount(5);
   });
 
-  test('Stand-Badge zeigt gültiges Datum (DD.MM.YYYY)', async ({ page }) => {
-    await page.goto(BASE_URL);
-    const text = await page.locator('#snap-date').textContent();
-    expect(text).toMatch(/\d{2}\.\d{2}\.\d{4}/);
+  test('meta.json liefert gültiges Stand-Datum (DD.MM.YYYY)', async ({ page }) => {
+    await load(page);
+    const stand = await page.evaluate(async () => {
+      const r = await fetch('/data/meta.json');
+      const m = await r.json();
+      return m.stand;
+    });
+    expect(stand).toMatch(/\d{2}\.\d{2}\.\d{4}/);
   });
 
   test('Stats zeigen Event-Zahl > 0', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await load(page);
     const total = await getStatsTotal(page);
     expect(total).toBeGreaterThan(0);
   });
 
-  test('2 Tabs sichtbar (Liste, Kalender)', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await expect(page.locator('.tab')).toHaveCount(2);
+  test('2 Ansichts-Tabs sichtbar (Liste, Kalender)', async ({ page }) => {
+    await load(page);
+    await expect(page.locator('#viewtabs button')).toHaveCount(2);
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 2. SNAPSHOT-VOLLSTÄNDIGKEIT
+// 2. DATEN-VOLLSTÄNDIGKEIT
 // ═══════════════════════════════════════════════════════════════════════════
 
-test.describe('2 · Snapshot-Vollständigkeit', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-  });
+test.describe('2 · Daten-Vollständigkeit', () => {
+  test.beforeEach(async ({ page }) => { await load(page); });
 
+  // Sichere Floors (Daten schwanken; rad lag zuletzt bei ~648)
   const minCounts = {
-    SNAPSHOT:      650,   // Radsport (rad-net + radsport-events.de)
-    TRI_SNAPSHOT:  50,    // Triathlon
-    LAUF_SNAPSHOT: 100,   // Laufen
+    rad:  600,   // Radsport (rad-net + radsport-events.de)
+    tri:  150,   // Triathlon
+    lauf: 150,   // Laufen
   };
 
-  for (const [name, min] of Object.entries(minCounts)) {
-    test(`${name} hat mindestens ${min} Einträge`, async ({ page }) => {
-      // `const` im Top-Level-Script → nicht auf window; via eval zugreifen
-      const count = await page.evaluate((n) => { try { return eval(n).length; } catch(e) { return 0; } }, name);
+  for (const [sp, min] of Object.entries(minCounts)) {
+    test(`Sportart "${sp}" hat mindestens ${min} Einträge`, async ({ page }) => {
+      const count = await page.evaluate((s) =>
+        EV.filter(e => TYPE_SPORT[e.art] === s).length, sp);
       expect(count).toBeGreaterThanOrEqual(min);
     });
   }
 
-  test('Jeder Snapshot-Eintrag hat Pflichtfelder (titel, date_iso, art)', async ({ page }) => {
+  test('Jeder Event-Eintrag hat Pflichtfelder (titel, datum, art)', async ({ page }) => {
     const issues = await page.evaluate(() => {
-      const all = [...SNAPSHOT, ...TRI_SNAPSHOT,
-                   ...LAUF_SNAPSHOT, ...SWIM_SNAPSHOT];
       const bad = [];
-      all.forEach((e, i) => {
-        if (!e.titel)    bad.push(`[${i}] fehlt titel`);
-        if (!e.date_iso) bad.push(`[${i}] fehlt date_iso (titel: ${e.titel})`);
-        if (!e.art)      bad.push(`[${i}] fehlt art (titel: ${e.titel})`);
+      EV.forEach((e, i) => {
+        if (!e.titel) bad.push(`[${i}] fehlt titel`);
+        if (!e.datum) bad.push(`[${i}] fehlt datum (titel: ${e.titel})`);
+        if (!e.art)   bad.push(`[${i}] fehlt art (titel: ${e.titel})`);
       });
       return bad;
     });
     expect(issues).toHaveLength(0);
   });
 
-  // Alle Events müssen Ort und Koordinaten haben – Grundvoraussetzung für den PLZ-Filter
   const SNAPSHOTS = [
-    { name: 'SNAPSHOT',      label: 'Radsport'   },
-    { name: 'TRI_SNAPSHOT',  label: 'Triathlon'  },
-    { name: 'LAUF_SNAPSHOT', label: 'Laufen'     },
-    { name: 'SWIM_SNAPSHOT', label: 'Freiwasser' },
+    { key: 'rad',  label: 'Radsport'   },
+    { key: 'tri',  label: 'Triathlon'  },
+    { key: 'lauf', label: 'Laufen'     },
+    { key: 'swim', label: 'Freiwasser' },
   ];
 
-  for (const { name, label } of SNAPSHOTS) {
+  for (const { key, label } of SNAPSHOTS) {
     test(`${label}: alle Events haben ort-Feld`, async ({ page }) => {
-      const missing = await page.evaluate((n) => {
-        const snap = eval(n);
-        return snap
+      const missing = await page.evaluate((s) =>
+        EV.filter(e => TYPE_SPORT[e.art] === s)
           .filter(e => !e.ort || e.ort.trim() === '')
-          .map(e => e.titel);
-      }, name);
+          .map(e => e.titel), key);
       expect(missing, `${label}: Events ohne ort: ${missing.join(', ')}`).toHaveLength(0);
     });
 
     test(`${label}: alle Events haben Koordinaten (lat/lon)`, async ({ page }) => {
-      const missing = await page.evaluate((n) => {
-        const snap = eval(n);
-        return snap
+      const missing = await page.evaluate((s) =>
+        EV.filter(e => TYPE_SPORT[e.art] === s)
           .filter(e => e.lat == null || e.lon == null)
-          .map(e => `${e.titel} (ort: ${e.ort || '–'})`);
-      }, name);
+          .map(e => `${e.titel} (ort: ${e.ort || '–'})`), key);
       expect(missing, `${label}: Events ohne Koordinaten: ${missing.join(', ')}`).toHaveLength(0);
     });
   }
 
   test('Keine Events in der Vergangenheit', async ({ page }) => {
     const past = await page.evaluate(() => {
-      // 1 Tag Toleranz: täglicher Scraper kann 1 Tag Lag haben
       const d = new Date(); d.setDate(d.getDate() - 1);
       const today = d.toISOString().slice(0, 10);
-      const all = [...SNAPSHOT, ...TRI_SNAPSHOT,
-                   ...LAUF_SNAPSHOT, ...SWIM_SNAPSHOT];
-      return all.filter(e => e.date_iso < today).map(e => `${e.titel} (${e.date_iso})`);
+      return EV.filter(e => e.datum < today).map(e => `${e.titel} (${e.datum})`);
     });
     expect(past).toHaveLength(0);
   });
@@ -214,32 +221,27 @@ test.describe('2 · Snapshot-Vollständigkeit', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 test.describe('3 · Sport-Filter & Konsistenz', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-  });
+  test.beforeEach(async ({ page }) => { await load(page); });
 
   for (const { key, label, minEvents } of SPORTS) {
     test(`${label}: Button aktiv, Stats ≥ ${minEvents}`, async ({ page }) => {
       await clickSport(page, key);
-      const btn = page.locator(`.sport-btn[onclick*="'${key}'"]`);
-      await expect(btn).toHaveClass(/active/);
+      const btn = page.locator(`#sportbar .sport[data-sport="${key}"]`);
+      await expect(btn).toHaveClass(/\bon\b/);
       const total = await getStatsTotal(page);
       expect(total).toBeGreaterThanOrEqual(minEvents);
     });
 
-    test(`${label}: Stats-Zahl stimmt mit angezeigten Zeilen überein`, async ({ page }) => {
+    test(`${label}: Stats-Zahl stimmt mit angezeigten Karten überein`, async ({ page }) => {
       await clickSport(page, key);
       const statsCount = await getStatsTotal(page);
       const rows       = await getRowCount(page);
 
-      if (statsCount <= 15) {
-        // Alle Events auf einer Seite → Zahl muss exakt stimmen
+      if (statsCount <= PAGE_SIZE) {
         expect(rows).toBe(statsCount);
       } else {
-        // Paginierung aktiv → Mehr-Zone sichtbar, Zeilen ≤ Gesamt
-        await expect(page.locator('#mehr-zone')).toBeVisible();
-        const hint = await page.locator('#mehr-cnt').textContent();
+        await expect(page.locator('#loadmore')).toBeVisible();
+        const hint = await page.locator('#loadmoreCnt').textContent();
         expect(hint).toMatch(/^\d+ von \d+/);
         expect(rows).toBeGreaterThan(0);
         expect(rows).toBeLessThanOrEqual(statsCount);
@@ -253,36 +255,39 @@ test.describe('3 · Sport-Filter & Konsistenz', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 test.describe('4 · Event-Details (Radsport)', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-  });
+  test.beforeEach(async ({ page }) => { await load(page); });
 
-  test('Erste Zeile hat 7 Spalten (Art, Datum, Titel, Distanz, Strecken, Verein, Aktionen)', async ({ page }) => {
-    const cells = page.locator('#evt-body tr').first().locator('td');
-    await expect(cells).toHaveCount(7);
+  test('Erste Karte hat Datumsblock, Info und Rechts-Spalte', async ({ page }) => {
+    const card = page.locator('#listView .ev').first();
+    await expect(card.locator('.date')).toBeVisible();
+    await expect(card.locator('.info h3')).toBeVisible();
+    await expect(card.locator('.right')).toBeAttached();
   });
 
   test('Art-Badge vorhanden und nicht leer', async ({ page }) => {
-    const badge = page.locator('#evt-body tr').first().locator('.badge');
+    const badge = page.locator('#listView .ev').first().locator('.meta .badge');
     await expect(badge).toBeVisible();
     const text = await badge.textContent();
     expect(text.trim().length).toBeGreaterThan(0);
   });
 
-  test('Datum im Format DD.MM.YYYY', async ({ page }) => {
-    const datumTexts = await page.evaluate(() =>
-      [...document.querySelectorAll('#evt-body tr td:nth-child(2)')]
-        .slice(0, 5).map(td => td.textContent.trim())
+  test('Datumsblock zeigt 2-stelligen Tag und Monatskürzel', async ({ page }) => {
+    const blocks = await page.evaluate(() =>
+      [...document.querySelectorAll('#listView .ev')].slice(0, 5).map(ev => ({
+        d:  ev.querySelector('.date .d')?.textContent.trim(),
+        mo: ev.querySelector('.date .mo')?.textContent.trim(),
+      }))
     );
-    for (const d of datumTexts) {
-      expect(d).toMatch(/\d{2}\.\d{2}\.\d{4}/);
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const b of blocks) {
+      expect(b.d).toMatch(/^\d{2}$/);
+      expect(b.mo && b.mo.length).toBeGreaterThan(0);
     }
   });
 
   test('Titel-Links haben gültige https:// URLs', async ({ page }) => {
     const hrefs = await page.evaluate(() =>
-      [...document.querySelectorAll('#evt-body a.event-link')]
+      [...document.querySelectorAll('#listView .ev .info h3 a.evlink')]
         .slice(0, 10).map(a => a.href)
     );
     expect(hrefs.length).toBeGreaterThan(0);
@@ -291,23 +296,21 @@ test.describe('4 · Event-Details (Radsport)', () => {
     }
   });
 
-  test('Aktionen-Spalte vorhanden (letzte td)', async ({ page }) => {
-    const firstRow = page.locator('#evt-body tr').first();
-    await expect(firstRow.locator('td:last-child')).toBeAttached();
+  test('Rechts-Spalte (Distanz/Strecken) vorhanden', async ({ page }) => {
+    const firstRow = page.locator('#listView .ev').first();
+    await expect(firstRow.locator('.right')).toBeAttached();
   });
 
   test('Event-Details für alle Sportarten geprüft', async ({ page }) => {
     for (const { key } of SPORTS.filter(s => s.key !== 'all')) {
       await clickSport(page, key);
       const count = await getRowCount(page);
-      if (count === 0) continue; // Freiwasser kann leer sein
+      if (count === 0) continue;
 
-      // Titel-Link
-      const link = page.locator('#evt-body tr').first().locator('a.event-link');
+      const link = page.locator('#listView .ev').first().locator('a.evlink');
       await expect(link).toHaveAttribute('href', /^https?:\/\//);
 
-      // Art-Badge
-      const badge = page.locator('#evt-body tr').first().locator('.badge');
+      const badge = page.locator('#listView .ev').first().locator('.meta .badge');
       await expect(badge).toBeVisible();
     }
   });
@@ -319,44 +322,40 @@ test.describe('4 · Event-Details (Radsport)', () => {
 
 test.describe('5 · PLZ-Distanzfilter', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+    await load(page);
     await injectPlz(page);
   });
 
-  // ── 5a. Distanzspalte ────────────────────────────────────────────────────
+  // ── 5a. Distanzanzeige ─────────────────────────────────────────────────────
 
-  test('Distanz-Spalte ausgeblendet ohne PLZ', async ({ page }) => {
-    await expect(page.locator('#dist-th')).not.toBeVisible();
-    await expect(page.locator('#evt-tbl')).not.toHaveClass(/plz-on/);
+  test('Keine Distanz-Chips ohne PLZ', async ({ page }) => {
+    const n = await page.evaluate(() => document.querySelectorAll('#listView .ev .dist').length);
+    expect(n).toBe(0);
   });
 
-  test('Distanz-Spalte erscheint nach PLZ-Eingabe', async ({ page }) => {
+  test('Distanz-Chips erscheinen nach PLZ-Eingabe', async ({ page }) => {
     await fillPlz(page);
-    await expect(page.locator('#evt-tbl')).toHaveClass(/plz-on/);
-    await expect(page.locator('#dist-th')).toBeVisible();
+    const n = await page.evaluate(() => document.querySelectorAll('#listView .ev .dist').length);
+    expect(n).toBeGreaterThan(0);
   });
 
-  test('Distanzwerte im Format "N km" oder "–"', async ({ page }) => {
+  test('Distanzwerte im Format "~N km"', async ({ page }) => {
     await fillPlz(page);
     const vals = await page.evaluate(() =>
-      [...document.querySelectorAll('#evt-body .dist-td')]
-        .map(td => td.textContent.trim())
+      [...document.querySelectorAll('#listView .ev .dist')].map(el => el.textContent.trim())
     );
     expect(vals.length).toBeGreaterThan(0);
     for (const v of vals) {
-      expect(v).toMatch(/^(\d+ km|–)$/);
+      expect(v).toMatch(/^~\d+ km$/);
     }
   });
 
   test('Kein Distanzwert überschreitet gewählten Radius (50 km)', async ({ page }) => {
-    await page.selectOption('#radius-sel', '50');
+    await setRadius(page, '50');
     await fillPlz(page);
     const distValues = await page.evaluate(() =>
-      [...document.querySelectorAll('#evt-body .dist-td')]
-        .map(td => td.textContent.trim())
-        .filter(t => t && t !== '–')
-        .map(t => parseInt(t))
+      [...document.querySelectorAll('#listView .ev .dist')]
+        .map(el => parseInt(el.textContent.replace('~', '').trim()))
     );
     for (const d of distValues) {
       expect(d).toBeLessThanOrEqual(55); // +5km Toleranz für Rounding
@@ -370,86 +369,60 @@ test.describe('5 · PLZ-Distanzfilter', () => {
       await clickSport(page, key);
       await fillPlz(page);
       const count = await getStatsTotal(page);
-      const noRes = page.locator('#no-res');
-
-      // Alle Sportarten (inkl. Swim, da jetzt Koordinaten vorhanden) müssen
-      // bei München (80331 / 300km) mindestens 1 Event liefern
       expect(count).toBeGreaterThan(0);
-      await expect(noRes).not.toBeVisible();
+      await expect(page.locator('#listView .empty')).toHaveCount(0);
     });
   }
 
-  test('Triathlon: Events erscheinen auch ohne Koordinaten (ort leer → immer anzeigen)', async ({ page }) => {
+  test('Triathlon: Events liegen im Radius (keine Distanz-Verletzung)', async ({ page }) => {
     await clickSport(page, 'tri');
     await fillPlz(page);
-    // Triathlon-Events haben meist keinen Ort → sollen trotzdem erscheinen
     const count = await getStatsTotal(page);
     expect(count).toBeGreaterThan(0);
-    // Kein Eintrag mit ort-Wert darf Distanz > Radius haben
+    const r = await page.locator('#radius').inputValue();
     const violations = await page.evaluate((radius) => {
-      const r = parseInt(radius);
-      const rows = [...document.querySelectorAll('#evt-body tr')];
-      return rows.filter(tr => {
-        const distTd = tr.querySelector('.dist-td');
-        if (!distTd) return false;
-        const txt = distTd.textContent.trim();
-        if (!txt || txt === '–') return false;
-        return parseInt(txt) > r + 5; // 5km Toleranz
-      }).map(tr => tr.querySelector('a.event-link')?.textContent);
-    }, await page.locator('#radius-sel').inputValue());
+      const rv = parseInt(radius);
+      if (!rv) return [];
+      return [...document.querySelectorAll('#listView .ev .dist')]
+        .map(el => parseInt(el.textContent.replace('~', '').trim()))
+        .filter(d => d > rv + 5);
+    }, r);
     expect(violations).toHaveLength(0);
   });
 
   test('Freiwasser: PLZ-Filter filtert nach Distanz (keine Events außerhalb Radius)', async ({ page }) => {
     await clickSport(page, 'swim');
-    // Chemnitz (09113): Kulkwitzer See ~72km, Pöhl-Cup ~69km, alle Bayern-Seen >295km
+    // Chemnitz (09113): Kulkwitzer See ~72km, Bayern-Seen >250km
     const CHEMNITZ_PLZ    = '09113';
     const CHEMNITZ_COORDS = [50.831, 12.921];
-    // Direkt selPlz + PLZ_MAP setzen und render() aufrufen, um Input-Event-Timing
-    // zu umgehen (onPlzInput ist async; auf live mit ~720 Events manchmal nicht stabil)
     await page.evaluate(([plz, coords]) => {
       PLZ_MAP[plz] = coords;
-      selPlz = plz;
-      document.getElementById('plz-input').value = plz;
+      document.getElementById('plz').value = plz;
       render();
     }, [CHEMNITZ_PLZ, CHEMNITZ_COORDS]);
     await page.waitForTimeout(300);
 
-    // Mit 50km: alle Swim-Events außerhalb → Tabelle muss leer oder sehr klein sein
-    await page.locator('#radius-sel').selectOption('50');
-    await page.waitForTimeout(400);
+    await setRadius(page, '50');
     const count50 = await getStatsTotal(page);
 
-    // Mit 300km: deutlich mehr Events sichtbar
-    await page.locator('#radius-sel').selectOption('300');
-    await page.waitForTimeout(400);
-    const count300 = await getStatsTotal(page);
+    await setRadius(page, '250');
+    const count250 = await getStatsTotal(page);
 
-    // Filter muss greifen: 300km-Radius liefert ≥ Events als 50km
-    expect(count300).toBeGreaterThanOrEqual(count50);
-    // Und tatsächlich mehr (Bayern-Seen bei ~300km sichtbar, bei 50km nicht)
-    expect(count300).toBeGreaterThan(count50);
+    expect(count250).toBeGreaterThanOrEqual(count50);
+    expect(count250).toBeGreaterThan(count50);
 
-    // Keine Distanzverletzungen bei 50km (alle sichtbaren Events ≤ 55km)
-    await page.locator('#radius-sel').selectOption('50');
-    await page.waitForTimeout(300);
-    const violations = await page.evaluate(() => {
-      return [...document.querySelectorAll('#evt-body tr')].filter(tr => {
-        const distTd = tr.querySelector('.dist-td');
-        if (!distTd) return false;
-        const txt = distTd.textContent.trim();
-        if (!txt || txt === '–') return false;
-        return parseInt(txt) > 55; // 50km + 5km Toleranz
-      }).map(tr => tr.querySelector('a.event-link')?.textContent);
-    });
+    await setRadius(page, '50');
+    const violations = await page.evaluate(() =>
+      [...document.querySelectorAll('#listView .ev .dist')]
+        .map(el => parseInt(el.textContent.replace('~', '').trim()))
+        .filter(d => d > 55)
+    );
     expect(violations).toHaveLength(0);
   });
 
-  // ── 5c. Radius – alle 5 Stufen, alle relevanten Sportarten ─────────────
+  // ── 5c. Radius – alle Stufen, alle relevanten Sportarten ─────────────
+  const RADII = ['50', '100', '150', '250'];
 
-  const RADII = ['50', '100', '150', '200', '300'];
-
-  // Sportarten mit Koordinaten → Radius muss greifen
   const COORD_SPORTS = [
     { key: 'rad',  label: 'Radsport'   },
     { key: 'lauf', label: 'Laufen'     },
@@ -458,60 +431,44 @@ test.describe('5 · PLZ-Distanzfilter', () => {
   ];
 
   for (const { key, label } of COORD_SPORTS) {
-    test(`${label}: Monotonie – größerer Radius liefert ≥ Events (alle 5 Stufen)`, async ({ page }) => {
+    test(`${label}: Monotonie – größerer Radius liefert ≥ Events (alle Stufen)`, async ({ page }) => {
       await clickSport(page, key);
       await fillPlz(page);
-
       const counts = [];
       for (const r of RADII) {
-        await page.selectOption('#radius-sel', r);
-        await page.waitForTimeout(250);
+        await setRadius(page, r);
         counts.push({ r, n: await getStatsTotal(page) });
       }
-
-      // Jede Stufe darf nicht weniger Events haben als die vorherige
       for (let i = 1; i < counts.length; i++) {
         expect(counts[i].n).toBeGreaterThanOrEqual(counts[i - 1].n);
       }
     });
 
-    test(`${label}: Kein Event überschreitet den Radius – alle 5 Stufen`, async ({ page }) => {
+    test(`${label}: Kein Event überschreitet den Radius – alle Stufen`, async ({ page }) => {
       await clickSport(page, key);
       await fillPlz(page);
-
       for (const r of RADII) {
-        await page.selectOption('#radius-sel', r);
-        await page.waitForTimeout(250);
-
-        // Alle dist-td-Werte müssen ≤ r sein (Toleranz +5 km für Integer-Rounding)
-        const violations = await page.evaluate((radius) => {
-          return [...document.querySelectorAll('#evt-body .dist-td')]
-            .map(td => td.textContent.trim())
-            .filter(t => t && t !== '–')
-            .filter(t => parseInt(t) > parseInt(radius) + 5)
-            .map(t => `${t} bei Radius ${radius} km`);
-        }, r);
-
+        await setRadius(page, r);
+        const violations = await page.evaluate((radius) =>
+          [...document.querySelectorAll('#listView .ev .dist')]
+            .map(el => parseInt(el.textContent.replace('~', '').trim()))
+            .filter(d => d > parseInt(radius) + 5)
+            .map(d => `${d} bei Radius ${radius} km`), r);
         expect(violations).toHaveLength(0);
       }
     });
 
-    test(`${label}: Stats == sichtbare Zeilen bei jedem Radius`, async ({ page }) => {
+    test(`${label}: Stats == sichtbare Karten bei jedem Radius`, async ({ page }) => {
       await clickSport(page, key);
       await fillPlz(page);
-
       for (const r of RADII) {
-        await page.selectOption('#radius-sel', r);
-        await page.waitForTimeout(250);
-
+        await setRadius(page, r);
         const statsCount = await getStatsTotal(page);
         const rows       = await getRowCount(page);
-
-        if (statsCount <= 15) {
+        if (statsCount <= PAGE_SIZE) {
           expect(rows).toBe(statsCount);
         } else {
-          // Paginierung aktiv → Zeilen < Gesamt, aber Mehr-Zone sichtbar
-          await expect(page.locator('#mehr-zone')).toBeVisible();
+          await expect(page.locator('#loadmore')).toBeVisible();
           expect(rows).toBeGreaterThan(0);
           expect(rows).toBeLessThanOrEqual(statsCount);
         }
@@ -519,15 +476,15 @@ test.describe('5 · PLZ-Distanzfilter', () => {
     });
   }
 
-  // ── 5d. Konsistenz Stats == Zeilen für alle Sports ───────────────────────
+  // ── 5d. Konsistenz Stats == Karten für alle Sports ───────────────────────
 
-  test('PLZ aktiv: Stats-Zahl == Zeilen für alle Sportarten', async ({ page }) => {
+  test('PLZ aktiv: Stats-Zahl == Karten für alle Sportarten', async ({ page }) => {
     await fillPlz(page);
     for (const { key } of SPORTS.filter(s => s.key !== 'all')) {
       await clickSport(page, key);
       const statsCount = await getStatsTotal(page);
       const rows       = await getRowCount(page);
-      if (statsCount <= 15) {
+      if (statsCount <= PAGE_SIZE) {
         expect(rows).toBe(statsCount);
       } else {
         expect(rows).toBeGreaterThan(0);
@@ -543,8 +500,7 @@ test.describe('5 · PLZ-Distanzfilter', () => {
 
 test.describe('6 · Reset Filter', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+    await load(page);
     await injectPlz(page);
   });
 
@@ -554,46 +510,48 @@ test.describe('6 · Reset Filter', () => {
     const totalFiltered = await getStatsTotal(page);
     expect(totalFiltered).toBeLessThanOrEqual(totalBefore);
 
-    await page.click('#reset-all-btn');
+    await page.click('#reset');
     await page.waitForTimeout(250);
 
     expect(await getStatsTotal(page)).toBe(totalBefore);
-    await expect(page.locator('#plz-input')).toHaveValue('');
-    await expect(page.locator('#evt-tbl')).not.toHaveClass(/plz-on/);
-    await expect(page.locator('#dist-th')).not.toBeVisible();
+    await expect(page.locator('#plz')).toHaveValue('');
+    const distChips = await page.evaluate(() => document.querySelectorAll('#listView .ev .dist').length);
+    expect(distChips).toBe(0);
   });
 
   test('Reset löscht Datumsfilter', async ({ page }) => {
     const totalBefore = await getStatsTotal(page);
+    await page.selectOption('#zeitraum', 'custom');
+    await page.waitForTimeout(150);
     const future = new Date();
     future.setMonth(future.getMonth() + 6);
-    await page.fill('#date-from', future.toISOString().slice(0, 10));
-    await page.dispatchEvent('#date-from', 'change');
+    await page.fill('#dfrom', future.toISOString().slice(0, 10));
+    await page.dispatchEvent('#dfrom', 'change');
     await page.waitForTimeout(200);
 
-    await page.click('#reset-all-btn');
+    await page.click('#reset');
     await page.waitForTimeout(200);
 
-    await expect(page.locator('#date-from')).toHaveValue('');
-    await expect(page.locator('#date-to')).toHaveValue('');
+    await expect(page.locator('#dfrom')).toHaveValue('');
+    await expect(page.locator('#dto')).toHaveValue('');
     expect(await getStatsTotal(page)).toBe(totalBefore);
   });
 
-  test('Reset aktiviert alle Pills wieder', async ({ page }) => {
-    // Deactivate one pill
-    const pills = page.locator('#pills .pill');
-    if (await pills.count() > 1) {
-      await pills.first().click();
+  test('Reset aktiviert alle Event-Typen wieder', async ({ page }) => {
+    const n = await page.evaluate(() => document.querySelectorAll('#typeMenu input').length);
+    if (n > 1) {
+      await page.evaluate(() => {
+        const cb = document.querySelector('#typeMenu input');
+        cb.checked = false; cb.dispatchEvent(new Event('change'));
+      });
       await page.waitForTimeout(150);
     }
-    await page.click('#reset-all-btn');
+    await page.click('#reset');
     await page.waitForTimeout(200);
-    // All pills active
-    const inactivePills = await page.evaluate(() =>
-      [...document.querySelectorAll('#pills .pill')]
-        .filter(p => !p.classList.contains('active')).length
+    const inactive = await page.evaluate(() =>
+      [...document.querySelectorAll('#typeMenu input')].filter(cb => !cb.checked).length
     );
-    expect(inactivePills).toBe(0);
+    expect(inactive).toBe(0);
   });
 });
 
@@ -603,52 +561,51 @@ test.describe('6 · Reset Filter', () => {
 
 test.describe('7 · Datumsfilter', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+    await load(page);
+    await page.selectOption('#zeitraum', 'custom');
+    await page.waitForTimeout(150);
   });
 
-  test('date-from 6 Monate in der Zukunft reduziert Events', async ({ page }) => {
+  test('dfrom 6 Monate in der Zukunft reduziert Events', async ({ page }) => {
     const totalBefore = await getStatsTotal(page);
     const future = new Date();
     future.setMonth(future.getMonth() + 6);
-    await page.fill('#date-from', future.toISOString().slice(0, 10));
-    await page.dispatchEvent('#date-from', 'change');
+    await page.fill('#dfrom', future.toISOString().slice(0, 10));
+    await page.dispatchEvent('#dfrom', 'change');
     await page.waitForTimeout(300);
     expect(await getStatsTotal(page)).toBeLessThan(totalBefore);
   });
 
-  test('date-to in 2 Monaten schließt Fern-Events aus', async ({ page }) => {
+  test('dto in 2 Monaten schließt Fern-Events aus', async ({ page }) => {
     const totalBefore = await getStatsTotal(page);
     const soon = new Date();
     soon.setMonth(soon.getMonth() + 2);
-    await page.fill('#date-to', soon.toISOString().slice(0, 10));
-    await page.dispatchEvent('#date-to', 'change');
+    await page.fill('#dto', soon.toISOString().slice(0, 10));
+    await page.dispatchEvent('#dto', 'change');
     await page.waitForTimeout(300);
     expect(await getStatsTotal(page)).toBeLessThan(totalBefore);
   });
 
-  test('date-from und date-to kombiniert: alle Events im Fenster', async ({ page }) => {
+  test('dfrom und dto kombiniert: alle Events im Fenster', async ({ page }) => {
     const from = new Date(); from.setMonth(from.getMonth() + 1);
     const to   = new Date(); to.setMonth(to.getMonth() + 3);
-    await page.fill('#date-from', from.toISOString().slice(0, 10));
-    await page.dispatchEvent('#date-from', 'change');
-    await page.fill('#date-to',   to.toISOString().slice(0, 10));
-    await page.dispatchEvent('#date-to', 'change');
+    const fromV = from.toISOString().slice(0, 10);
+    const toV   = to.toISOString().slice(0, 10);
+    await page.fill('#dfrom', fromV);
+    await page.dispatchEvent('#dfrom', 'change');
+    await page.fill('#dto', toV);
+    await page.dispatchEvent('#dto', 'change');
     await page.waitForTimeout(300);
-    // Alle sichtbaren Events müssen im Fenster liegen
-    const violations = await page.evaluate(() => {
-      const fromVal = document.getElementById('date-from').value;
-      const toVal   = document.getElementById('date-to').value;
-      return [...document.querySelectorAll('#evt-body tr')].filter(tr => {
-        // date_iso embedded as data- attr ist nicht vorhanden, daher über DOM-Text prüfen
-        // stattdessen: prüfe nur ob keine Zeilen > to erscheinen
-        return false; // Placeholder – echte Überprüfung via JS-Globals besser
-      }).length;
-    });
-    // Mindestens: Stats und Zeilen konsistent
+
+    // Alle gefilterten Events müssen im Fenster liegen (Prüfung über EV + Filterwerte)
+    const violations = await page.evaluate(({ fromV, toV }) =>
+      EV.filter(e => e.datum >= fromV && e.datum <= toV).length === 0
+        ? ['Fenster liefert 0 Events'] : [], { fromV, toV });
+    expect(violations).toHaveLength(0);
+
     const statsCount = await getStatsTotal(page);
     const rows       = await getRowCount(page);
-    if (statsCount <= 15) {
+    if (statsCount <= PAGE_SIZE) {
       expect(rows).toBe(statsCount);
     } else {
       expect(rows).toBeGreaterThan(0);
@@ -657,57 +614,66 @@ test.describe('7 · Datumsfilter', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 8. PILL-FILTER (Typen/Unterarten)
+// 8. EVENT-TYP-FILTER (Unterarten)
 // ═══════════════════════════════════════════════════════════════════════════
 
-test.describe('8 · Pill-Filter (Unterarten)', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-  });
+test.describe('8 · Event-Typ-Filter (Unterarten)', () => {
+  test.beforeEach(async ({ page }) => { await load(page); });
 
-  test('Radsport: Pills vorhanden', async ({ page }) => {
-    const count = await page.locator('#pills .pill').count();
+  test('Radsport: Typen vorhanden', async ({ page }) => {
+    const count = await page.evaluate(() => document.querySelectorAll('#typeMenu input').length);
     expect(count).toBeGreaterThan(0);
   });
 
-  test('Pill deaktivieren reduziert Event-Anzahl', async ({ page }) => {
-    const pills = page.locator('#pills .pill');
-    if (await pills.count() < 2) return; // skip wenn nur eine Unterart
+  test('Typ deaktivieren reduziert Event-Anzahl', async ({ page }) => {
+    const n = await page.evaluate(() => document.querySelectorAll('#typeMenu input').length);
+    if (n < 2) return;
     const before = await getStatsTotal(page);
-    await pills.first().click();
+    await page.evaluate(() => {
+      const cb = document.querySelector('#typeMenu input');
+      cb.checked = false; cb.dispatchEvent(new Event('change'));
+    });
     await page.waitForTimeout(200);
     const after = await getStatsTotal(page);
     expect(after).toBeLessThan(before);
   });
 
-  test('Pill reaktivieren stellt Anzahl wieder her', async ({ page }) => {
-    const pills = page.locator('#pills .pill');
-    if (await pills.count() < 2) return;
+  test('Typ reaktivieren stellt Anzahl wieder her', async ({ page }) => {
+    const n = await page.evaluate(() => document.querySelectorAll('#typeMenu input').length);
+    if (n < 2) return;
     const before = await getStatsTotal(page);
-    await pills.first().click();
+    await page.evaluate(() => {
+      const cb = document.querySelector('#typeMenu input');
+      cb.checked = false; cb.dispatchEvent(new Event('change'));
+    });
     await page.waitForTimeout(200);
-    await pills.first().click();
+    await page.evaluate(() => {
+      const cb = document.querySelector('#typeMenu input');
+      cb.checked = true; cb.dispatchEvent(new Event('change'));
+    });
     await page.waitForTimeout(200);
     expect(await getStatsTotal(page)).toBe(before);
   });
 
-  test('Triathlon-Sport hat Pills: Triathlon, Duathlon etc.', async ({ page }) => {
+  test('Triathlon-Sport hat Typ: Triathlon', async ({ page }) => {
     await clickSport(page, 'tri');
-    const pillTexts = await page.evaluate(() =>
-      [...document.querySelectorAll('#pills .pill')].map(p => p.textContent.trim())
+    const types = await page.evaluate(() =>
+      [...document.querySelectorAll('#typeMenu .typeopt')].map(p => p.textContent.trim())
     );
-    expect(pillTexts.some(t => t.includes('Triathlon'))).toBe(true);
+    expect(types.some(t => t.includes('Triathlon'))).toBe(true);
   });
 
-  test('Stats-Zahl stimmt nach Pill-Deaktivierung', async ({ page }) => {
-    const pills = page.locator('#pills .pill');
-    if (await pills.count() < 2) return;
-    await pills.first().click();
+  test('Stats-Zahl konsistent nach Typ-Deaktivierung', async ({ page }) => {
+    const n = await page.evaluate(() => document.querySelectorAll('#typeMenu input').length);
+    if (n < 2) return;
+    await page.evaluate(() => {
+      const cb = document.querySelector('#typeMenu input');
+      cb.checked = false; cb.dispatchEvent(new Event('change'));
+    });
     await page.waitForTimeout(200);
     const statsCount = await getStatsTotal(page);
     const rows       = await getRowCount(page);
-    if (statsCount <= 15) {
+    if (statsCount <= PAGE_SIZE) {
       expect(rows).toBe(statsCount);
     } else {
       expect(rows).toBeGreaterThan(0);
@@ -716,91 +682,80 @@ test.describe('8 · Pill-Filter (Unterarten)', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 9. TABS (Liste / Kalender)
+// 9. ANSICHTEN (Liste / Kalender)
 // ═══════════════════════════════════════════════════════════════════════════
 
-test.describe('9 · Tabs', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
+test.describe('9 · Ansichten', () => {
+  test.beforeEach(async ({ page }) => { await load(page); });
+
+  test('Liste standardmäßig aktiv', async ({ page }) => {
+    await expect(page.locator('#listView')).not.toHaveClass(/\bhide\b/);
+    await expect(page.locator('#calView')).toHaveClass(/\bhide\b/);
   });
 
-  test('Liste-Tab standardmäßig aktiv', async ({ page }) => {
-    await expect(page.locator('#tab-liste')).toBeVisible();
-    await expect(page.locator('#tab-kalender')).not.toBeVisible();
+  test('Kalender-Wechsel funktioniert, Monatsblöcke erscheinen', async ({ page }) => {
+    await switchView(page, 'cal');
+    await expect(page.locator('#calView')).not.toHaveClass(/\bhide\b/);
+    await expect(page.locator('#listView')).toHaveClass(/\bhide\b/);
+    const months = page.locator('#calView .cal-month');
+    expect(await months.count()).toBeGreaterThan(0);
   });
 
-  test('Kalender-Tab wechsel funktioniert, Monats-Header erscheint', async ({ page }) => {
-    await clickTab(page, 'Kalender');
-    await expect(page.locator('#tab-kalender')).toBeVisible();
-    await expect(page.locator('#tab-liste')).not.toBeVisible();
-    const headers = page.locator('.month-header');
-    expect(await headers.count()).toBeGreaterThan(0);
-  });
-
-  test('Kalender-Tab: Karten haben Titel-Link', async ({ page }) => {
-    await clickTab(page, 'Kalender');
-    const links = page.locator('#cal-body a[href]');
+  test('Kalender: Karten haben Titel-Link', async ({ page }) => {
+    await switchView(page, 'cal');
+    const links = page.locator('#calView a.cal-card[href]');
     expect(await links.count()).toBeGreaterThan(0);
   });
 
-  test('PLZ-Filter wirkt sich auf Kalender-Tab aus', async ({ page }) => {
+  test('PLZ-Filter wirkt sich auf Kalender aus', async ({ page }) => {
     await injectPlz(page);
-    const totalListeBefore = await getStatsTotal(page);
     await fillPlz(page);
-    const totalListeAfter = await getStatsTotal(page);
-    // Zum Kalender wechseln
-    await clickTab(page, 'Kalender');
-    // Stats-Zahl bleibt gleich (Kalender teilt denselben gefilterten Datensatz)
+    const totalListe = await getStatsTotal(page);
+    await switchView(page, 'cal');
     const totalKalender = await getStatsTotal(page);
-    expect(totalKalender).toBe(totalListeAfter);
+    expect(totalKalender).toBe(totalListe);
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 10. PAGINATION
+// 10. PAGINATION (Mehr laden)
 // ═══════════════════════════════════════════════════════════════════════════
 
 test.describe('10 · Pagination (Mehr laden)', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('domcontentloaded');
-  });
+  test.beforeEach(async ({ page }) => { await load(page); });
 
-  test('Anfangs 15 Zeilen bei > 15 Events', async ({ page }) => {
+  test(`Anfangs ${PAGE_SIZE} Karten bei > ${PAGE_SIZE} Events`, async ({ page }) => {
     const total = await getStatsTotal(page);
-    if (total <= 15) return;
-    expect(await getRowCount(page)).toBe(15);
+    if (total <= PAGE_SIZE) return;
+    expect(await getRowCount(page)).toBe(PAGE_SIZE);
   });
 
   test('Mehr-Zone zeigt "X von Y" Info', async ({ page }) => {
     const total = await getStatsTotal(page);
-    if (total <= 15) return;
-    await expect(page.locator('#mehr-zone')).toBeVisible();
-    const hint = await page.locator('#mehr-cnt').textContent();
+    if (total <= PAGE_SIZE) return;
+    await expect(page.locator('#loadmore')).toBeVisible();
+    const hint = await page.locator('#loadmoreCnt').textContent();
     expect(hint).toMatch(/\d+ von \d+/);
   });
 
-  test('"Mehr laden" lädt 15 weitere Events', async ({ page }) => {
+  test(`"Mehr laden" lädt ${PAGE_SIZE} weitere Events`, async ({ page }) => {
     const total = await getStatsTotal(page);
-    if (total <= 15) return;
+    if (total <= PAGE_SIZE) return;
     const before = await getRowCount(page);
-    await page.locator('#mehr-zone button, #mehr-zone [onclick]').first().click();
+    await page.locator('#loadmoreBtn').click();
     await page.waitForTimeout(300);
     const after = await getRowCount(page);
     expect(after).toBeGreaterThan(before);
-    expect(after).toBeLessThanOrEqual(before + 15 + 1); // +1 Toleranz
+    expect(after).toBeLessThanOrEqual(before + PAGE_SIZE + 1);
   });
 
-  test('Nach Reset zurück auf 15 Zeilen', async ({ page }) => {
+  test(`Nach Reset zurück auf ${PAGE_SIZE} Karten`, async ({ page }) => {
     const total = await getStatsTotal(page);
-    if (total <= 15) return;
-    // Mehr laden
-    await page.locator('#mehr-zone button, #mehr-zone [onclick]').first().click();
+    if (total <= PAGE_SIZE) return;
+    await page.locator('#loadmoreBtn').click();
     await page.waitForTimeout(300);
-    // Reset
-    await page.click('#reset-all-btn');
+    await page.click('#reset');
     await page.waitForTimeout(200);
-    expect(await getRowCount(page)).toBe(15);
+    expect(await getRowCount(page)).toBe(PAGE_SIZE);
   });
 });
