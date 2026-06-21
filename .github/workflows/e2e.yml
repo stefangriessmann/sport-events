@@ -1,0 +1,64 @@
+name: E2E Tests
+
+# Läuft nach jedem Push auf main/staging (= nach jedem Deploy) und manuell.
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - 'index.html'
+      - 'data/**'
+      - 'tests/**'
+      - 'netlify.toml'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Playwright installieren
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install -D @playwright/test
+          npx playwright install --with-deps chromium
+
+      - name: Ziel-URL je Branch bestimmen
+        id: url
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "base=https://bockwurst-events.netlify.app" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=https://staging--bockwurst-events.netlify.app" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Auf Netlify-Deploy warten
+        run: |
+          BASE="${{ steps.url.outputs.base }}"
+          echo "Warte auf $BASE/event-guide ..."
+          for i in $(seq 1 24); do
+            if curl -sf "$BASE/event-guide" >/dev/null; then
+              echo "Seite erreichbar (Versuch $i)"; break
+            fi
+            sleep 10
+          done
+          # Puffer, damit der frische Build sicher ausgeliefert wird
+          sleep 60
+
+      - name: Playwright-Tests
+        env:
+          BASE_URL: ${{ steps.url.outputs.base }}
+        run: npx playwright test tests/bockwurst.spec.js --reporter=line
+
+      - name: Report hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.ref_name }}
+          path: playwright-report/
+          retention-days: 7
