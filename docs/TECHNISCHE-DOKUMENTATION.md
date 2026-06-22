@@ -315,7 +315,7 @@ Ohne `BASE_URL` läuft die Suite gegen die Live-URL.
 1. **`update_snapshots.py` ist abgelöst (Stand 22.06.2026).** `approve_event.yml` und `monthly-update.yml` rufen jetzt `update_data.py` auf und committen `data/*.json` statt `index.html`. Das frühere Regressionsrisiko – ein Scraping-Job erzeugt `index.html` neu und überschreibt das Design – ist damit beseitigt. `scripts/update_snapshots.py` wird von keinem Workflow mehr verwendet und kann bei Gelegenheit entfernt werden.
 2. **`index.html` darf nie von einem Scraping-Job neu erzeugt werden.** Genau das hat früher das Relaunch-Design überschrieben. Nur `update_data.py` (Daten) und gezielte Entwickler-Commits (Design) sind erlaubt.
 3. **Geleakte Tokens.** In früheren `HANDOVER.md`/`STATUS.md` standen GitHub-Tokens im Klartext. Diese sind zu widerrufen/rotieren. Tokens gehören ausschließlich in Netlify-Env-Vars bzw. GitHub-Secrets, nie in den Quellcode.
-4. **`CLAUDE.md` ist veraltet.** Sie beschreibt noch das alte Modell (eingebettete Snapshots, `run_update.sh`, lokale `~/Claude/`-Arbeitskopie). Sie sollte auf diese Doku verweisen oder überarbeitet werden.
+4. **`CLAUDE.md`** ist auf die aktuelle Architektur aktualisiert und verweist als schlanker Agenten-Einstieg auf diese Doku.
 5. **Landesverband-Fallback ist kein Bug.** Events ohne geocodierbare Adresse bekommen das Zentroid ihres Bundeslands als Koordinaten. Das ist gewollt.
 
 ---
@@ -360,3 +360,4 @@ Das Stand-Datum im Kopf der Datei bei jeder Pflege mitziehen. Die Eventzahlen in
 | https://github.com/stefangriessmann/sport-events/issues | Event-Einreichungen |
 | https://github.com/stefangriessmann/sport-events/actions | CI-Läufe (Scraping, Tests) |
 | https://app.netlify.com | Netlify-Dashboard |
+                                                                                   
