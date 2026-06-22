@@ -98,7 +98,9 @@ def main():
     if args.no_scrape:
         print("\n── --no-scrape: Scraper übersprungen, nur approved_events.json wird eingemischt ──")
         for _, filename, _ in SOURCES:
-            scraped_data[filename] = []
+            # Bestehende Daten als Basis laden, damit Phase 2 die Freigaben anhängt
+            # und der MIN_EVENTS-Guard in Phase 3 nicht blockt.
+            scraped_data[filename] = load_existing(filename)
     else:
         for module_path, filename, sport_key in SOURCES:
             modules = [module_path] if isinstance(module_path, str) else module_path
