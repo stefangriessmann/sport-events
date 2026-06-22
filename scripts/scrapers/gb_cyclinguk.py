@@ -116,12 +116,8 @@ def parse_listing_page(html: str) -> list[dict]:
 _DATE_RE = re.compile(r"((?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\s+\d{1,2}\s+\w+\s+\d{4})")
 
 
-def _section(text: str, start: str, ends: tuple[str, ...]) -> str:
-    """Textausschnitt ab Label `start` bis zum ersten der `ends`-Labels.
-
-    Wichtig, um Navigation/Footer (z. B. die Büro-Postcode GU2 9JX oder die
-    '280km/174-mile'-Promo im Menü) NICHT mitzuparsen.
-    """
+def _section(text, start, ends):
+    """Textausschnitt ab Label `start` bis zum ersten der `ends`-Labels (ohne Nav/Footer)."""
     i = text.find(start)
     if i == -1:
         return ""
@@ -139,32 +135,22 @@ def _uniq(seq):
 
 
 def parse_detail(html: str) -> dict:
-    """Postcode, Distanzen, Datum, Veranstalter, Audax-Kategorie – jeweils nur aus
-    der passenden Detail-Sektion (nicht aus Nav/Footer)."""
+    """Postcode, Distanzen, Datum, Veranstalter, Audax – jeweils nur aus der passenden Sektion."""
     soup = BeautifulSoup(html, "lxml")
     text = soup.get_text(" ", strip=True)
     d = {}
-
-    # Adresse/Postcode nur aus der "Start location"-Sektion
     loc = _section(text, "Start location", ("Date and time", "Contact details", "Subscribe to Cycling UK"))
     pc = POSTCODE_RE.search(loc)
     d["postcode"] = pc.group(1).strip() if pc else ""
-
-    # Distanzen nur aus "Route details" (steht vor "Start location")
     route = _section(text, "Route details", ("Start location", "Date and time", "Contact details"))
     d["km_list"] = _uniq(re.findall(r"(\d+(?:\.\d+)?)\s*km", route))
     d["mi_list"] = _uniq(re.findall(r"(\d+(?:\.\d+)?)\s*mi\b", route))
-
-    # Datum aus "Date and time", sonst Fallback auf gesamten Text
     datesec = _section(text, "Date and time", ("Contact details", "Subscribe to Cycling UK"))
     m_date = _DATE_RE.search(datesec) or _DATE_RE.search(text)
     d["date_text"] = m_date.group(1).strip() if m_date else ""
-
     m_org = re.search(r"Organised by\s+(.+?)(?:\s{2,}|Audax category|Route details|Start location|Date and time|$)", text)
     d["organiser"] = m_org.group(1).strip()[:120] if m_org else ""
     d["is_audax"] = "Audax category" in text
-
-    # externe Event-Website (z. B. audax.uk) als bevorzugte URL
     ext = ""
     for a in soup.select("a[href^='http']"):
         h = a.get("href", "")
@@ -238,7 +224,6 @@ def fetch(year: int | None = None) -> list[dict]:
         # Distanzen / km
         km_list = det.get("km_list") or []
         mi_list = det.get("mi_list") or []
-        # strecken in Meilen (UK-Konvention); km bleibt intern als Zahl erhalten
         strecken = " / ".join(mi_list) if mi_list else (" / ".join(km_list) if km_list else r["dist_raw"])
         km_val = float(km_list[0]) if km_list else None
         try:
@@ -264,4 +249,37 @@ def fetch(year: int | None = None) -> list[dict]:
             "verein": det.get("organiser", ""),
             "lv": lv,
             "country": "GB",
-            "url": det.get("ext_url") or r["url
+            "url": det.get("ext_url") or r["url"],
+            "serie": "",
+        })
+    events.sort(key=lambda e: e["date_iso"])
+    return events
+
+
+def main():
+    year = date.today().year
+    events = fetch(year)
+    # Schreiben
+    root = pathlib.Path(__file__).resolve().parents[2]
+    data_dir = root / "data"
+    data_dir.mkdir(exist_ok=True)
+    (data_dir / "radsport-gb.json").write_text(
+        json.dumps(events, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+    # Zusammenfassung
+    from collections import Counter
+    by_art = Counter(e["art"] for e in events)
+    with_geo = sum(1 for e in events if e["lat"] is not None)
+    with_pc = sum(1 for e in events if e["plz"])
+    print("\n=== Cycling-UK Scraper – Zusammenfassung ===")
+    print(f"Events (zukünftig, Breitensport): {len(events)}")
+    print(f"  nach Typ: {dict(by_art)}")
+    print(f"  mit Postcode: {with_pc}  |  geocodiert (lat/lon): {with_geo}")
+    print(f"  -> data/radsport-gb.json geschrieben")
+    print("\nBeispiele:")
+    for e in events[:8]:
+        print(f"  {e['date_iso']}  {e['art']:12s}  {e['titel'][:45]:45s}  {e['ort'][:22]:22s}  {e['plz']:8s}  {e['strecken']}")
+
+
+if __name__ == "__main__":
+    main()
