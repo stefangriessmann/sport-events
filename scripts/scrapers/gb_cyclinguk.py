@@ -82,6 +82,41 @@ def geocode_postcode(pc: str) -> dict | None:
     return None
 
 
+_PLACE_CACHE: dict = {}
+
+
+def geocode_place(ort: str) -> dict | None:
+    """Ort-Fallback via Nominatim (nur GB). Fuer Events ohne Postcode.
+
+    Nominatim-ToS: max. 1 Request/s, aussagekraeftiger User-Agent (ist gesetzt).
+    """
+    key = (ort or "").strip().lower()
+    if not key:
+        return None
+    if key in _PLACE_CACHE:
+        return _PLACE_CACHE[key]
+    try:
+        r = SESSION.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": ort, "countrycodes": "gb", "format": "json", "limit": 1, "addressdetails": 1},
+            timeout=20,
+        )
+        time.sleep(1.1)  # Nominatim Rate-Limit
+        if r.status_code == 200:
+            arr = r.json()
+            if arr:
+                a = arr[0]
+                ad = a.get("address", {}) or {}
+                region = ad.get("county") or ad.get("state_district") or ad.get("state") or ""
+                out = {"lat": float(a["lat"]), "lon": float(a["lon"]), "region": region}
+                _PLACE_CACHE[key] = out
+                return out
+    except Exception as e:  # noqa: BLE001
+        print(f"  PLACE GEO ERROR {ort}: {e}", file=__import__("sys").stderr)
+    _PLACE_CACHE[key] = None
+    return None
+
+
 def parse_listing_page(html: str) -> list[dict]:
     """Eventlinks + Basisdaten aus einer Listenseite."""
     soup = BeautifulSoup(html, "lxml")
@@ -221,6 +256,11 @@ def fetch(year: int | None = None) -> list[dict]:
             if geo and geo.get("lat") is not None:
                 lat, lon = geo["lat"], geo["lon"]
                 lv = geo.get("region") or ""
+        if lat is None and r.get("ort"):
+            pgeo = geocode_place(r["ort"])
+            if pgeo:
+                lat, lon = pgeo["lat"], pgeo["lon"]
+                lv = lv or pgeo.get("region") or ""
         # Distanzen / km
         km_list = det.get("km_list") or []
         mi_list = det.get("mi_list") or []
