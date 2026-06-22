@@ -40,16 +40,16 @@ jobs:
       - name: Install scraper dependencies
         run: pip install requests beautifulsoup4 lxml
 
-      - name: Update index.html with approved event
-        run: python3 scripts/update_snapshots.py --no-scrape
+      - name: Eventdaten aktualisieren (data/*.json)
+        run: python3 scripts/update_data.py --no-scrape
 
       - name: Commit approved_events.json + index.html
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
-          git add data/approved_events.json index.html
+          git add data/approved_events.json data/radsport-de.json data/triathlon-de.json data/laufen-de.json data/swim-de.json data/meta.json
           git diff --cached --quiet && echo "Nothing to commit" && exit 0
-          git commit -m "✅ Event genehmigt + index.html aktualisiert (issue #${{ github.event.issue.number }})"
+          git commit -m "✅ Event genehmigt – data/*.json aktualisiert (issue #${{ github.event.issue.number }})"
           git push
 
       - name: Comment and close issue
@@ -63,7 +63,7 @@ jobs:
               body: [
                 '✅ **Event freigegeben und live!**',
                 '',
-                'Der Event wurde in `data/approved_events.json` aufgenommen und `index.html` wurde aktualisiert.',
+                'Der Event wurde in `data/approved_events.json` aufgenommen und in die `data/*.json` eingemischt.',
                 'Er erscheint in ~1 Minute auf der Live-Seite (Netlify-Deploy).',
               ].join('\n'),
             });

@@ -36,22 +36,22 @@ jobs:
           if [ -z "$YEAR" ]; then
             YEAR=$(date +%Y)
           fi
-          python scripts/update_snapshots.py --year "$YEAR"
+          python scripts/update_data.py --year "$YEAR"
 
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage the HTML and geocache (if it exists)
-          git add index.html
-          git add scripts/geocache.json 2>/dev/null || true
+          # Stage data files + caches (NICHT index.html – das ist ein festes Design-Artefakt)
+          git add data/radsport-de.json data/triathlon-de.json data/laufen-de.json data/swim-de.json data/meta.json
+          git add data/geocache.json 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "Nothing changed – no commit needed."
           else
             DATE=$(date +%Y-%m-%d)
-            git commit -m "chore: monthly snapshot update ${DATE}"
+            git commit -m "chore: monthly data update ${DATE}"
             git push
             echo "Pushed updated snapshot – Netlify will auto-deploy."
           fi
