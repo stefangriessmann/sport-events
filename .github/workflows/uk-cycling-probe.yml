@@ -1,8 +1,8 @@
 name: UK Cycling Probe (manuell)
 
-# Einmal-Lauf zur Volumen-/Dubletten-Messung: scrapt Cycling UK + Sportive.com,
-# schreibt data/radsport-gb*.json (Artifacts) und die Zahlen in die Run-Summary.
-# Nur manuell – kein Schedule, kein Push auf Daten.
+# Einmal-Lauf zur Volumen-/Dubletten-Messung: baut data/radsport-gb.json aus
+# Cycling UK + Sportive.com mit Fuzzy-Dedup, schreibt Zahlen in die Run-Summary
+# und laedt die JSON als Artifact hoch. Nur manuell.
 on:
   workflow_dispatch:
 
@@ -16,25 +16,15 @@ jobs:
           python-version: '3.12'
       - name: Dependencies
         run: pip install requests beautifulsoup4 lxml
-
-      - name: Scrape Cycling UK
+      - name: Build radsport-gb (Cycling UK + Sportive.com, dedup)
         run: |
           set -o pipefail
-          python scripts/scrapers/gb_cyclinguk.py 2>&1 | tee /tmp/uk_probe.txt
-          { echo '## Cycling UK'; echo '```'; cat /tmp/uk_probe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Scrape Sportive.com
-        run: |
-          set -o pipefail
-          python scripts/scrapers/gb_sportive.py 2>&1 | tee /tmp/sp_probe.txt
-          { echo '## Sportive.com'; echo '```'; cat /tmp/sp_probe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Artifacts
+          python scripts/build_gb_probe.py 2>&1 | tee /tmp/gb.txt
+          { echo '## radsport-gb (kombiniert + dedupliziert)'; echo '```'; cat /tmp/gb.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: radsport-gb
-          path: |
-            data/radsport-gb.json
-            data/radsport-gb-sportive.json
+          path: data/radsport-gb.json
           retention-days: 7

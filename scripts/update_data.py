@@ -31,6 +31,7 @@ SOURCES = [
     (["scrapers.de_radnet", "scrapers.de_radsport_events"], "radsport-de.json", "rad"),
     ("scrapers.de_triathlonde",                             "triathlon-de.json", "tri"),
     (["scrapers.de_laufen", "scrapers.de_mammutmarsch"],    "laufen-de.json",   "lauf"),
+    (["scrapers.gb_cyclinguk", "scrapers.gb_sportive"],     "radsport-gb.json", "rad_gb"),
     # swim-de.json is manually curated – not auto-updated by scrapers
 ]
 
@@ -72,6 +73,45 @@ def dedup(events: list) -> list:
         seen_titledate.add(key_td)
         result.append(ev)
     return result
+
+
+def _norm_pc(pc):
+    return (pc or "").replace(" ", "").upper()
+
+
+def _title_tokens(t):
+    import re as _re
+    stop = {"2026", "2027", "the", "and", "sportive", "ride", "challenge", "event", "events"}
+    return set(w for w in _re.findall(r"[a-z0-9]+", (t or "").lower()) if len(w) > 2 and w not in stop)
+
+
+def dedup_fuzzy(events: list) -> list:
+    """Exakte Dedup + quellenuebergreifende Near-Dups (gleiches Datum + Postcode + Titel-Ueberlappung)."""
+    base = dedup(events)
+    out = []
+    removed = 0
+    for ev in base:
+        is_dup = False
+        for kept in out:
+            if ev.get("date_iso") != kept.get("date_iso"):
+                continue
+            pc1, pc2 = _norm_pc(ev.get("plz")), _norm_pc(kept.get("plz"))
+            if not pc1 or pc1 != pc2:
+                continue
+            t1, t2 = _title_tokens(ev.get("titel")), _title_tokens(kept.get("titel"))
+            if not t1 or not t2:
+                continue
+            union = len(t1 | t2)
+            jacc = len(t1 & t2) / union if union else 0
+            if jacc >= 0.5 or t1 <= t2 or t2 <= t1:
+                is_dup = True
+                removed += 1
+                break
+        if not is_dup:
+            out.append(ev)
+    if removed:
+        print(f"  fuzzy-dedup: {removed} quellenuebergreifende Near-Duplicate entfernt")
+    return out
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -117,6 +157,8 @@ def main():
                     print(f"  SCRAPER ERROR ({mp}): {e}")
 
             events = dedup(sorted(all_events, key=lambda e: e.get("date_iso", "")))
+            if filename == "radsport-gb.json":
+                events = dedup_fuzzy(events)
             scraped_data[filename] = events
 
     # ── Phase 2: Manuell freigegebene Events einmischen ────────────────────────
@@ -181,6 +223,7 @@ def main():
         "radsport-de.json":  50,
         "triathlon-de.json": 20,
         "laufen-de.json":    20,
+        "radsport-gb.json":  15,
         "swim-de.json":       0,  # manually curated, no minimum
     }
 
