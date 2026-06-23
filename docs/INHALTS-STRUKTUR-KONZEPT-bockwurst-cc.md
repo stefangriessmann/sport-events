@@ -51,3 +51,38 @@ flowchart TD
 3. **Blog/News**: ab Start oder erst später? *(Empfehlung: später.)*
 4. **Sprachen**: DE zuerst, EN ab Start oder nachziehen? *(Empfehlung: DE zuerst, EN nachziehen.)*
 5. **Startseiten-Schwerpunkt**: Soll „Events" wirklich der größte Block sein, oder gleichberechtigt neben Touren?
+
+---
+
+## v2 – Entscheidungen & Vertiefung (23.06.2026)
+
+### Getroffene Entscheidungen
+1. **Event Guide → perspektivisch nativ in TYPO3** (als Extension/Plugin): wiederverwendbare Bausteine statt nur Verlinkung. Z. B. interaktiver Startseiten-Teaser „5 aktuellste Events + Absprung", volle Such-/Listenansicht, native Event-Detailseiten.
+2. **Tour-Detailseite** wird zuerst ausgearbeitet (eigener Design-Brief).
+3. **Blog/News**: erst später.
+4. **Sprachen**: DE-Start, **EN gleich mit** (DeepL bezahlbar; Inhalte einmalig übersetzt).
+5. **Startseite: Touren-Schwerpunkt** + Marken-Content (Rennrad-Tipps/Equipment/20-Jahre-Erfahrung), YouTube Shorts, **6-Points-Markenbotschafter-Teaser prominent**, Profil-Anriss – plus der Event-Teaser aus (1).
+
+### Ziel-Architektur Event Guide (phasiert)
+- **Phase A (kurzfristig, kleiner Aufwand):** Event-Guide bleibt eigene App unter `events.bockwurst.cc`. Auf bockwurst.cc nur ein **Teaser** (5 aktuellste Events aus den bestehenden `data/*.json`) + Absprung. Schnell, kein Umbau.
+- **Phase B (Ziel):** Event-Guide als **TYPO3-Extension** `bockwurst_events` mit wiederverwendbaren Content-Elementen (Teaser, Such-/Listen-Plugin, native Detailseiten). Der Scraper füttert TYPO3. Vorteil: eine Plattform, SEO-fähige Detailseiten, überall einsetzbare Bausteine. Aufwand höher → später.
+
+### Startseite – Blöcke (Reihenfolge)
+1. **Hero** – Marke „Stefans Rennrad Welt" + aktuelles Highlight (neueste Tour/Video)
+2. **Touren-Highlights** (Schwerpunkt) – kuratiertes Raster der besten Touren
+3. **6 Points Charity** – prominenter Markenbotschafter-Banner (immer sichtbar)
+4. **Event-Teaser** – „5 aktuellste Events in deiner Nähe" (interaktiv) + Absprung zum Guide
+5. **YouTube Shorts** – Leiste mit aktuellen Shorts
+6. **Über Bockwurst** – Profil-Anriss (Foto + 1–2 Sätze + Link)
+7. *(später)* **Tipps & Erfahrungen** – Blog-Teaser (Equipment, 20 Jahre Rennrad)
+
+### Tour-Detailseite – Bausteine (Basis für den Design-Brief)
+- **Kopf:** Titel, Region/Startort, Tour-Typ (Rennrad/Gravel), Schwierigkeit, Saison/Datum
+- **Eckdaten aus Strava:** Distanz (km), Höhenmeter (hm), Dauer, Ø-Tempo (Watt optional) – Kachelreihe
+- **Interaktive Streckenkarte** (Polyline) **+ Höhenprofil**
+- **YouTube-Video** (consent-gated)
+- **Beschreibung & Fazit** (Fließtext + „Mein Fazit"-Box)
+- **Rating** (z. B. Landschaft / Anspruch / Straßenqualität, oder Gesamt-Rating)
+- **GPX-Download** + „Strecke nachfahren" (Komoot/Strava-Link) + Teilen
+- **Vernetzung (wichtig):** „Events in dieser Region" (Absprung Event-Guide gefiltert), „Ähnliche Touren", ggf. „Zwift-Pendant", Link „Über Bockwurst"/Kanal abonnieren
+- **Meine Ideen extra:** Höhenprofil, Ø-Tempo, Highlights/POIs entlang der Strecke (Pässe, Cafés), Saison-/Verkehrshinweis, Foto-Galerie, Tour-Serie/Tags, *(später)* Kommentare/Feedback
