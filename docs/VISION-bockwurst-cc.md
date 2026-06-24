@@ -71,3 +71,8 @@ Das alte Kanban plante WordPress (Astra/GeneratePress, Rank Math, TranslatePress
 
 - TYPO3-Detailentscheidungen (Ext-Auswahl: DeepL, Cookie-Consent; DDEV ja/nein; Hosting Hetzner-Größe).
 - Reihenfolge: Event Guide (UK) fertig ziehen vs. parallel Hauptseiten-Fundament (Domain/TYPO3) starten.
+
+## Ausblick Tourenportal (23.06.2026)
+
+- **Content-Verwertung – alle Tour-Videos ins Portal:** Perspektivisch sollen **alle** vorhandenen Rennrad-Tour-Videos (~80 auf dem Kanal) als Tour-Detailseiten verwertet werden, nicht nur die kuratierten 9. Vorgehen: Video ↔ Strava-Fahrt nach Datum/Titel matchen (viele haben den YouTube-Link schon in der Strava-Beschreibung), dann halbautomatisch Detailseiten erzeugen. Strava-Entwickler-API liefert Eckdaten, Strecke, Höhenprofil, GPX und **Fotos**; YouTube liefert das Video → wenig Handarbeit pro Tour (nur Fazit/Rating).
+- **Touren-Übersichtskarte:** Eine Karte im Tourenbereich, die **alle gefahrenen Touren** zeigt (Startpunkte als Marker und/oder Routen), klickbar → jeweilige Tour-Detailseite. Daten aus Strava (Start-Koordinaten + Polylines). Macht die Reichweite/Vielfalt der Touren auf einen Blick sichtbar.
