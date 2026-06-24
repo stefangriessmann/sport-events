@@ -22,11 +22,13 @@ Teil von **bockwurst.cc** („Stefans Rennrad Welt") – Tourenportal. Diese Sei
 8. **Highlights (optional):** kurze Liste markanter Punkte entlang der Strecke (Pässe, Aussicht, Café-Stopp).
 9. **Vernetzung (wichtig):** drei Blöcke – „Events in dieser Region" (führt zum Event-Guide), „Ähnliche Touren" (2–3 Kacheln), „Mehr über Bockwurst / Kanal abonnieren".
 
-## Beispieldaten (zum Befüllen des Entwurfs)
+## Beispieldaten (echte Tour – aus Strava + YouTube)
 - Titel: „Grenzerfahrung MSR300 – Mecklenburger Seenrunde, Nachtfahrt"
-- Region: Mecklenburg · Tour-Typ: Rennrad · Schwierigkeit: schwer · Saison: Sommer
-- Distanz: 300 km · Höhenmeter: 1.450 hm · Dauer: 12:48 h · Ø-Tempo: 23,4 km/h
-- Fazit: „Eine Nacht, ein See nach dem anderen – mental wie körperlich an der Grenze, aber unvergesslich."
+- Region: Mecklenburg · Tour-Typ: Rennrad · Schwierigkeit: schwer · Saison: Frühsommer (Nachtfahrt)
+- **Distanz: 306 km · Höhenmeter: 1.908 hm · Fahrzeit: 12:33 h · Ø-Tempo: 24,4 km/h** (Quelle Strava, Activity 18715623879)
+- Video: YouTube `YmrZUVxX2yw` (21:13)
+- Fazit-Beispiel: „Eine Nacht, ein See nach dem anderen – mental wie körperlich an der Grenze, aber unvergesslich."
+- Hinweis: Eckdaten/Karte/Höhenprofil/GPX kommen automatisch aus Strava; Beschreibung, Fazit und Rating ergänzt Stefan.
 
 ## Technische Hinweise (für die spätere Umsetzung – nur als Kontext)
 - Bitte **sauberes, eigenständiges HTML/CSS**, ohne Abhängigkeiten außer den genannten Schriften und (für die Karte) Leaflet. Damit lässt es sich gut in TYPO3-Templates überführen.
