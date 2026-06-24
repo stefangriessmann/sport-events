@@ -9,7 +9,7 @@
 - Identisch zu Startseite & Tour-Detailseite: hell, werbefrei, große Typo. Farben Cobalt `#2B5BFF`, Pink `#FF2E86`, Grün `#13C766`, Cyan `#1FB6C9`, Gelb `#FBC400`, Tinte `#0C0E14`, weiß. Schriften „Bricolage Grotesque" / „Familjen Grotesk".
 
 ## Seitenaufbau
-1. **Kopf:** Titel „Touren", kurzer Einleitungssatz; optional eine Übersichtskarte mit allen Tour-Startpunkten.
+1. **Kopf + Touren-Landkarte (Highlight):** Titel „Touren" + kurzer Einleitungssatz, darunter eine **interaktive Karte mit ALLEN Touren** – je Tour ein Marker am Startpunkt (Klick → Detailseite), optional die Routen als Linien. Zeigt auf einen Blick, „wo war ich überall". Quelle: Strava (Start/Strecke).
 2. **Filter-/Sortierleiste:** Filter nach **Region**, **Distanz** (z. B. <100 / 100–200 / 200+ km), **Tour-Typ** (Rennrad/Gravel); Sortierung „neueste / längste".
 3. **Touren-Raster:** Karten mit Bild, Titel, Region, **Eckdaten** (Distanz km, Höhenmeter hm), Typ-Badge, Schwierigkeit, 1-Zeilen-Teaser; Klick → Tour-Detailseite.
 4. **Mehr laden / Pagination** (für später, wenn viele Touren).

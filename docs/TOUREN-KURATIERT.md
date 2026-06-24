@@ -31,3 +31,7 @@
 ## Andere Rubriken (nicht Tourenportal)
 - **Event-Berichte/Streckenposten:** RDCR Rennsteig, Fichtelberg Radmarathon, PORPHYR KING Everesting.
 - **Zwift/Team Valhalla:** → Zwift-Säule. · **Tipps:** „Mein Tipp für Dein Rennradabenteuer" → Blog.
+
+## Ausblick / Roadmap (Tourenportal)
+- **Ziel: alle Video-Touren ins Portal** (~81 Kanal-Videos). Bereits erstellten Content verwerten: jede Tour = Strava (Karte/Stats/GPX/Fotos) + YouTube-Video. Vorgehen: alle Videos schrittweise per Datum/Titel zu Strava-Fahrten matchen und Seiten in Serie erzeugen (die 9 sind der Start).
+- **Touren-Landkarte:** interaktive Übersichtskarte mit allen Touren (Marker am Startpunkt → Detailseite, optional Routenlinien) als Highlight der Tourenportal-Übersicht. Quelle: Strava (Startpunkt + Polyline je Tour).
