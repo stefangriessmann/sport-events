@@ -1,52 +1,34 @@
-# Touren – Auswahl & Mapping (Tour ↔ Strava ↔ YouTube)
+# Touren – Kuratierte Auswahl & Mapping (Tour ↔ Strava ↔ YouTube)
 
-> Stand: 23.06.2026 · Du hakst ab, welche Touren ins Portal sollen. „Sofort baubar" = Strava-Daten **und** Video vorhanden (Karte/Stats/GPX aus Strava + Video).
+> Stand: 23.06.2026 · **Auswahl getroffen** (Stefan). „ready" = Strava-Daten + Video vorhanden → Detailseite direkt baubar.
 
-## A) Sofort baubar – empfohlener Start (Strava + Video vorhanden)
+## Kuratierte Auswahl (9 Touren)
 
-| ✓ | Tour | Datum | km | hm | Fahrzeit | Strava-ID | YouTube-ID |
-|---|------|-------|----|----|----------|-----------|------------|
-| ☐ | MSR300 Night Special (Mecklenburger Seenrunde, Nachtfahrt) | 29.05.26 | 306 | 1.908 | 12:33 | 18715623879 | YmrZUVxX2yw |
-| ☐ | 6Points Mallorca 2026 – Etappe 1 (Muntana, #ForJens) | 15.05.26 | 140 | 2.793 | 7:32 | 18518219019 | Hn-Iwp1utP4 |
-| ☐ | 6Points Mallorca 2026 – Stage 2 (Kap Formentor) | 16.05.26 | 80 | 1.109 | 4:15 | 18528956811 | DQeJ101piME |
-| ☐ | 6Points Mallorca 2026 – Stage 3 (Valle) | 17.05.26 | 99 | 682 | 5:08 | 18550837043 | QeGV88Avtwo |
-| ☐ | Chemnitz – Rochlitzer Berg – Colditz 100 | 25.05.26 | 100 | 948 | 4:05 | 18645519487 | V_f9rni7VD0 |
-| ☐ | Galilea memorial ride (#ForJens) | 14.05.26 | 35 | 550 | 1:51 | 18503851889 | fKh33WbQmo4 |
+| # | Tour | Datum | km | hm | Strava-ID | YouTube | Status |
+|---|------|-------|----|----|-----------|---------|--------|
+| 1 | MSR300 Night Special (Mecklenburger Seenrunde, Nachtfahrt) | 29.05.26 | 306 | 1.908 | 18715623879 | YmrZUVxX2yw | ✅ ready |
+| 2 | 6Points Mallorca 2026 – Etappe 1 (Muntana) | 15.05.26 | 140 | 2.793 | 18518219019 | Hn-Iwp1utP4 | ✅ ready |
+| 3 | 6Points Mallorca 2026 – Stage 2 (Kap Formentor) | 16.05.26 | 80 | 1.109 | 18528956811 | DQeJ101piME | ✅ ready |
+| 4 | 6Points Mallorca 2026 – Stage 3 (Valle) | 17.05.26 | 99 | 682 | 18550837043 | QeGV88Avtwo | ✅ ready |
+| 5 | Chemnitz – Rochlitzer Berg – Colditz 100 | 25.05.26 | 100 | 948 | 18645519487 | V_f9rni7VD0 | ✅ ready |
+| 6 | Spreewaldmarathon 2026 (200 km) | 18.04.26 | 201 | 568 | 18161027189 | oPrjZqhY1_Y | ✅ ready |
+| 7 | Schliersee – Tegernsee – Valepp – Spitzingsee | 10.10.25 | 76 | 917 | 16096925096 | Video vorhanden (ID nachtragen) | ✅ ready |
+| 8 | Bayrischzell – Sudelfeldpass (Wendelstein) | 09.10.25 | 51 | 836 | 16083947422 | Video vorhanden (ID nachtragen) | ✅ ready |
+| 9 | Rund um Berlin – 205 km | (vor 09/2025) | ~205 | – | **Strava-ID offen** | Video vorhanden (ID nachtragen) | ⏳ Strava-Fahrt nachziehen |
 
-## B) Weitere Tour-Videos (Strava-Fahrt ordne ich bei Auswahl per Datum zu)
+> 8 von 9 sind sofort baubar (Strava + Video). Bei **Rund um Berlin** ziehe ich die ältere Strava-Fahrt nach (oder sag mir grob das Datum). Für #7/#8 trage ich die YouTube-Video-IDs noch ein.
 
-**2026**
-- ☐ Spreewaldmarathon 2026 – 200 km
-- ☐ Elberadweg Riesa – Torgau – Riesa
-- ☐ Papa Memorial Ride zum Scheibenberg — *Strava ✓ (09.05., 125 km / 1.571 hm), **Video fehlt** → ggf. als Text-Tour*
+## Bewusst (noch) nicht gewählt
+- Galilea memorial ride (#ForJens) — vorerst raus.
+- Papa Memorial Ride zum Scheibenberg — Strava ✓ (09.05., 125 km / 1.571 hm), **kein Video** → später / Text-Tour.
+- Weitere Video-Touren als Reserve: Chemnitz–Grimma–Leipzig 175 km, Chemnitz–Sosa–Fichtelberg 170 km, Elberadweg Riesa–Torgau–Riesa, Stoneman Miriquidi Road, 6Points Mallorca 2025/2024, Torgau–Wittenberg 130 km u. a.
 
-**2025**
-- ☐ Schliersee – Tegernsee – Spitzingsee (75 km / 950 hm)
-- ☐ Rund um den Wendelstein / Sudelfeldpass (51 km / 836 hm)
-- ☐ Chemnitz – Grimma – Leipzig (175 km)
-- ☐ Chemnitz – Sosa – Fichtelberg (170 km / 2.150 hm)
-- ☐ Rund um Berlin – 205 km
-- ☐ Stoneman Miriquidi Road
-- ☐ 6Points Mallorca 2025 – Etappe 1 / 2 / 3 (+ WarmUp)
+## Andere Rubriken (nicht Tourenportal)
+- **Event-Berichte/Streckenposten:** RDCR Rennsteig, Fichtelberg Radmarathon, PORPHYR KING Everesting.
+- **Zwift/Team Valhalla:** → Zwift-Säule.
+- **Tipps:** „Mein Tipp für Dein Rennradabenteuer" → Blog.
 
-**2024**
-- ☐ 6Points Mallorca 2024 – Stage 1 / 2 / 3
-
-*(Der Kanal hat ~81 Videos; weitere ältere Touren sind vorhanden – auf Wunsch liste ich die komplette Historie.)*
-
-## C) Event-Berichte / Streckenposten (anderer Typ – eigene Rubrik oder weglassen)
-- RDCR EXTREM 2025 – Rennsteig
-- Fichtelberg Radmarathon 2025 – Streckenposten
-- PORPHYR KING 2026 – Everesting Rochlitzer Berg (Support)
-
-## D) Zwift / Team Valhalla (→ Zwift-Säule, nicht Tourenportal)
-- Indoor Cycling – Zwift Valhalla Group Ride
-- Team Valhalla Isle of Wight Sausage Memorial Ride
-
-## E) Tipps / Sonstiges (→ Blog)
-- „Mein Tipp für Dein Rennradabenteuer 2025"
-
-## So nutzen
-- In **A/B** abhaken, was ins Portal soll.
-- Für **A** baue ich die Detailseiten direkt (Strava → Karte/Höhenprofil/GPX/Eckdaten, plus Video).
-- Für **B** ziehe ich die passende Strava-Fahrt nach Datum und ergänze Strava-ID + Stats in die Tabelle.
+## Nächste Schritte
+- **Rund um Berlin**: Strava-Fahrt nachziehen (Datum?), dann ID/Stats ergänzen.
+- **#7/#8**: YouTube-Video-IDs ergänzen.
+- Pro Tour kommen Karte/Höhenprofil/GPX/Eckdaten automatisch aus Strava; Beschreibung, Fazit, Rating ergänzt Stefan.
