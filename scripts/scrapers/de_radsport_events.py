@@ -260,6 +260,7 @@ def fetch(year: int) -> list[dict]:
     today     = date.today().isoformat()
     events: list[dict] = []
     seen_ids: set[str] = set()
+    skipped_no_geo = 0
 
     print(f"[radsport-events.de] Fetching {year} cycling events...")
 
@@ -383,6 +384,12 @@ def fetch(year: int) -> list[dict]:
             if not ort and lv in LV_STATE_NAMES:
                 ort = LV_STATE_NAMES[lv]
 
+            # Skip events without a resolvable location (empty "(Start-)Ort",
+            # no PLZ, no LV centroid fallback) – they would carry null coords.
+            if coords["lat"] is None or coords["lon"] is None:
+                skipped_no_geo += 1
+                continue
+
             events.append({
                 "art":          art,
                 "datum":        datum,
@@ -417,4 +424,6 @@ def fetch(year: int) -> list[dict]:
             break
 
     print(f"  {len(events)} total future {year} events collected (Germany only)")
+    if skipped_no_geo:
+        print(f"  {skipped_no_geo} event(s) skipped: no resolvable location (empty (Start-)Ort)")
     return sorted(events, key=lambda e: e["date_iso"])
