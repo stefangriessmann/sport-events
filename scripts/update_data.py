@@ -232,6 +232,19 @@ def main():
 
     for _, filename, sport_key in SOURCES:
         events = scraped_data.get(filename, [])
+
+        # Datenqualität (zentral, alle Quellen): Events ohne Koordinaten oder
+        # ohne Ort verwerfen. Ein ortsbasierter Guide (Umkreisfilter, Karte)
+        # kann sie nicht nutzen, und die E2E-Daten-Vollständigkeitstests
+        # verlangen lückenlose lat/lon und ort. Fängt ungeocodebare Ausreißer
+        # aus JEDEM Scraper ab (nicht nur radsport-events.de).
+        _before_geo = len(events)
+        events = [e for e in events
+                  if e.get("lat") is not None and e.get("lon") is not None
+                  and (e.get("ort") or "").strip()]
+        if len(events) < _before_geo:
+            print(f"  {filename}: {_before_geo - len(events)} Event(s) ohne Koordinaten/Ort verworfen.")
+
         min_req = MIN_EVENTS.get(filename, 10)
 
         existing = load_existing(filename)
