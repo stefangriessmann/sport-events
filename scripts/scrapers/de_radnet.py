@@ -9,6 +9,7 @@ Cache: data/startort_cache.json (keyed by event URL).
 from __future__ import annotations  # Python 3.9 compat
 import re
 import time
+import random
 from datetime import date, datetime
 
 import json
@@ -101,32 +102,65 @@ def _save_startort_cache() -> None:
         json.dump(_startort_cache, f, ensure_ascii=False, indent=2)
 
 
+def _retry_after_seconds(resp) -> int:
+    """Retry-After-Header (Sekunden) parsen; 0 wenn nicht vorhanden/ungültig."""
+    try:
+        return max(0, int(resp.headers.get("Retry-After", "") or 0))
+    except ValueError:
+        return 0
+
+
+def _http_get(url: str, *, base_sleep: float = 1.5, tries: int = 3) -> str | None:
+    """
+    GET mit Rate-Limit-bewusstem Retry. Pausiert base_sleep + Jitter vor jedem
+    Versuch, erkennt HTTP 429 (respektiert Retry-After) und die rad-net-
+    „Bitte warten / automatisierter Zugriffe"-Seite und wartet dann eskalierend.
+    Gibt den Response-Text zurück – oder None, wenn nach `tries` Versuchen
+    weiterhin blockiert/fehlerhaft (der Aufrufer entscheidet über den Fallback).
+    """
+    for attempt in range(tries):
+        try:
+            time.sleep(base_sleep + random.uniform(0, 0.7))
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            if r.status_code == 429:
+                wait = _retry_after_seconds(r) or 12 * (attempt + 1)
+                print(f"  [radnet] HTTP 429 – warte {wait}s (Versuch {attempt + 1}/{tries})")
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            low = r.text.lower()
+            if "automatisierter" in low or "bitte warten" in low:
+                wait = 15 * (attempt + 1)
+                print(f"  [radnet] Rate-Limit-Seite – Cooldown {wait}s (Versuch {attempt + 1}/{tries}): {url[-40:]!r}")
+                time.sleep(wait)
+                continue
+            return r.text
+        except Exception as e:
+            print(f"  [radnet] Fetch-Fehler (Versuch {attempt + 1}/{tries}) {url[-40:]!r}: {e}")
+            time.sleep(5 * (attempt + 1))
+    return None
+
+
 def _fetch_startort(detail_url: str) -> dict[str, str]:
     """
     Fetch rad-net detail page and extract Startort (PLZ + city).
     Returns {"ort": str, "plz": str} – empty strings if not found.
     Caches results in startort_cache.json keyed by URL.
+    Bei anhaltendem Rate-Limit (html None) wird NICHT gecacht → nächster Lauf
+    versucht es erneut; in fetch() greifen derweil die LV-Fallback-Koordinaten.
     """
     cache = _load_startort_cache()
     if detail_url in cache:
         return cache[detail_url]
 
     result = {"ort": "", "plz": ""}
+    html = _http_get(detail_url)   # inkl. Backoff/Retry
+    if html is None:
+        return result  # not cached
+
     try:
-        time.sleep(1.5)   # rate-limit: increased from 0.5s to reduce blocking
-        r = requests.get(detail_url, headers=HEADERS, timeout=15)
-        r.raise_for_status()
-
-        # Detect rad-net rate-limit page ("Bitte warten" / "automatisierter Zugriffe").
-        # Do NOT cache – the next run will retry.
-        if "automatisierter" in r.text or "bitte warten" in r.text.lower():
-            print(f"  [radnet] Rate-limited: {detail_url[-50:]!r} – skipped (retry next run)")
-            return result  # not cached
-
-        soup = BeautifulSoup(r.text, "lxml")
-
+        soup = BeautifulSoup(html, "lxml")
         # <tr><th>Startort</th><td>Straße<br>PLZ Stadt<br>Geschäftsstelle…</td></tr>
-        # Use get_text() to handle nested elements robustly
         th = next(
             (t for t in soup.find_all("th") if re.search(r"Startort", t.get_text(), re.I)),
             None,
@@ -146,7 +180,8 @@ def _fetch_startort(detail_url: str) -> dict[str, str]:
                     if plz_m:
                         result["plz"] = plz_m.group(1)
     except Exception as e:
-        print(f"  [radnet] Detail fetch error for {detail_url}: {e}")
+        print(f"  [radnet] Parse-Fehler {detail_url[-40:]!r}: {e}")
+        return result  # transient – nicht cachen
 
     cache[detail_url] = result
     _save_startort_cache()
@@ -267,14 +302,18 @@ def fetch(year: int) -> list[dict]:
             f"&startdate=01.01.{year}&enddate=31.12.{year}"
             f"&lstart={lstart}"
         )
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            r.raise_for_status()
-        except Exception as e:
-            print(f"  Error fetching page (lstart={lstart}): {e}")
-            break
+        html = _http_get(url, base_sleep=0.5)   # inkl. Rate-Limit-Retry
+        if html is None:
+            # Seite dauerhaft blockiert: überspringen statt den ganzen Lauf abzubrechen.
+            print(f"  [radnet] Listenseite lstart={lstart} blockiert – übersprungen")
+            if total is None:
+                break  # ohne total kein sinnvolles Weiterblättern
+            lstart += 30
+            if lstart >= total:
+                break
+            continue
 
-        soup = BeautifulSoup(r.text, "lxml")
+        soup = BeautifulSoup(html, "lxml")
 
         if total is None:
             m = re.search(r"(\d+)\s+Treffer", soup.get_text())
@@ -293,7 +332,6 @@ def fetch(year: int) -> list[dict]:
         lstart += 30
         if lstart >= (total or 0):
             break
-        time.sleep(0.5)
 
     # Deduplicate by URL
     seen: set[str] = set()

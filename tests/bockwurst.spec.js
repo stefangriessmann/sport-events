@@ -153,11 +153,13 @@ test.describe('1 · Seitenaufruf', () => {
 test.describe('2 · Daten-Vollständigkeit', () => {
   test.beforeEach(async ({ page }) => { await load(page); });
 
-  // Sichere Floors (Daten schwanken; rad lag zuletzt bei ~648)
+  // Sichere Floors: fangen einen KAPUTTEN Scrape (nahe 0 / eine Quelle tot),
+  // nicht den saisonalen Rückgang. „upcoming" sinkt übers Jahr (Mitte Juli:
+  // rad ~515, tri ~207, lauf ~198). Schwellen defensiv; ggf. saisonal nachziehen.
   const minCounts = {
-    rad:  600,   // Radsport (rad-net + radsport-events.de)
-    tri:  150,   // Triathlon
-    lauf: 150,   // Laufen
+    rad:  400,   // Radsport (rad-net + radsport-events.de) – fängt Single-Source-Ausfall (~300)
+    tri:  120,   // Triathlon
+    lauf: 120,   // Laufen
   };
 
   for (const [sp, min] of Object.entries(minCounts)) {
