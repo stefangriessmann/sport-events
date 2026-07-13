@@ -789,6 +789,7 @@
       </div>
       <div class="fbar">
         <span>© 2026 Stefan Grießmann · bockwurst.cc</span>
+        <span id="lastUpdate"></span>
         <span data-de="Kein Tracking · Keine Cookies · Werbefrei" data-en="No tracking · No cookies · Ad-free">Kein Tracking · Keine Cookies · Werbefrei</span>
       </div>
     </div>
@@ -870,6 +871,7 @@ function updateTypeSummary(types){
 function filtered(){
   const c=center(), r=+document.getElementById('radius').value;
   return EV.filter(e=>{
+    if(e.datum < TODAY_ISO) return false;   // vergangene Events nie anzeigen (Basisfilter, unabhängig vom Zeitraum)
     if(sport!=='all' && TYPE_SPORT[e.art]!==sport) return false;
     if(typeOff.has(e.art)) return false;
     if(!inQd(e.datum)) return false;
@@ -1094,6 +1096,12 @@ async function boot(){
     SRC.forEach((s,i)=>{ const sp=s[1]; (res[i]||[]).forEach(e=>{ const art=e.art||'Sonstige'; TYPE_SPORT[art]=sp; EV.push({art:art,datum:e.date_iso||e.datum,titel:e.titel,ort:e.ort,plz:e.plz||'',strecken:e.strecken||'',verein:e.verein||'',lv:e.lv||'',url:e.url||'',lat:e.lat,lon:e.lon}); }); });
   }catch(err){ console.error('Events laden fehlgeschlagen',err); }
   try{ const pm=await fetch('/data/plz_map.json').then(r=>r.ok?r.json():{}).catch(()=>({})); if(pm&&typeof pm==='object') Object.assign(PLZ_MAP,pm); }catch(e){}
+  try{
+    const meta=await fetch('/data/meta.json').then(r=>r.ok?r.json():null).catch(()=>null);
+    if(meta&&meta.stand){ const lu=document.getElementById('lastUpdate');
+      if(lu){ lu.setAttribute('data-de','Letzte Aktualisierung: '+meta.stand); lu.setAttribute('data-en','Last updated: '+meta.stand);
+        lu.textContent=(lang==='de'?'Letzte Aktualisierung: ':'Last updated: ')+meta.stand; } }
+  }catch(e){}
   render();
 }
 boot();
