@@ -716,7 +716,7 @@
     <div class="promo-col">
     <h3 class="promo-head" data-de="Neuestes Video" data-en="Latest video">Neuestes Video</h3>
     <div class="promo-card yt">
-      <a class="ytthumb" id="ytThumb" href="https://www.youtube.com/watch?v=YmrZUVxX2yw" target="_blank" rel="noopener" style="display:block"><img id="ytThumbImg" src="/og-image.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%"><span class="ytscrim"></span><span class="ytnew" data-de="★ Must-See" data-en="★ Must-see">★ Must-See</span><span class="ytdur">12:48</span><span class="ytplay"><i></i></span></a>
+      <a class="ytthumb" id="ytThumb" href="https://www.youtube.com/watch?v=YmrZUVxX2yw" target="_blank" rel="noopener" style="display:block"><img id="ytThumbImg" src="/og-image.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%"><span class="ytscrim"></span><span class="ytnew" data-de="★ Must-See" data-en="★ Must-see">★ Must-See</span><span class="ytdur" id="ytDur">12:48</span><span class="ytplay"><i></i></span></a>
       <div class="ytbody">
         <div class="ytmeta"><span class="ytk" data-de="Neuestes Video" data-en="Latest video">Neuestes Video</span><span class="ytsep">·</span><span class="ytch">Stefan_Rennrad_Chemnitz</span></div>
         <h4 id="ytTitle">Grenzerfahrung Rennradtour MSR300 — Mecklenburger Seenrunde 2026 — Nachtfahrt</h4>
@@ -1087,7 +1087,21 @@ function tick(){
 }
 tick(); setInterval(tick,1000);
 
-/* YouTube-Vorschaubild ist direkt per <a> verlinkt (kein Embed, kein Consent) */
+/* „Neuestes Video"-Karte: holt das neueste Video vom Kanal über die
+   Netlify-Function (RSS serverseitig). Schlägt der Abruf fehl, bleibt die
+   statische Fallback-Karte stehen. */
+async function loadLatestVideo(){
+  try{
+    const v = await fetch('/.netlify/functions/latest-video').then(r=>r.ok?r.json():null).catch(()=>null);
+    if(!v || !v.id) return;
+    const thumb = document.getElementById('ytThumb'); if(thumb && v.url) thumb.href = v.url;
+    const img = document.getElementById('ytThumbImg'); if(img && v.thumb){ img.src = v.thumb; img.style.objectPosition='50% 50%'; }
+    const title = document.getElementById('ytTitle'); if(title && v.title) title.textContent = v.title;
+    const dur = document.getElementById('ytDur'); if(dur) dur.style.display='none'; // Dauer liefert der RSS nicht
+  }catch(e){ /* Fallback: statische Karte */ }
+}
+loadLatestVideo();
+
 
 async function boot(){
   const SRC=[['/data/radsport-de.json','rad'],['/data/triathlon-de.json','tri'],['/data/laufen-de.json','lauf'],['/data/swim-de.json','swim']];
