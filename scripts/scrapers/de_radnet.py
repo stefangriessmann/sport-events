@@ -110,34 +110,39 @@ def _retry_after_seconds(resp) -> int:
         return 0
 
 
-def _http_get(url: str, *, base_sleep: float = 1.5, tries: int = 3) -> str | None:
+def _http_get(url: str, *, base_sleep: float = 1.5, tries: int = 1) -> str | None:
     """
-    GET mit Rate-Limit-bewusstem Retry. Pausiert base_sleep + Jitter vor jedem
-    Versuch, erkennt HTTP 429 (respektiert Retry-After) und die rad-net-
-    „Bitte warten / automatisierter Zugriffe"-Seite und wartet dann eskalierend.
-    Gibt den Response-Text zurück – oder None, wenn nach `tries` Versuchen
-    weiterhin blockiert/fehlerhaft (der Aufrufer entscheidet über den Fallback).
+    GET mit Rate-Limit-Erkennung. Pausiert base_sleep + Jitter vor jedem Versuch,
+    erkennt HTTP 429 und die rad-net-„Bitte warten / automatisierter Zugriffe"-Seite.
+    Gibt den Response-Text zurück – oder None, wenn blockiert/fehlerhaft.
+
+    WICHTIG (Laufzeit): Ein kurzer Cooldown erfolgt NUR zwischen Versuchen, nie
+    nach dem letzten – und gedeckelt. `tries` bewusst klein halten: Detailseiten
+    laufen mit tries=1 (hunderte Abrufe → der LV-Fallback fängt Blockaden ab;
+    Retries würden den Lauf in die Stunden treiben → 6-h-Timeout). Nur die
+    wenigen Listenseiten leisten sich einen kurzen Retry.
     """
     for attempt in range(tries):
         try:
-            time.sleep(base_sleep + random.uniform(0, 0.7))
+            time.sleep(base_sleep + random.uniform(0, 0.5))
             r = requests.get(url, headers=HEADERS, timeout=15)
-            if r.status_code == 429:
-                wait = _retry_after_seconds(r) or 12 * (attempt + 1)
-                print(f"  [radnet] HTTP 429 – warte {wait}s (Versuch {attempt + 1}/{tries})")
+            blocked = r.status_code == 429
+            if not blocked:
+                r.raise_for_status()
+                low = r.text.lower()
+                if "automatisierter" in low or "bitte warten" in low:
+                    blocked = True
+                else:
+                    return r.text
+            # blockiert: nur warten, wenn noch ein Versuch folgt (Cooldown gedeckelt)
+            if attempt < tries - 1:
+                wait = min(_retry_after_seconds(r) or 8, 12)
+                print(f"  [radnet] blockiert – warte {wait}s (Versuch {attempt + 1}/{tries}): {url[-40:]!r}")
                 time.sleep(wait)
-                continue
-            r.raise_for_status()
-            low = r.text.lower()
-            if "automatisierter" in low or "bitte warten" in low:
-                wait = 15 * (attempt + 1)
-                print(f"  [radnet] Rate-Limit-Seite – Cooldown {wait}s (Versuch {attempt + 1}/{tries}): {url[-40:]!r}")
-                time.sleep(wait)
-                continue
-            return r.text
         except Exception as e:
             print(f"  [radnet] Fetch-Fehler (Versuch {attempt + 1}/{tries}) {url[-40:]!r}: {e}")
-            time.sleep(5 * (attempt + 1))
+            if attempt < tries - 1:
+                time.sleep(3)
     return None
 
 
@@ -302,7 +307,7 @@ def fetch(year: int) -> list[dict]:
             f"&startdate=01.01.{year}&enddate=31.12.{year}"
             f"&lstart={lstart}"
         )
-        html = _http_get(url, base_sleep=0.5)   # inkl. Rate-Limit-Retry
+        html = _http_get(url, base_sleep=0.5, tries=2)   # Listenseite: 1 kurzer Retry
         if html is None:
             # Seite dauerhaft blockiert: überspringen statt den ganzen Lauf abzubrechen.
             print(f"  [radnet] Listenseite lstart={lstart} blockiert – übersprungen")
