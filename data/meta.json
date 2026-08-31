@@ -1,11 +1,11 @@
 {
-  "stand": "24.08.2026",
-  "stand_iso": "2026-08-24",
+  "stand": "31.08.2026",
+  "stand_iso": "2026-08-31",
   "counts": {
     "rad": 448,
-    "tri": 111,
-    "lauf": 157,
-    "rad_gb": 50,
-    "swim": 3
+    "tri": 83,
+    "lauf": 137,
+    "rad_gb": 56,
+    "swim": 2
   }
 }
