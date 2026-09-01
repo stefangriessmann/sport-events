@@ -4438,5 +4438,29 @@
   "kassel-wilhelmshöhe": {
     "lat": 51.3113881,
     "lon": 9.4477049
+  },
+  "kronberg im taunus": {
+    "lat": 50.1796561,
+    "lon": 8.5085855
+  },
+  "braunschweig-schapen": {
+    "lat": 52.2888863,
+    "lon": 10.5929595
+  },
+  "diekholzen": {
+    "lat": 52.0944417,
+    "lon": 9.915534
+  },
+  "wilsche-neubokel": {
+    "lat": 52.5085583,
+    "lon": 10.4817084
+  },
+  "evessen": {
+    "lat": 52.188673,
+    "lon": 10.7089033
+  },
+  "thale": {
+    "lat": 51.7527606,
+    "lon": 11.037722
   }
 }
