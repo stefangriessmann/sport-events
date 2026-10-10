@@ -16,7 +16,7 @@ Werbefreier Event-Guide für Rennrad, Triathlon, Schwimmen und Laufen in Deutsch
 
 ## Goldene Regeln
 1. **`index.html` ist ein festes Design-Artefakt.** Nur ein gezielter Entwickler-Commit ändert es. **Kein Scraping-/Daten-Job darf `index.html` neu erzeugen** – genau das hat früher das Design zurückgesetzt.
-2. **Eventdaten nur über `scripts/update_data.py`** nach `data/*.json` schreiben. Das alte `scripts/update_snapshots.py` (eingebettete Snapshots in `index.html`) ist abgelöst und wird von keinem Workflow mehr genutzt.
+2. **Eventdaten nur über `scripts/update_data.py`** nach `data/*.json` schreiben. Das alte Snapshot-Modell (`update_snapshots.py`, eingebettete Snapshots in `index.html`) ist abgelöst und entfernt.
 3. **Keine Tokens im Quellcode.** Sie gehören in Netlify-Env-Vars (`GITHUB_ISSUES_TOKEN`) bzw. GitHub-Secrets (`RESEND_API_KEY`).
 4. **DOM-IDs nicht beiläufig umbenennen** – die Playwright-Tests (`tests/bockwurst.spec.js`, 76 Stück) hängen daran. Bei Änderungen Tests mitziehen.
 5. Schriften sind **selbst gehostet** (`assets/fonts/`, kein Google Fonts) – wegen „kein Tracking".
