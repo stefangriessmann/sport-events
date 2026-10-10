@@ -64,11 +64,11 @@ ART_MAP = {
     "RENNEN_12H": "12h-Rennen",
     "RENNEN_2_3_6H": "Zeitrennen",
     # GRAVEL
-    "GRAVEL_RIDE": "Gravel",
-    "GRAVEL_TOUR": "Gravel",
+    "GRAVEL_RIDE": "Gravelride",      # Label an de_radnet angeglichen (ein Chip)
+    "GRAVEL_TOUR": "Gravelride",
     "GRAVEL_RACE": "Gravel Race",
     "GRAVEL_CAMP": "Gravel Camp",
-    "GRAVEL_SONSTIGES": "Gravel",
+    "GRAVEL_SONSTIGES": "Gravelride",
     "BIKEPACKING": "Bikepacking",
     # MTB (nur relevant, falls "MTB" zu CATEGORIES hinzugefügt wird)
     "CTF": "CTF",
