@@ -241,6 +241,28 @@ def main():
 
     for _, filename, sport_key in SOURCES:
         events = scraped_data.get(filename, [])
+        existing = load_existing(filename)
+        is_de = filename.endswith("-de.json")
+
+        # DE saisontauglich: nur zukuenftige Termine behalten UND die bereits
+        # erfassten Zukunfts-Events der bestehenden Datei hineinmischen (dedupe).
+        # Damit (a) blaeht sich die Datei nicht mit Alt-Terminen auf – sonst
+        # blockt der 70%-Schutz unten die saisonale Schrumpfung dauerhaft und
+        # neue Jahrgaenge (z. B. 2027) kommen nie hinein – und (b) gehen bereits
+        # erfasste Zukunfts-Termine nicht verloren, wenn ein Scraper sie in
+        # diesem Lauf mal nicht liefert (z. B. rad-net = 0). Vergleichsbasis fuer
+        # den Ausfall-Schutz sind dann die Zukunfts-Events der bestehenden Datei
+        # (nicht die aufgeblaehte Gesamtzahl). GB bleibt unveraendert
+        # (GB-Scraper nehmen ohnehin alle Zukunft).
+        if is_de:
+            existing_future = [e for e in existing
+                               if (e.get("date_iso") or "") >= today_iso]
+            events = dedup(sorted(
+                [e for e in events if (e.get("date_iso") or "") >= today_iso] + existing_future,
+                key=lambda e: e.get("date_iso", "")))
+            guard_base = len(existing_future)
+        else:
+            guard_base = len(existing)
 
         # Datenqualität (zentral, alle Quellen): Events ohne Koordinaten oder
         # ohne Ort verwerfen. Ein ortsbasierter Guide (Umkreisfilter, Karte)
@@ -256,16 +278,14 @@ def main():
 
         min_req = MIN_EVENTS.get(filename, 10)
 
-        existing = load_existing(filename)
-
         if len(events) < min_req:
             print(f"\n  {filename}: Nur {len(events)} Events (min {min_req}) – bestehende Daten bleiben.")
             counts[sport_key] = len(existing)
             continue
 
-        # 70% threshold guard against scraper timeouts
-        if existing and len(existing) >= min_req and len(events) < 0.70 * len(existing):
-            print(f"\n  ⚠️  {filename}: Neuer Count {len(events)} < 70% des bestehenden {len(existing)} → NICHT überschrieben.")
+        # 70%-Schutz gegen Scraper-Ausfaelle (DE: Zukunft-zu-Zukunft verglichen).
+        if guard_base >= min_req and len(events) < 0.70 * guard_base:
+            print(f"\n  ⚠️  {filename}: Neuer Count {len(events)} < 70% der Vergleichsbasis {guard_base} → NICHT überschrieben.")
             counts[sport_key] = len(existing)
             continue
 
