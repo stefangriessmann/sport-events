@@ -144,17 +144,26 @@ def main():
     else:
         for module_path, filename, sport_key in SOURCES:
             modules = [module_path] if isinstance(module_path, str) else module_path
-            print(f"\n── {', '.join(modules)} → {filename} ──────────────────")
+
+            # Die DE-Scraper sind jahr-gebunden: fetch(year) filtert aufs Zieljahr
+            # und verwirft Fremdjahre. Damit die kommende Saison (Folgejahr) jetzt
+            # erscheint, rufen wir die DE-Quellen fuer [laufendes Jahr, Folgejahr]
+            # (ganzjaehrig, kein Saison-Umschalter) auf und mergen/deduplizieren.
+            # GB-Scraper nehmen ohnehin alle Zukunft -> nur einmal (args.year).
+            is_de = filename.endswith("-de.json")
+            years = [args.year, args.year + 1] if is_de else [args.year]
+            print(f"\n── {', '.join(modules)} → {filename}  (Jahre: {', '.join(map(str, years))}) ──────────────────")
 
             all_events = []
             for mp in modules:
-                try:
-                    mod   = importlib.import_module(mp)
-                    batch = mod.fetch(args.year)
-                    print(f"  {mp}: {len(batch)} events")
-                    all_events.extend(batch)
-                except Exception as e:
-                    print(f"  SCRAPER ERROR ({mp}): {e}")
+                for yr in years:
+                    try:
+                        mod   = importlib.import_module(mp)
+                        batch = mod.fetch(yr)
+                        print(f"  {mp} [{yr}]: {len(batch)} events")
+                        all_events.extend(batch)
+                    except Exception as e:
+                        print(f"  SCRAPER ERROR ({mp} [{yr}]): {e}")
 
             events = dedup(sorted(all_events, key=lambda e: e.get("date_iso", "")))
             if filename == "radsport-gb.json":
