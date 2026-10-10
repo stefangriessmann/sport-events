@@ -299,22 +299,28 @@ def main():
             )
             changed_files.append(filename)
 
-    # ── Phase 4: swim-de.json – vergangene Events entfernen ───────────────────
-    swim_path = DATA_DIR / "swim-de.json"
-    swim_events = load_existing("swim-de.json")
-    swim_future = [e for e in swim_events if e.get("date_iso", "9999") >= today_iso]
-    if len(swim_future) < len(swim_events):
-        purged = len(swim_events) - len(swim_future)
-        print(f"\n  swim-de.json: {purged} vergangene(s) Event(s) entfernt.")
-        counts["swim"] = len(swim_future)
-        if not args.dry_run:
-            swim_path.write_text(
-                json.dumps(swim_future, ensure_ascii=False, separators=(",", ":")),
-                encoding="utf-8"
-            )
-            changed_files.append("swim-de.json")
-    else:
-        counts.setdefault("swim", len(swim_events))
+    # ── Phase 4: Vergangene Events aus ALLEN Dateien entfernen ─────────────────
+    # Unabhaengig vom Scraper-Erfolg: ein ortsbasierter, zukunftsgerichteter Guide
+    # zeigt keine vergangenen Termine. Das haelt auch eingefrorene Dateien sauber
+    # (z. B. radsport-de, wenn die Scraper mal nichts liefern und Phase 3 die
+    # bestehende Datei behaelt) und erfuellt den E2E-Test „Keine Events in der
+    # Vergangenheit". Setzt zugleich die finalen counts je Datei.
+    all_files = [fn for (_, fn, _) in SOURCES] + ["swim-de.json"]
+    file_to_sport = {fn: sk for (_, fn, sk) in SOURCES}
+    file_to_sport["swim-de.json"] = "swim"
+    for filename in all_files:
+        current = load_existing(filename)
+        future = [e for e in current if e.get("date_iso", "9999") >= today_iso]
+        counts[file_to_sport[filename]] = len(future)
+        if len(future) < len(current):
+            print(f"\n  {filename}: {len(current) - len(future)} vergangene(s) Event(s) entfernt.")
+            if not args.dry_run:
+                (DATA_DIR / filename).write_text(
+                    json.dumps(future, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8"
+                )
+                if filename not in changed_files:
+                    changed_files.append(filename)
 
     # ── Phase 5: meta.json schreiben ──────────────────────────────────────────
     meta = {

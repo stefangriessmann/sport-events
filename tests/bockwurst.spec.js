@@ -94,11 +94,11 @@ async function switchView(page, view) {
 // ── Test-Setup ──────────────────────────────────────────────────────────────
 
 const SPORTS = [
-  { key: 'rad',  label: 'Radsport',   minEvents: 200 },
+  { key: 'rad',  label: 'Radsport',   minEvents: 25  },
   { key: 'tri',  label: 'Triathlon',  minEvents: 10  },
   { key: 'lauf', label: 'Laufen',     minEvents: 50  },
   { key: 'swim', label: 'Freiwasser', minEvents: 0   },
-  { key: 'all',  label: 'Alle',       minEvents: 300 },
+  { key: 'all',  label: 'Alle',       minEvents: 100 },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -154,12 +154,15 @@ test.describe('2 · Daten-Vollständigkeit', () => {
   test.beforeEach(async ({ page }) => { await load(page); });
 
   // Sichere Floors: fangen einen KAPUTTEN Scrape (nahe 0 / eine Quelle tot),
-  // nicht den saisonalen Rückgang. „upcoming" sinkt übers Jahr (Mitte Juli:
-  // rad ~515, tri ~207, lauf ~198). Schwellen defensiv; ggf. saisonal nachziehen.
+  // nicht den saisonalen Rückgang. Seit die Daten future-only sind (vergangene
+  // Events werden in update_data.py entfernt), zählt EV nur noch kommende Termine
+  // – Richtung Jahresende deutlich weniger. Floors daher auf saisonale Realität
+  // gesenkt (Okt 2026: rad~80 inkl. GB, tri~30, lauf~70); fangen weiter einen
+  // Totalausfall ab. Ggf. saisonal nachziehen.
   const minCounts = {
-    rad:  400,   // Radsport (rad-net + radsport-events.de) – fängt Single-Source-Ausfall (~300)
-    tri:  120,   // Triathlon
-    lauf: 120,   // Laufen
+    rad:  30,    // Radsport (rad-net + radsport-events.de + GB)
+    tri:  20,    // Triathlon
+    lauf: 50,    // Laufen
   };
 
   for (const [sp, min] of Object.entries(minCounts)) {
