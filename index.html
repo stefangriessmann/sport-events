@@ -906,7 +906,7 @@ function renderCal(items){
   const cv=document.getElementById('calView');
   if(!items.length){ cv.innerHTML=emptyHtml(); tl(cv); return; }
   const groups={};
-  items.forEach(e=>{ const dt=new Date(e.datum); const key=dt.getFullYear()+'-'+dt.getMonth(); (groups[key]=groups[key]||[]).push(e); });
+  items.forEach(e=>{ const dt=new Date(e.datum); const key=dt.getFullYear()+'-'+String(dt.getMonth()).padStart(2,'0'); (groups[key]=groups[key]||[]).push(e); });
   cv.innerHTML=Object.keys(groups).sort().map(key=>{
     const [y,m]=key.split('-').map(Number); const moName=(lang==='de'?MO_DE:MO_EN)[m];
     const cards=groups[key].map(e=>{
