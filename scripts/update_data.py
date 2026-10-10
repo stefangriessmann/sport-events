@@ -144,17 +144,26 @@ def main():
     else:
         for module_path, filename, sport_key in SOURCES:
             modules = [module_path] if isinstance(module_path, str) else module_path
-            print(f"\n── {', '.join(modules)} → {filename} ──────────────────")
+
+            # Die DE-Scraper sind jahr-gebunden: fetch(year) filtert aufs Zieljahr
+            # und verwirft Fremdjahre. Damit die kommende Saison (Folgejahr) jetzt
+            # erscheint, rufen wir die DE-Quellen fuer [laufendes Jahr, Folgejahr]
+            # (ganzjaehrig, kein Saison-Umschalter) auf und mergen/deduplizieren.
+            # GB-Scraper nehmen ohnehin alle Zukunft -> nur einmal (args.year).
+            is_de = filename.endswith("-de.json")
+            years = [args.year, args.year + 1] if is_de else [args.year]
+            print(f"\n── {', '.join(modules)} → {filename}  (Jahre: {', '.join(map(str, years))}) ──────────────────")
 
             all_events = []
             for mp in modules:
-                try:
-                    mod   = importlib.import_module(mp)
-                    batch = mod.fetch(args.year)
-                    print(f"  {mp}: {len(batch)} events")
-                    all_events.extend(batch)
-                except Exception as e:
-                    print(f"  SCRAPER ERROR ({mp}): {e}")
+                for yr in years:
+                    try:
+                        mod   = importlib.import_module(mp)
+                        batch = mod.fetch(yr)
+                        print(f"  {mp} [{yr}]: {len(batch)} events")
+                        all_events.extend(batch)
+                    except Exception as e:
+                        print(f"  SCRAPER ERROR ({mp} [{yr}]): {e}")
 
             events = dedup(sorted(all_events, key=lambda e: e.get("date_iso", "")))
             if filename == "radsport-gb.json":
@@ -232,6 +241,28 @@ def main():
 
     for _, filename, sport_key in SOURCES:
         events = scraped_data.get(filename, [])
+        existing = load_existing(filename)
+        is_de = filename.endswith("-de.json")
+
+        # DE saisontauglich: nur zukuenftige Termine behalten UND die bereits
+        # erfassten Zukunfts-Events der bestehenden Datei hineinmischen (dedupe).
+        # Damit (a) blaeht sich die Datei nicht mit Alt-Terminen auf – sonst
+        # blockt der 70%-Schutz unten die saisonale Schrumpfung dauerhaft und
+        # neue Jahrgaenge (z. B. 2027) kommen nie hinein – und (b) gehen bereits
+        # erfasste Zukunfts-Termine nicht verloren, wenn ein Scraper sie in
+        # diesem Lauf mal nicht liefert (z. B. rad-net = 0). Vergleichsbasis fuer
+        # den Ausfall-Schutz sind dann die Zukunfts-Events der bestehenden Datei
+        # (nicht die aufgeblaehte Gesamtzahl). GB bleibt unveraendert
+        # (GB-Scraper nehmen ohnehin alle Zukunft).
+        if is_de:
+            existing_future = [e for e in existing
+                               if (e.get("date_iso") or "") >= today_iso]
+            events = dedup(sorted(
+                [e for e in events if (e.get("date_iso") or "") >= today_iso] + existing_future,
+                key=lambda e: e.get("date_iso", "")))
+            guard_base = len(existing_future)
+        else:
+            guard_base = len(existing)
 
         # Datenqualität (zentral, alle Quellen): Events ohne Koordinaten oder
         # ohne Ort verwerfen. Ein ortsbasierter Guide (Umkreisfilter, Karte)
@@ -247,16 +278,14 @@ def main():
 
         min_req = MIN_EVENTS.get(filename, 10)
 
-        existing = load_existing(filename)
-
         if len(events) < min_req:
             print(f"\n  {filename}: Nur {len(events)} Events (min {min_req}) – bestehende Daten bleiben.")
             counts[sport_key] = len(existing)
             continue
 
-        # 70% threshold guard against scraper timeouts
-        if existing and len(existing) >= min_req and len(events) < 0.70 * len(existing):
-            print(f"\n  ⚠️  {filename}: Neuer Count {len(events)} < 70% des bestehenden {len(existing)} → NICHT überschrieben.")
+        # 70%-Schutz gegen Scraper-Ausfaelle (DE: Zukunft-zu-Zukunft verglichen).
+        if guard_base >= min_req and len(events) < 0.70 * guard_base:
+            print(f"\n  ⚠️  {filename}: Neuer Count {len(events)} < 70% der Vergleichsbasis {guard_base} → NICHT überschrieben.")
             counts[sport_key] = len(existing)
             continue
 
@@ -270,22 +299,28 @@ def main():
             )
             changed_files.append(filename)
 
-    # ── Phase 4: swim-de.json – vergangene Events entfernen ───────────────────
-    swim_path = DATA_DIR / "swim-de.json"
-    swim_events = load_existing("swim-de.json")
-    swim_future = [e for e in swim_events if e.get("date_iso", "9999") >= today_iso]
-    if len(swim_future) < len(swim_events):
-        purged = len(swim_events) - len(swim_future)
-        print(f"\n  swim-de.json: {purged} vergangene(s) Event(s) entfernt.")
-        counts["swim"] = len(swim_future)
-        if not args.dry_run:
-            swim_path.write_text(
-                json.dumps(swim_future, ensure_ascii=False, separators=(",", ":")),
-                encoding="utf-8"
-            )
-            changed_files.append("swim-de.json")
-    else:
-        counts.setdefault("swim", len(swim_events))
+    # ── Phase 4: Vergangene Events aus ALLEN Dateien entfernen ─────────────────
+    # Unabhaengig vom Scraper-Erfolg: ein ortsbasierter, zukunftsgerichteter Guide
+    # zeigt keine vergangenen Termine. Das haelt auch eingefrorene Dateien sauber
+    # (z. B. radsport-de, wenn die Scraper mal nichts liefern und Phase 3 die
+    # bestehende Datei behaelt) und erfuellt den E2E-Test „Keine Events in der
+    # Vergangenheit". Setzt zugleich die finalen counts je Datei.
+    all_files = [fn for (_, fn, _) in SOURCES] + ["swim-de.json"]
+    file_to_sport = {fn: sk for (_, fn, sk) in SOURCES}
+    file_to_sport["swim-de.json"] = "swim"
+    for filename in all_files:
+        current = load_existing(filename)
+        future = [e for e in current if e.get("date_iso", "9999") >= today_iso]
+        counts[file_to_sport[filename]] = len(future)
+        if len(future) < len(current):
+            print(f"\n  {filename}: {len(current) - len(future)} vergangene(s) Event(s) entfernt.")
+            if not args.dry_run:
+                (DATA_DIR / filename).write_text(
+                    json.dumps(future, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8"
+                )
+                if filename not in changed_files:
+                    changed_files.append(filename)
 
     # ── Phase 5: meta.json schreiben ──────────────────────────────────────────
     meta = {
