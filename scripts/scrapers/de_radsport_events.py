@@ -1,429 +1,266 @@
 """
-de_radsport_events.py – Scraper for radsport-events.de cycling calendar.
+de_radsport_events.py – Scraper for radsport-events.de (Rennrad/Gravel, DE).
 
-Full listing (server-rendered HTML, ISO-8859-1):
-  https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php
-Pagination: ?kal_Start=N  (N=1, 22, 43, 64, ...; step=21)
-Event canonical URL: ?kal_Aktion=detail&kal_Nummer=NNNN
+Die Seite wurde 2026 auf eine client-gerenderte React-SPA umgebaut: die alte
+`…/kalender.php` leitet per 301 auf `/rennrad-events` um, und die Eventliste
+entsteht erst im Browser (kein Server-HTML). Das Frontend bezieht seine Daten
+aber von einer sauberen, öffentlichen REST-API:
 
-HTML structure per event (4 x div.kalTbLst inside a per-event container div):
-  cells[0] = date:       "27.06.2026\xa0Sa-\xa028.06.2026\xa0So"  (or single day)
-  cells[1] = title+cat:  <a class="kalDetl">TITLE</a><div class="uzl">CATEGORY</div>
-  cells[2] = distance:   "122 / 233 / 333 km 2500 / 4600 / 6400 Hm"
-  cells[3] = location:   PLZ + City + Country + State (may be concatenated)
+    GET https://api.radsport-events.de/api/v1/events
+        ?page=0&size=200&country=DE&date=YYYY-01-01&dateTo=YYYY-12-31
 
-Scope: Germany-only, future events, current year.
+Antwort (paginiert): {"content": [ …Events… ], "totalPages": N, …}. Jedes
+Event liefert fertige Koordinaten (latitude/longitude), postalCode, city,
+bundesland, category (ROAD/GRAVEL/MTB), eventType, distances[] u. v. m. – es ist
+also KEIN Geocoding und KEINE Standort-Heuristik nötig, und der Scraper braucht
+nur `requests` (kein Playwright/Chromium → keine Workflow-Änderung).
+
+Scope: Deutschland (API-Filter country=DE), Kategorien ROAD+GRAVEL, nur
+zukünftige Termine des Zieljahres. Nicht-Radsport (Triathlon/Duathlon) und
+virtuelle Events werden übersprungen.
 """
-from __future__ import annotations  # Python 3.9 compat for type hints
-import re
+from __future__ import annotations  # Python 3.9 compat
+
 import time
-from datetime import date
+from datetime import date, datetime
 
 import requests
-from bs4 import BeautifulSoup
-from _geocode import geocode, geocode_plz
 
-BASE      = "https://radsport-events.de/Termine-Hobby-und-Jedermannrennen/kalender.php"
-HEADERS   = {
-    "User-Agent": "Mozilla/5.0 (compatible; bockwurst-events/2.0; +github.com/stefangriessmann/sport-events)",
+API_URL = "https://api.radsport-events.de/api/v1/events"
+DETAIL_URL = "https://radsport-events.de/events/{id}"  # kanonische Event-URL
+HEADERS = {
+    "User-Agent": "bockwurst-events/2.0 (+github.com/stefangriessmann/sport-events)",
+    "Accept": "application/json",
 }
+PAGE_SIZE = 200
+MAX_PAGES = 50  # Sicherheitsobergrenze
 
-PAGE_STEP = 21
+# Welche Rad-Kategorien in den Guide einfließen. MTB ist bewusst aus (die Site
+# ist Rennrad/Gravel-fokussiert); zum Aktivieren einfach "MTB" ergänzen – das
+# ART_MAP unten deckt die MTB-Eventtypen bereits ab.
+CATEGORIES = {"ROAD", "GRAVEL"}
 
-# LV fallback: state centroid coords + names (mirrors de_radnet.py – kept in sync manually)
-LV_COORD_FALLBACK: dict[str, tuple[float, float]] = {
-    "BAY": (48.79, 11.50), "NRW": (51.43, 7.66),  "BRA": (52.52, 13.40),
-    "SAC": (51.05, 13.74), "SA":  (51.50, 11.97),  "THÜ": (50.98, 11.03),
-    "NDS": (52.37, 9.74),  "HES": (50.11, 8.68),   "SCH": (54.32, 10.12),
-    "RLP": (50.00, 7.27),  "BER": (52.52, 13.40),  "BAD": (48.99, 8.41),
-    "WÜR": (49.79, 9.95),  "SAA": (49.24, 6.99),   "HAM": (53.58, 10.02),
-    "BRE": (53.08, 8.80),  "MEV": (53.64, 11.40),
-}
-LV_STATE_NAMES: dict[str, str] = {
-    "BAY": "Bayern",         "NRW": "Nordrhein-Westfalen", "BRA": "Brandenburg",
-    "SAC": "Sachsen",        "SA":  "Sachsen-Anhalt",      "THÜ": "Thüringen",
-    "NDS": "Niedersachsen",  "HES": "Hessen",              "SCH": "Schleswig-Holstein",
-    "RLP": "Rheinland-Pfalz","BER": "Berlin",              "BAD": "Baden",
-    "WÜR": "Württemberg",    "SAA": "Saarland",            "HAM": "Hamburg",
-    "BRE": "Bremen",         "MEV": "Mecklenburg-Vorpommern",
-}
+# Nicht-Radsport bzw. virtuelle Eventtypen überspringen (Triathlon/Duathlon
+# gehören in triathlon-de.json; virtuelle RTFs haben keinen echten Ort).
+SKIP_EVENT_TYPES = {"TRIATHLON", "DUATHLON", "DUATHLON_CROSS", "VIRTUELLE_RTF"}
 
-SKIP_ARTS = {
-    "Etappenfahrt", "Sonstige", "Vintage-Tour", "Triathlon", "Duathlon",
-    "Swimrun", "Swim & Run", "24 h Rennen", "12 h Rennen",
-}
-
+# eventType (API-Enum) → Anzeige-„art". Die Labels erscheinen 1:1 im Typ-Filter
+# der Site; index.html ordnet jede hier gelieferte art automatisch dem Sport
+# „rad" zu (TYPE_SPORT[art]=sp beim Laden). Wichtig: KEIN Label „Ultra" o. Ä.,
+# das mit den fest verdrahteten TYPE_SPORT-Keys (Ultra→lauf, Triathlon→tri …)
+# kollidieren würde – daher „Ultracycling".
 ART_MAP = {
-    "Radtourenfahrt":   "RTF",
-    "Radtourenfahrten": "RTF",
-    "Brevet":           "Brevet",
-    "Radmarathon":      "Marathon",
-    "Jedermannrennen":  "Marathon",
-    "Hobbyrennen":      "Marathon",
-    "Volksradfahren":   "Volksradfahren",
-    "Einzelzeitfahren": "CTF",
-    "Bergzeitfahren":   "CTF",
-    "Gravelride":       "Gravelride",
-    "Gravelevent":      "Gravelride",
-    "Gravel":           "Gravelride",
+    # ROAD
+    "RTF": "RTF",
+    "BREVET": "Brevet",
+    "RADMARATHON": "Marathon",
+    "JEDERMANN": "Jedermannrennen",
+    "HOBBYRENNEN": "Jedermannrennen",
+    "VOLKSRADFAHREN": "Volksradfahren",
+    "EINZELZEITFAHREN": "Zeitfahren",
+    "ULTRA": "Ultracycling",
+    "ETAPPENRENNEN": "Etappenrennen",
+    "RENNEN_24H": "24h-Rennen",
+    "RENNEN_12H": "12h-Rennen",
+    "RENNEN_2_3_6H": "Zeitrennen",
+    # GRAVEL
+    "GRAVEL_RIDE": "Gravel",
+    "GRAVEL_TOUR": "Gravel",
+    "GRAVEL_RACE": "Gravel Race",
+    "GRAVEL_CAMP": "Gravel Camp",
+    "GRAVEL_SONSTIGES": "Gravel",
+    "BIKEPACKING": "Bikepacking",
+    # MTB (nur relevant, falls "MTB" zu CATEGORIES hinzugefügt wird)
+    "CTF": "CTF",
+    "MTB_MARATHON": "MTB-Marathon",
+    "CROSSCOUNTRY": "Cross-Country",
+    "CYCLOCROSS": "Cyclocross",
+    "DOWNHILL": "Downhill",
+    "ENDURO": "Enduro",
+    "HILLCLIMB": "Bergzeitfahren",
+    "SONSTIGE_MTB": "MTB",
 }
 
-STATE_MAP = [
-    ("sachsen-anhalt",      "SA"),
-    ("sachsen",             "SAC"),
-    ("thüringen",      "THÜ"),
-    ("thueringen",          "THÜ"),
-    ("thuringen",           "THÜ"),
-    ("thuring",             "THÜ"),
-    ("bayern",              "BAY"),
-    ("niedersachsen",       "NDS"),
-    ("hessen",              "HES"),
-    ("nordrhein-westfalen", "NRW"),
-    ("nordrhein",           "NRW"),
-    ("westfalen",           "NRW"),
-    ("brandenburg",         "BRA"),
-    ("mecklenburg",         "MEV"),
-    ("vorpommern",          "MEV"),
-    ("schleswig-holstein",  "SCH"),
-    ("schleswig",           "SCH"),
-    ("rheinland-pfalz",     "RLP"),
-    ("rheinland",           "RLP"),
-    ("berlin",              "BER"),
-    ("hamburg",             "HAM"),
-    ("bremen",              "BRE"),
-    ("saarland",            "SAA"),
-    ("württemberg",    "WÜR"),
-    ("wuerttemberg",        "WÜR"),
-    ("wurttemberg",         "WÜR"),
-    ("baden",               "BAD"),
-]
-
-WDAY_DE = {
-    "Mo": "Montag", "Di": "Dienstag", "Mi": "Mittwoch",
-    "Do": "Donnerstag", "Fr": "Freitag", "Sa": "Samstag", "So": "Sonntag",
+# 16 Bundesländer → Kurzcode (für die Anzeige „DE · <Code>", wie bei de_radnet).
+BUNDESLAND_LV = {
+    "Baden-Württemberg": "BW", "Bayern": "BAY", "Berlin": "BER",
+    "Brandenburg": "BRA", "Bremen": "BRE", "Hamburg": "HAM", "Hessen": "HES",
+    "Mecklenburg-Vorpommern": "MEV", "Niedersachsen": "NDS",
+    "Nordrhein-Westfalen": "NRW", "Rheinland-Pfalz": "RLP", "Saarland": "SAA",
+    "Sachsen": "SAC", "Sachsen-Anhalt": "SA", "Schleswig-Holstein": "SCH",
+    "Thüringen": "THÜ",
 }
 
-# Known country keywords to split location text
-COUNTRY_KEYWORDS = [
-    "Deutschland", "Frankreich", "Österreich", "Oesterreich",
-    "Schweiz", "Italien", "Belgien", "Niederlande", "Spanien",
-    "Tschechien", "Polen", "Dänemark",
-]
+WDAY_ABBR = {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"}
+WDAY_FULL = {
+    "Mo": "Montag", "Di": "Dienstag", "Mi": "Mittwoch", "Do": "Donnerstag",
+    "Fr": "Freitag", "Sa": "Samstag", "So": "Sonntag",
+}
 
 
-def _lv_from_state(state_text: str) -> str:
-    t = state_text.lower()
-    for fragment, code in STATE_MAP:
-        if fragment in t:
-            return code
-    return ""
-
-
-def _parse_date_cell(cell_text: str):
-    """
-    Parse date cell, possibly multi-day.
-    Handles \\xa0 (non-breaking space) used as separator on radsport-events.de.
-    Examples:
-      '31.05.2026\\xa0So'
-      '27.06.2026\\xa0Sa-\\xa028.06.2026\\xa0So'
-    Returns (date_iso, date_iso_end, datum, datum_end, wochentag) or None.
-    """
-    # Normalise non-breaking spaces and runs of whitespace to a single space
-    clean = re.sub(r"[\xa0\s]+", " ", cell_text).strip()
-
-    start_m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})\s+([A-Za-z]{2})", clean)
-    if not start_m:
+def _fmt_datum(date_iso: str):
+    """'2026-10-10' → ('Sa, 10.10.2026', 'Sa', 'Samstag') oder None."""
+    try:
+        dt = datetime.strptime(date_iso, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
         return None
-
-    d1, m1, y1, wd1 = start_m.groups()
-    date_iso  = f"{y1}-{m1}-{d1}"
-    datum     = f"{wd1}, {d1}.{m1}.{y1}"
-    wochentag = WDAY_DE.get(wd1, "")
-
-    remainder = clean[start_m.end():]
-    end_m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})(?:\s+([A-Za-z]{2}))?", remainder)
-    if end_m:
-        d2, m2, y2 = end_m.group(1), end_m.group(2), end_m.group(3)
-        date_iso_end = f"{y2}-{m2}-{d2}"
-        datum_end    = f"{d2}.{m2}.{y2}"
-    else:
-        date_iso_end = None
-        datum_end    = None
-
-    return date_iso, date_iso_end, datum, datum_end, wochentag
+    wd = WDAY_ABBR[dt.weekday()]
+    return f"{wd}, {dt.strftime('%d.%m.%Y')}", wd, WDAY_FULL[wd]
 
 
-def _parse_location(cell_text: str):
-    """
-    Parse location cell from radsport-events.de.
+def _strecken(distances: list) -> str:
+    """distances[] → '55/80/105' (aufsteigend, dedupliziert)."""
+    kms = []
+    for d in distances or []:
+        km = d.get("distanceKm")
+        if km is None:
+            continue
+        kms.append(int(km) if float(km).is_integer() else round(float(km), 1))
+    uniq = sorted(dict.fromkeys(kms))
+    return "/".join(str(k) for k in uniq)
 
-    HTML child elements produce varying line structures when using get_text("\\n"):
-      [city, PLZ, country, state]           (most common)
-      [PLZ, city, country, state]
-      [PLZ+city, country, state]            (concatenated, single line)
-      "PLZCityCountryState"                 (all concatenated, no newlines)
 
-    Approach:
-      1. Detect foreign country anywhere in full text → reject.
-      2. Detect "Deutschland" anywhere in full text → accept.
-      3. Find the country line and extract city + PLZ from lines before it.
-      4. Fall back to single-line split on "Deutschland".
-
-    Returns (ort, plz, country_raw, lv).
-    country_raw="" means Germany assumed (site is German-focused, accept the event).
-    """
-    # Normalised full text
-    full      = re.sub(r"[\xa0]", " ", cell_text)
-    full_flat = re.sub(r"\s+", " ", full).strip()
-
-    # Step 1 – skip explicit foreign events (4-digit PLZ = AT/CH tip-off too)
-    FOREIGN = [
-        "Frankreich", "Österreich", "Oesterreich", "Schweiz", "Italien",
-        "Belgien", "Niederlande", "Spanien", "Tschechien", "Polen",
-        "Dänemark", "France", "Belgium", "Netherlands",
-        "Kroatien", "Croatia", "Hrvatska",
-        "Slowenien", "Slovenia", "Ungarn", "Hungary",
-        "Rumänien", "Romania", "Bulgarien", "Luxemburg",
-    ]
-    for fw in FOREIGN:
-        if fw in full_flat:
-            return "foreign", "", fw, ""
-
-    # Step 2 – extract LV from full text
-    lv = _lv_from_state(full_flat)
-
-    # Helper: extract 5-digit German PLZ from a text fragment
-    def _extract_plz(text: str) -> str:
-        m = re.search(r"\b(\d{5})\b", text)
-        return m.group(1) if m else ""
-
-    # Step 3 – newline-separated lines (most common)
-    lines = [l.strip() for l in full.splitlines() if l.strip()]
-    if len(lines) >= 2:
-        country_idx = next(
-            (i for i, l in enumerate(lines) if "Deutschland" in l),
-            len(lines)
-        )
-        pre = lines[:country_idx]
-        plz = ""
-        # Dedicated PLZ-only line
-        for l in pre:
-            if re.fullmatch(r"\d{5}", l):
-                plz = l
-                break
-        # City lines = non-PLZ-only lines
-        city_lines = [l for l in pre if not re.fullmatch(r"\d{4,5}", l)]
-        if city_lines:
-            plz_m = re.match(r"(\d{5})\s+(.*)", city_lines[0])
-            if plz_m:
-                plz = plz_m.group(1)
-                ort = plz_m.group(2).strip()
-            else:
-                ort = city_lines[0]
-        elif pre:
-            ort = pre[-1]
-        else:
-            ort = ""
-        if not plz:
-            plz = _extract_plz(" ".join(pre))
-        country_raw = "Deutschland" if country_idx < len(lines) else ""
-        return ort or full_flat[:40], plz, country_raw, lv
-
-    # Step 4 – single-line split on "Deutschland"
-    if "Deutschland" in full_flat:
-        before = full_flat[:full_flat.index("Deutschland")]
-        plz    = _extract_plz(before)
-        plz_m  = re.match(r"\d{5}\s*(.*)", before.strip())
-        if plz_m:
-            ort = plz_m.group(1).strip()
-        else:
-            plz_m2 = re.match(r"\d{5}(.*)", before.strip())
-            ort = plz_m2.group(1).strip() if plz_m2 else before.strip()
-        return ort or before.strip() or full_flat[:40], plz, "Deutschland", lv
-
-    # Step 5 – no country keyword: best-effort
-    plz = _extract_plz(full_flat)
-    plz_m = re.match(r"\d{5}\s*(.*)", full_flat)
-    if plz_m:
-        ort = plz_m.group(1).strip()
-    else:
-        plz_m2 = re.match(r"\d{5}(.*)", full_flat)
-        ort = plz_m2.group(1).strip() if plz_m2 else full_flat[:40]
-    return ort or full_flat[:40], plz, "", lv
+def _fetch_page(session: requests.Session, params: dict):
+    """Eine API-Seite holen; None bei (auch nach einem Retry) anhaltendem Fehler."""
+    for attempt in range(2):
+        try:
+            r = session.get(API_URL, params=params, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            print(f"  [rse] API-Fehler (Versuch {attempt + 1}/2) page={params.get('page')}: {e}")
+            if attempt == 0:
+                time.sleep(2)
+    return None
 
 
 def fetch(year: int) -> list[dict]:
     """
-    Fetch all German cycling events for the given year from radsport-events.de.
-    Filters to Germany only; skips arts in SKIP_ARTS.
+    Rad-Events (DE, ROAD+GRAVEL) des Zieljahres von radsport-events.de.
+
+    Holt alle Seiten der REST-API im Datumsfenster [year-01-01, year-12-31],
+    filtert auf Zukunft + Zieljahr + gewünschte Kategorien und liefert das
+    gemeinsame Ausgabeschema der de_*-Scraper.
     """
-    today     = date.today().isoformat()
+    today = date.today().isoformat()
+    base_params = {
+        "country": "DE",
+        "date": f"{year}-01-01",
+        "dateTo": f"{year}-12-31",
+        "size": PAGE_SIZE,
+    }
+
+    print(f"[radsport-events.de] Fetching {year} events via REST API (ROAD+GRAVEL)...")
+
+    session = requests.Session()
     events: list[dict] = []
-    seen_ids: set[str] = set()
-    skipped_no_geo = 0
+    seen_ids: set = set()
+    skipped_year = skipped_cat = skipped_type = skipped_cancelled = skipped_nodate = 0
 
-    print(f"[radsport-events.de] Fetching {year} cycling events...")
+    total_pages = None
+    page = 0
+    while page < MAX_PAGES:
+        data = _fetch_page(session, {**base_params, "page": page})
+        if data is None:
+            print(f"  Seite {page} dauerhaft fehlerhaft – breche Paginierung ab")
+            break
 
-    last_start = None
-    kal_start  = 1
-    page_num   = 0
+        content = data.get("content", []) or []
+        if total_pages is None:
+            total_pages = data.get("totalPages", 1)
+            print(f"  {data.get('totalElements', '?')} DE-Treffer {year}, {total_pages} Seite(n)")
 
-    while True:
-        page_num += 1
-        url = BASE if kal_start == 1 else f"{BASE}?kal_Start={kal_start}"
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=20)
-            r.raise_for_status()
-            r.encoding = "iso-8859-1"
-        except Exception as e:
-            print(f"  Error fetching page {page_num} (kal_Start={kal_start}): {e}")
-            time.sleep(1)
-            kal_start += PAGE_STEP
-            continue
-
-        soup = BeautifulSoup(r.text, "lxml")
-
-        # Detect last page from ">|" pagination link
-        if last_start is None:
-            last_link = soup.find("a", title="Ende")
-            if last_link and last_link.get("href"):
-                m = re.search(r"kal_Start=(\d+)", last_link["href"])
-                if m:
-                    last_start = int(m.group(1))
-                    print(f"  Last page at kal_Start={last_start}")
-
-        page_count = 0
-
-        # Each event has an <a class="kalDetl"> link inside a div.kalTbLst.
-        # The grandparent of that link is the per-event container with 4 div.kalTbLst children.
-        for a_tag in soup.find_all("a", class_="kalDetl"):
-            href  = a_tag.get("href", "")
-            num_m = re.search(r"kal_Nummer=(\d+)", href)
-            if not num_m:
-                continue
-            kal_num = num_m.group(1)
-            if kal_num in seen_ids:
+        for ev in content:
+            ev_id = ev.get("id")
+            if ev_id in seen_ids:
                 continue
 
-            title_div = a_tag.parent   # div.kalTbLst that wraps the link
-            if not title_div:
+            date_iso = ev.get("eventDate") or ""
+            fmt = _fmt_datum(date_iso)
+            if not fmt:
+                skipped_nodate += 1
                 continue
-            row = title_div.parent     # per-event container
-            if not row:
-                continue
+            datum, _wd, wochentag = fmt
 
-            cells = row.find_all("div", class_="kalTbLst")
-            if len(cells) < 4:
-                continue
-
-            # Cell 0: date
-            date_text = re.sub(r"[\xa0\s]+", " ", cells[0].get_text()).strip()
-            parsed = _parse_date_cell(date_text)
-            if not parsed:
-                continue
-            date_iso, date_iso_end, datum, datum_end, wochentag = parsed
-
-            # Filter: target year and future only
-            if not date_iso.startswith(str(year)):
-                continue
-            if date_iso < today:
+            # Nur Zukunft + Zieljahr (dateTo begrenzt bereits, heute zusätzlich).
+            if not date_iso.startswith(str(year)) or date_iso < today:
+                skipped_year += 1
                 continue
 
-            # Cell 1: title from link text; category from nested div.uzl
-            titel = a_tag.get_text(strip=True)
-            if not titel:
+            if ev.get("category") not in CATEGORIES:
+                skipped_cat += 1
                 continue
 
-            cat_div = a_tag.find_next_sibling("div", class_="uzl")
-            art_raw = cat_div.get_text(strip=True) if cat_div else ""
-
-            art = ART_MAP.get(art_raw, "")
-            if not art:
-                art_lower = art_raw.lower()
-                if "rtf" in art_lower or "radtour" in art_lower:
-                    art = "RTF"
-                elif "brevet" in art_lower:
-                    art = "Brevet"
-                elif "marathon" in art_lower:
-                    art = "Marathon"
-                elif "gravel" in art_lower:
-                    art = "Gravelride"
-                elif "zeitfahr" in art_lower:
-                    art = "CTF"
-                elif "jedermann" in art_lower or "hobbyrennen" in art_lower:
-                    art = "Marathon"
-                elif "volksrad" in art_lower:
-                    art = "Volksradfahren"
-                else:
-                    continue  # skip unknown/unwanted types
-
-            if art_raw in SKIP_ARTS:
+            event_type = ev.get("eventType") or ""
+            if event_type in SKIP_EVENT_TYPES:
+                skipped_type += 1
                 continue
 
-            # Cell 2: distance / strecken
-            strecken = cells[2].get_text(" ", strip=True)
-
-            # Cell 3: location
-            loc_text = cells[3].get_text("\n", strip=True)
-            ort, plz, country_raw, lv = _parse_location(loc_text)
-
-            # Germany only: skip events explicitly tagged as foreign
-            if ort == "foreign":
+            # Abgesagte Events ausblenden (die Site kennzeichnet sie, unser
+            # schlankes Guide-Schema nicht – also lieber nicht anzeigen).
+            if ev.get("cancelled"):
+                skipped_cancelled += 1
                 continue
 
-            # Skip virtual/online events (e.g. Zwift vRTF) – no physical location
-            if "virtuell" in ort.lower():
+            lat, lon = ev.get("latitude"), ev.get("longitude")
+            ort = (ev.get("city") or ev.get("locationName") or "").strip()
+            # Ortsbasierter Guide: ohne Koordinaten/Ort kippt der zentrale
+            # Qualitätsfilter in update_data.py das Event ohnehin.
+            if lat is None or lon is None or not ort:
                 continue
 
-            seen_ids.add(kal_num)
-            url_ev = f"{BASE}?kal_Aktion=detail&kal_Nummer={kal_num}"
-            coords = geocode_plz(plz) if plz else geocode(ort)
-            # LV fallback: use state centroid when geocoding failed but LV is known
-            if coords["lat"] is None and lv in LV_COORD_FALLBACK:
-                coords = {"lat": LV_COORD_FALLBACK[lv][0], "lon": LV_COORD_FALLBACK[lv][1]}
-            if not ort and lv in LV_STATE_NAMES:
-                ort = LV_STATE_NAMES[lv]
+            seen_ids.add(ev_id)
 
-            # Skip events without a resolvable location (empty "(Start-)Ort",
-            # no PLZ, no LV centroid fallback) – they would carry null coords.
-            if coords["lat"] is None or coords["lon"] is None:
-                skipped_no_geo += 1
-                continue
+            # Mehrtägig: endDate (falls abweichend) als Ende übernehmen.
+            end_iso = ev.get("endDate")
+            if end_iso and end_iso != date_iso and _fmt_datum(end_iso):
+                date_iso_end = end_iso
+                datum_end = datetime.strptime(end_iso, "%Y-%m-%d").strftime("%d.%m.%Y")
+            else:
+                date_iso_end = None
+                datum_end = None
 
             events.append({
-                "art":          art,
+                "art":          ART_MAP.get(event_type, "Sonstige"),
                 "datum":        datum,
                 "datum_end":    datum_end,
                 "wochentag":    wochentag,
                 "date_iso":     date_iso,
                 "date_iso_end": date_iso_end,
                 "km":           None,
-                "lat":          coords["lat"],
-                "lon":          coords["lon"],
-                "titel":        titel,
+                "lat":          lat,
+                "lon":          lon,
+                "titel":        (ev.get("title") or "").strip(),
                 "ort":          ort,
-                "plz":          plz,
-                "strecken":     strecken,
-                "verein":       "",
-                "lv":           lv,
+                "plz":          (ev.get("postalCode") or "").strip(),
+                "strecken":     _strecken(ev.get("distances")),
+                "verein":       (ev.get("organizer") or "").strip(),
+                "lv":           BUNDESLAND_LV.get(ev.get("bundesland") or "", ""),
                 "country":      "DE",
-                "url":          url_ev,
+                "url":          DETAIL_URL.format(id=ev_id),
                 "serie":        "",
             })
-            page_count += 1
 
-        print(f"  Page {page_num} (kal_Start={kal_start}): +{page_count} DE events (total {len(events)})")
-
-        if last_start is not None and kal_start >= last_start:
+        page += 1
+        if total_pages is not None and page >= total_pages:
             break
-        kal_start += PAGE_STEP
-        time.sleep(0.4)
+        time.sleep(0.3)  # höflich zur API
 
-        if page_num > 50:
-            print("  Safety cap reached (50 pages)")
-            break
-
-    print(f"  {len(events)} total future {year} events collected (Germany only)")
-    if skipped_no_geo:
-        print(f"  {skipped_no_geo} event(s) skipped: no resolvable location (empty (Start-)Ort)")
+    print(
+        f"  {len(events)} DE-Events {year} übernommen (übersprungen: "
+        f"{skipped_year} Jahr/Vergangenheit, {skipped_cat} andere Kategorie, "
+        f"{skipped_type} Nicht-Radsport/virtuell, {skipped_cancelled} abgesagt, "
+        f"{skipped_nodate} ohne Datum)"
+    )
     return sorted(events, key=lambda e: e["date_iso"])
+
+
+if __name__ == "__main__":  # manueller Test: python de_radsport_events.py [year]
+    import sys
+    yr = int(sys.argv[1]) if len(sys.argv) > 1 else date.today().year
+    evs = fetch(yr)
+    for e in evs[:8]:
+        rng = f"–{e['date_iso_end']}" if e["date_iso_end"] else ""
+        print(f"{e['date_iso']}{rng} {e['lv']:>3} {e['ort']} – {e['titel']} "
+              f"[{e['art']}] ({e['strecken']})")
+    print(f"total: {len(evs)}")
