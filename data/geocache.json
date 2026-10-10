@@ -4402,5 +4402,85 @@
   "76 / 112 / 176 km": {
     "lat": 51.1638175,
     "lon": 10.4478313
+  },
+  "winnenden": {
+    "lat": 48.8760958,
+    "lon": 9.3993124
+  },
+  "ostseebad binz": {
+    "lat": 54.4010291,
+    "lon": 13.6076477
+  },
+  "augsburg": {
+    "lat": 48.3690341,
+    "lon": 10.8979522
+  },
+  "hövelhof": {
+    "lat": 51.8203938,
+    "lon": 8.6588368
+  },
+  "wolfsburg": {
+    "lat": 52.4205588,
+    "lon": 10.7861682
+  },
+  "osterode am harz": {
+    "lat": 51.72784,
+    "lon": 10.2508204
+  },
+  "bad wünnenberg": {
+    "lat": 51.5169114,
+    "lon": 8.6986809
+  },
+  "wittmar": {
+    "lat": 52.1302725,
+    "lon": 10.6415533
+  },
+  "kassel-wilhelmshöhe": {
+    "lat": 51.3113881,
+    "lon": 9.4477049
+  },
+  "kronberg im taunus": {
+    "lat": 50.1796561,
+    "lon": 8.5085855
+  },
+  "braunschweig-schapen": {
+    "lat": 52.2888863,
+    "lon": 10.5929595
+  },
+  "diekholzen": {
+    "lat": 52.0944417,
+    "lon": 9.915534
+  },
+  "wilsche-neubokel": {
+    "lat": 52.5085583,
+    "lon": 10.4817084
+  },
+  "evessen": {
+    "lat": 52.188673,
+    "lon": 10.7089033
+  },
+  "thale": {
+    "lat": 51.7527606,
+    "lon": 11.037722
+  },
+  "neuhaus": {
+    "lat": 53.7992554,
+    "lon": 9.0322505
+  },
+  "laatzen-rethen": {
+    "lat": 52.3082453,
+    "lon": 9.8722176
+  },
+  "alfeld-warzen": {
+    "lat": 51.9815398,
+    "lon": 9.8175148
+  },
+  "bad driburg": {
+    "lat": 51.7366427,
+    "lon": 9.0175012
+  },
+  "ahnatal": {
+    "lat": 51.365326,
+    "lon": 9.4051218
   }
 }

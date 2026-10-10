@@ -80,7 +80,6 @@ sport-events/
 │   ├── build_plz_map.py           # Baut data/plz_map.json
 │   ├── approve_event.py           # Parst freigegebenes Issue → approved_events.json
 │   ├── notify_resend.py           # Ergebnis-Mail via Resend (für CI)
-│   ├── update_snapshots.py        # ALTLAST: altes Modell, schreibt in index.html (siehe §12)
 │   └── scrapers/                  # Ein Scraper pro Quelle, jeweils fetch(year) -> list[dict]
 │       ├── de_radnet.py           # rad-net.de
 │       ├── de_radsport_events.py  # radsport-events.de
@@ -97,7 +96,7 @@ sport-events/
 │   ├── weekly_update.yml          # Wöchentliches Daten-Scraping (aktiv, maßgeblich)
 │   ├── e2e.yml                    # Playwright-Tests nach jedem Deploy
 │   ├── approve_event.yml          # Event-Freigabe per Label
-│   └── monthly-update.yml         # ALTLAST: ruft update_snapshots.py (siehe §12)
+│   └── monthly-update.yml         # Monatlicher Lauf: ruft update_data.py → data/*.json
 ├── CLAUDE.md                      # Projektkontext für Agenten – VERALTET (siehe §12)
 └── docs/
     └── TECHNISCHE-DOKUMENTATION.md # diese Datei
@@ -312,7 +311,7 @@ Ohne `BASE_URL` läuft die Suite gegen die Live-URL.
 
 > Dieser Abschnitt ist der wichtigste für die Wartung. Hier stehen die Stolperfallen, die schon einmal zu Regressionen geführt haben oder noch latent sind.
 
-1. **`update_snapshots.py` ist abgelöst (Stand 22.06.2026).** `approve_event.yml` und `monthly-update.yml` rufen jetzt `update_data.py` auf und committen `data/*.json` statt `index.html`. Das frühere Regressionsrisiko – ein Scraping-Job erzeugt `index.html` neu und überschreibt das Design – ist damit beseitigt. `scripts/update_snapshots.py` wird von keinem Workflow mehr verwendet und kann bei Gelegenheit entfernt werden.
+1. **Snapshot-Modell abgelöst und entfernt (Stand 10.10.2026).** `approve_event.yml`, `weekly_update.yml` und `monthly-update.yml` rufen `update_data.py` auf und committen `data/*.json` statt `index.html`. Das frühere Regressionsrisiko – ein Scraping-Job erzeugt `index.html` neu und überschreibt das Design – ist damit beseitigt. Das alte `scripts/update_snapshots.py` sowie die veraltete Top-Level-Dublette `scripts/de_radsport_events.py` (alter BeautifulSoup-HTML-Scraper gegen die inzwischen tote `kalender.php`) wurden gelöscht; der aktive Radsport-Scraper ist `scripts/scrapers/de_radsport_events.py` (REST-API).
 2. **`index.html` darf nie von einem Scraping-Job neu erzeugt werden.** Genau das hat früher das Relaunch-Design überschrieben. Nur `update_data.py` (Daten) und gezielte Entwickler-Commits (Design) sind erlaubt.
 3. **Geleakte Tokens.** In früheren `HANDOVER.md`/`STATUS.md` standen GitHub-Tokens im Klartext. Diese sind zu widerrufen/rotieren. Tokens gehören ausschließlich in Netlify-Env-Vars bzw. GitHub-Secrets, nie in den Quellcode.
 4. **`CLAUDE.md`** ist auf die aktuelle Architektur aktualisiert und verweist als schlanker Agenten-Einstieg auf diese Doku.
