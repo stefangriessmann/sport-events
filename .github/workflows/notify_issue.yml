@@ -1,0 +1,43 @@
+name: Neuer Event-Vorschlag → Mail
+
+# Schickt bei jedem neu eröffneten Issue (= Event-Vorschlag über das Formular)
+# eine Mail via Resend an NOTIFY_TO (Default: stefan.griessmann@web.de),
+# damit Vorschläge nicht im GitHub-Postfach untergehen.
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Mail via Resend
+        # Issue-Felder bewusst über ENV (nicht inline ${{ }}) → kein Shell-Injection
+        # über benutzergesteuerte Titel/Texte.
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ISSUE_TITLE:    ${{ github.event.issue.title }}
+          ISSUE_BODY:     ${{ github.event.issue.body }}
+          ISSUE_URL:      ${{ github.event.issue.html_url }}
+          ISSUE_USER:     ${{ github.event.issue.user.login }}
+        run: |
+          python3 scripts/notify_resend.py \
+            "[bockwurst.cc] Neuer Event-Vorschlag: $ISSUE_TITLE" \
+            "Es ist ein neuer Event-Vorschlag eingegangen.
+
+          Von:   $ISSUE_USER
+          Link:  $ISSUE_URL
+
+          --- Inhalt ---
+          $ISSUE_BODY
+
+          --- Freigeben ---
+          Label 'approved' am Issue setzen – dann geht der Event automatisch live."
