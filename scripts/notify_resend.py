@@ -31,7 +31,14 @@ payload = {"from": sender, "to": [to], "subject": subject, "text": text}
 req = urllib.request.Request(
     "https://api.resend.com/emails",
     data=json.dumps(payload).encode("utf-8"),
-    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+    headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        # Ohne User-Agent sendet urllib "Python-urllib/..." → Cloudflare vor
+        # api.resend.com bannt das (error 1010). Ein normaler UA kommt durch.
+        "User-Agent": "Mozilla/5.0 (compatible; bockwurst.cc-notify/1.0; +https://bockwurst.cc)",
+        "Accept": "application/json",
+    },
 )
 try:
     resp = urllib.request.urlopen(req, timeout=20)
