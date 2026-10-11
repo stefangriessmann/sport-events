@@ -175,6 +175,7 @@ def main():
         try:
             approved_raw = json.loads(APPROVED_PATH.read_text(encoding="utf-8"))
             added = 0
+            updated = 0
 
             # Map sport_key → filename
             sport_to_file = {sk: fn for (_, fn, sk) in SOURCES}
@@ -198,29 +199,41 @@ def main():
 
                 ev_clean = {k: v for k, v in ev.items() if not k.startswith("_")}
 
+                # Geocode if ort/plz is set but lat/lon are missing
+                if not ev_clean.get("lat") and (ev_clean.get("plz") or ev_clean.get("ort")):
+                    try:
+                        from _geocode import geocode_plz as _gp, geocode as _gc
+                        _coords = _gp(ev_clean["plz"]) if ev_clean.get("plz") else {"lat": None, "lon": None}
+                        if _coords["lat"] is None and ev_clean.get("ort"):
+                            _coords = _gc(ev_clean["ort"])
+                        if _coords["lat"] is not None:
+                            ev_clean["lat"] = _coords["lat"]
+                            ev_clean["lon"] = _coords["lon"]
+                    except Exception as _ge:
+                        print(f"  [geocode approved] {ev_clean.get('titel','?')}: {_ge}")
+
                 events_list = scraped_data.setdefault(filename, [])
                 url = ev_clean.get("url", "")
                 td  = (ev_clean.get("titel", ""), ev_clean.get("date_iso", ""))
-                duplicate = (url and any(e.get("url") == url for e in events_list)) or \
-                            any((e.get("titel"), e.get("date_iso")) == td for e in events_list)
-                if not duplicate:
-                    # Geocode if ort/plz is set but lat/lon are missing
-                    if not ev_clean.get("lat") and (ev_clean.get("plz") or ev_clean.get("ort")):
-                        try:
-                            from _geocode import geocode_plz as _gp, geocode as _gc
-                            _coords = _gp(ev_clean["plz"]) if ev_clean.get("plz") else {"lat": None, "lon": None}
-                            if _coords["lat"] is None and ev_clean.get("ort"):
-                                _coords = _gc(ev_clean["ort"])
-                            if _coords["lat"] is not None:
-                                ev_clean["lat"] = _coords["lat"]
-                                ev_clean["lon"] = _coords["lon"]
-                        except Exception as _ge:
-                            print(f"  [geocode approved] {ev_clean.get('titel','?')}: {_ge}")
+                match = next((e for e in events_list
+                              if (url and e.get("url") == url)
+                              or (e.get("titel"), e.get("date_iso")) == td), None)
+                if match is None:
                     events_list.append(ev_clean)
                     added += 1
+                else:
+                    # Manuell gepflegte (freigegebene) Werte sind maßgeblich:
+                    # nicht-leere Felder aus approved_events.json überschreiben den
+                    # bestehenden (ggf. gescrapten) Eintrag. So wirkt Nachbearbeiten
+                    # per approved_events.json / erneuter Freigabe auch auf bereits
+                    # vorhandene Events.
+                    for _k, _v in ev_clean.items():
+                        if _v not in (None, "", []):
+                            match[_k] = _v
+                    updated += 1
 
-            if added:
-                print(f"\n── Manuell freigegebene Events eingemischt: {added} ──")
+            if added or updated:
+                print(f"\n── Manuell freigegebene Events: {added} neu, {updated} aktualisiert ──")
                 # Re-sort after adding
                 for fn in scraped_data:
                     scraped_data[fn].sort(key=lambda e: e.get("date_iso", ""))

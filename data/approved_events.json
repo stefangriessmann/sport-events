@@ -53,13 +53,14 @@
     "lon": null,
     "titel": "Silvesterlauf Chemnitz 2026",
     "ort": "Chemnitz",
-    "strecken": "",
+    "strecken": "0,5 / 1,5 / 3,6 / 10,1 km",
     "verein": "",
     "lv": "",
     "country": "DE",
     "url": "https://www.triathlonchemnitz.de/veranstaltungen/silvesterlauf/silvesterlauf-2026/",
     "serie": "",
     "_snapshot": "LAUF_SNAPSHOT",
-    "_issue": 23
+    "_issue": 23,
+    "plz": "09114"
   }
 ]
