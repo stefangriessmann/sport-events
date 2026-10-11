@@ -45,6 +45,8 @@ jobs:
         if: always()
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_FROM: ${{ vars.NOTIFY_FROM }}
+          NOTIFY_TO: ${{ vars.NOTIFY_TO }}
         run: |
           STAND=$(python3 -c "import json;print(json.load(open('data/meta.json'))['stand'])" 2>/dev/null || echo '?')
           COUNTS=$(python3 -c "import json;c=json.load(open('data/meta.json'))['counts'];print('Rad %s, Tri %s, Lauf %s, Swim %s'%(c['rad'],c['tri'],c['lauf'],c['swim']))" 2>/dev/null || echo '?')

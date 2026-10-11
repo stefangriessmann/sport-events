@@ -67,6 +67,8 @@ jobs:
         if: always()
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_FROM: ${{ vars.NOTIFY_FROM }}
+          NOTIFY_TO: ${{ vars.NOTIFY_TO }}
         run: |
           python3 scripts/notify_resend.py \
             "[bockwurst.cc] E2E-Tests ${{ job.status }} (${{ github.ref_name }})" \
