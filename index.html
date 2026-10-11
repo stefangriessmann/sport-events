@@ -1012,8 +1012,8 @@ document.getElementById('reset').onclick=()=>{ document.getElementById('plz').va
 document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; document.documentElement.lang=lang; document.querySelectorAll('.lng button').forEach(x=>x.classList.toggle('on',x.dataset.lang===lang)); render(); });
 
 /* suggest modal */
-const T={ de:{title:"Event vorschlagen",sub:"Kennst du ein Event, das fehlt? Schick es mir, ich prüfe und nehme es auf. Kostenlos und werbefrei.",titel:"Event-Titel",sportL:"Sportart",datum:"Datum",ort:"Ort",plz:"PLZ",strecke:"Strecke(n)",link:"Link / Webseite",submit:"Vorschlag senden",note:"Dein Vorschlag wird geprüft und dann freigeschaltet.",okT:"Danke!",okP:"Dein Vorschlag ist eingegangen. Ich schaue ihn mir an und nehme das Event in den Guide auf."},
-  en:{title:"Suggest an event",sub:"Know an event that's missing? Send it over and I'll review and add it. Free and ad-free.",titel:"Event title",sportL:"Sport",datum:"Date",ort:"Town",plz:"Postcode",strecke:"Distance(s)",link:"Link / website",submit:"Send suggestion",note:"Your suggestion will be reviewed and then published.",okT:"Thanks!",okP:"Your suggestion came through. I'll review it and add the event to the guide."} };
+const T={ de:{title:"Event vorschlagen",sub:"Kennst du ein Event, das fehlt? Schick es mir, ich prüfe und nehme es auf. Kostenlos und werbefrei.",titel:"Event-Titel",sportL:"Sportart",datum:"Datum",ort:"Ort",plz:"PLZ",strecke:"Strecke(n)",typ:"Typ / Disziplin",typPh:"z.B. RTF, Marathon, Swim & Run …",verein:"Verein / Veranstalter",link:"Link / Webseite",submit:"Vorschlag senden",note:"Dein Vorschlag wird geprüft und dann freigeschaltet.",okT:"Danke!",okP:"Dein Vorschlag ist eingegangen. Ich schaue ihn mir an und nehme das Event in den Guide auf."},
+  en:{title:"Suggest an event",sub:"Know an event that's missing? Send it over and I'll review and add it. Free and ad-free.",titel:"Event title",sportL:"Sport",datum:"Date",ort:"Town",plz:"Postcode",strecke:"Distance(s)",typ:"Type / discipline",typPh:"e.g. RTF, marathon, swim & run …",verein:"Club / organiser",link:"Link / website",submit:"Send suggestion",note:"Your suggestion will be reviewed and then published.",okT:"Thanks!",okP:"Your suggestion came through. I'll review it and add the event to the guide."} };
 function openModal(){
   const t=T[lang];
   const ov=document.createElement('div'); ov.className='ovl'; ov.id='ovl';
@@ -1024,21 +1024,31 @@ function openModal(){
       <div class="full"><label>${t.titel}</label><input id="f-titel" required placeholder="${lang==='de'?'z.B. 12. Erzgebirgs-Marathon':'e.g. 12th Ore Mountains Marathon'}"></div>
       <div><label>${t.sportL}</label><select id="f-sport">${Object.entries(SPORTS).map(([k,s])=>`<option>${lang==='de'?s.de:s.en}</option>`).join('')}</select></div>
       <div><label>${t.datum}</label><input id="f-datum" type="date" value="2026-07-15"></div>
+      <div><label>${t.typ}</label><input id="f-typ" list="typ-rad" placeholder="${t.typPh}" autocomplete="off"></div>
+      <div><label>${t.verein}</label><input id="f-verein" placeholder="${lang==='de'?'z.B. RSV Chemnitz':'e.g. RSV Chemnitz'}"></div>
       <div><label>${t.ort}</label><input id="f-ort" placeholder="${lang==='de'?'Chemnitz':'Chemnitz'}"></div>
       <div><label>${t.plz}</label><input id="f-plz" maxlength="5" placeholder="09111"></div>
       <div class="full"><label>${t.strecke}</label><input id="f-strecke" placeholder="${lang==='de'?'z.B. 50 / 100 / 150 km':'e.g. 50 / 100 / 150 km'}"></div>
       <div class="full"><label>${t.link}</label><input id="f-link" type="url" placeholder="https://"></div>
       <button class="msubmit" type="submit">${t.submit}</button>
       <div class="mnote">${t.note}</div>
+      <datalist id="typ-rad"><option>RTF</option><option>CTF</option><option>Gravel</option><option>Marathon</option><option>Jedermannrennen</option><option>Zeitfahren</option></datalist>
+      <datalist id="typ-tri"><option>Sprint</option><option>Olympisch</option><option>Mitteldistanz</option><option>Langdistanz</option><option>Cross</option><option>Duathlon</option><option>Aquathlon</option><option>Swim &amp; Run</option><option>Aquabike</option><option>Indoor</option></datalist>
+      <datalist id="typ-swim"><option>Freiwasser</option><option>Staffel</option></datalist>
+      <datalist id="typ-lauf"><option>Volkslauf</option><option>Halbmarathon</option><option>Marathon</option><option>Ultra</option><option>Trail</option><option>Silvesterlauf</option></datalist>
     </form></div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('mx').onclick=()=>ov.remove();
+  // Typ-Vorschläge an die gewählte Sportart koppeln (Combobox bleibt frei eintippbar)
+  const sportKey=txt=>Object.keys(SPORTS).find(k=>(lang==='de'?SPORTS[k].de:SPORTS[k].en)===txt)||'rad';
+  const _fsport=document.getElementById('f-sport'), _ftyp=document.getElementById('f-typ');
+  if(_fsport&&_ftyp){ _fsport.addEventListener('change',()=>{ _ftyp.setAttribute('list','typ-'+sportKey(_fsport.value)); _ftyp.value=''; }); }
   document.getElementById('mform').onsubmit=async e=>{ e.preventDefault();
     const btn=ov.querySelector('.msubmit'); if(btn){btn.disabled=true; btn.textContent=(lang==='de'?'Senden…':'Sending…');}
     const g=id=>{const el=document.getElementById(id); return el?el.value.trim():'';};
-    const titel=g('f-titel'), sportV=g('f-sport'), datum=g('f-datum'), ort=g('f-ort'), plz=g('f-plz'), strecke=g('f-strecke'), link=g('f-link');
-    const body=['**Sport:** '+sportV,'**Typ:** '+sportV,'**Name:** '+titel,'**Datum:** '+datum,'**Ort:** '+ort,'**PLZ:** '+plz,'**Strecke:** '+strecke,'**Link:** '+link,'','—','Eingereicht über das Vorschlagsformular auf bockwurst.cc'].join('\n');
+    const titel=g('f-titel'), sportV=g('f-sport'), typ=g('f-typ')||sportV, verein=g('f-verein'), datum=g('f-datum'), ort=g('f-ort'), plz=g('f-plz'), strecke=g('f-strecke'), link=g('f-link');
+    const body=['**Sport:** '+sportV,'**Typ:** '+typ,'**Name:** '+titel,'**Datum:** '+datum,'**Ort:** '+ort,'**PLZ:** '+plz,'**Strecke:** '+strecke,'**Verein:** '+verein,'**Link:** '+link,'','—','Eingereicht über das Vorschlagsformular auf bockwurst.cc'].join('\n');
     try{
       const r=await fetch('/.netlify/functions/create-issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Event-Vorschlag: '+(titel||'(ohne Titel)'),body})});
       if(!r.ok) throw new Error('HTTP '+r.status);
