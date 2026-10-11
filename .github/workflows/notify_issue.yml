@@ -24,6 +24,7 @@ jobs:
         # über benutzergesteuerte Titel/Texte.
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_TO:      ${{ vars.NOTIFY_TO }}
           ISSUE_TITLE:    ${{ github.event.issue.title }}
           ISSUE_BODY:     ${{ github.event.issue.body }}
           ISSUE_URL:      ${{ github.event.issue.html_url }}
