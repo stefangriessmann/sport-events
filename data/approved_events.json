@@ -40,5 +40,26 @@
     "serie": "",
     "_snapshot": "LAUF_SNAPSHOT",
     "_issue": 1
+  },
+  {
+    "art": "Laufen",
+    "datum": "Do, 31.12.2026",
+    "datum_end": null,
+    "wochentag": "Donnerstag",
+    "date_iso": "2026-12-31",
+    "date_iso_end": null,
+    "km": null,
+    "lat": null,
+    "lon": null,
+    "titel": "Silvesterlauf Chemnitz 2026",
+    "ort": "Chemnitz",
+    "strecken": "",
+    "verein": "",
+    "lv": "",
+    "country": "DE",
+    "url": "https://www.triathlonchemnitz.de/veranstaltungen/silvesterlauf/silvesterlauf-2026/",
+    "serie": "",
+    "_snapshot": "LAUF_SNAPSHOT",
+    "_issue": 23
   }
 ]
