@@ -38,4 +38,10 @@ try:
     print("Mail gesendet:", resp.status)
 except Exception as e:  # noqa: BLE001
     print("Mail-Versand fehlgeschlagen:", e)
+    try:
+        body = e.read().decode("utf-8", "replace") if hasattr(e, "read") else ""
+        if body:
+            print("Resend-Antwort:", body[:600])
+    except Exception:
+        pass
     sys.exit(0)
